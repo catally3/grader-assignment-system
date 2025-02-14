@@ -1,0 +1,14 @@
+Within the Project Scope
+	We need to make the read/generate excel/csv files point more specific and refer to the resumes from handshake as input types
+	We need to add that the grader assignment should be incremental so that it can be updated if graders leave or courses are added
+	Professors should be able to log in and specify or recommend graders
+Within our Specifications
+	We need to simplify our security section to say that we will be implementing the UTD netID verification system
+Within our Tech Stack
+	We will likely be hosting our web app using a UTD virtual machine instead of Vercel for security
+Going forward we need status reports per team member and a plan for the next week at each meeting
+Generally, our structure looked good but we need more detail and to get started initilizing things
+Within our Timeline
+	We should plan sprints per week instead of larger phases so that front-end and back-end can work in parallel each week
+For this week
+	we should research matching algorithms and how to get resumes (unstructured data) into a database (structured)
