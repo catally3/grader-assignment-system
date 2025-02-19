@@ -1,0 +1,29 @@
+
+services:
+  mysql:
+    image: mysql
+    restart: unless-stopped
+    env_file: ./.env
+    environment:
+      - MYSQL_USER=$MYSQL_USER
+      - MYSQL_ROOT_PASSWORD=$MYSQL_ROOT_PASSWORD
+      - MYSQL_DB=$MYSQL_DATABASE
+    ports:
+      - $MYSQL_LOCAL_PORT:$MYSQL_DOCKER_PORT
+    volumes:
+      - ./db:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+  app:
+    container_name: web-app
+    depends_on: 
+      - mysql
+    build: ./src
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "9000:3000"
+    volumes:
+      - .:/app
+
+volumes: 
+  db:
