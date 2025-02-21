@@ -1,0 +1,29 @@
+Weekly Report
+	ER Diagram
+	Matching Algorithm
+	BAckend Operations
+	NetID and Virtual Machine Process
+		The professor will have to get permission for us to use the NetID authentication system
+		We can ignore that auth system for now and use a basic login system until we have permission for the netID api
+		We already have virtual machines, we just need to wait for the professor to give us the login info
+	UI/UX Draft
+		We need to revise this to account for entering all courses in a batch rather than individually
+		Also need to account for the only user being the hiring manager
+		We can share our UI progress directly in Figma going forward
+Looking at the Excel Input File
+	The 'Fully Qualified' field is automatically filled by Handshake as true or as false
+	We should not fully discard false applicants in case there are not enough true applicants to fill all positions
+Looking at Handshake PDF
+	This is a big PDF with a list of students and then each person's resume
+		The resumes may be one or more pages long
+	We will have to separate each resume out of the pdf and parse for keywords to associate with each applicant
+General
+	We need to upload our weekly status rep[ort to github before each weekly meeting and it needs to have each person's tasks and the number of hours worked
+	We need to figure out a way to match course number or titles to resumes
+		The course list does not include required skills so we will need to use the course number to find the syllabus on coursebook and get keywords from there
+Next Week
+	Revise UI/UX and look at how figma can be exported to working code
+	Figure out pdf parsing/storage for resumes
+	Initilize database structure
+	Backend people need to learn about node.js and express.js to begin matching algorithm
+	
