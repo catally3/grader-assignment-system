@@ -1,0 +1,30 @@
+{
+  "name": "grader-assignment-app",
+  "version": "1.0.0",
+  "description": "Make sure you have the docker daemon running i.e. via Docker Desktop",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "app": "node index.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/catally3/grader-assignment-system.git"
+  },
+  "author": "Alexandra Ontiveros, Anh Tran, Do Kyung Lee, Gaby Salazar Mejia, Madison Hokstad",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/catally3/grader-assignment-system/issues"
+  },
+  "homepage": "https://github.com/catally3/grader-assignment-system#readme",
+  "dependencies": {
+    "express": "^4.21.2",
+    "cors": "^2.8.5",
+    "csv-parser": "^3.0.0",
+    "munkres-js": "^1.2.2",
+    "mysql2": "^3.2.0",
+    "multer": "^1.4.4",
+    "pdf-parse": "^1.1.1",
+    "xlsx": "^0.18.5"
+  }
+}
