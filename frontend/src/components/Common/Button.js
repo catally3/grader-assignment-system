@@ -12,7 +12,7 @@ const Container = styled.button`
 `;
 
 const TextContainer = styled.div`
-  font-size: ${(props) => props.size || 14}px;
+  font-size: ${(props) => props.size || "medium"}px;
   color: ${(props) => props.color || props.theme.colors.white};
 `;
 
@@ -33,7 +33,7 @@ const Button = ({
       style={style}
     >
       <TextContainer
-        size={TextSize ? TextSize : 14}
+        size={TextSize ? TextSize : "medium"}
         color={TextColor ? TextColor : "#ffffff"}
       >
         {Text}

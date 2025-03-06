@@ -15,7 +15,7 @@ const HeaderContainer = styled.div`
 const Header = () => {
   return (
     <HeaderContainer>
-      <Button Text={"Sign out"} TextColor={"#ffffff"} TextSize={"14"} />
+      <Button Text={"Sign out"} TextColor={"#ffffff"} TextSize={"medium"} />
     </HeaderContainer>
   );
 };

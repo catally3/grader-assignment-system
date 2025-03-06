@@ -42,7 +42,7 @@ const MenuContainer = styled.div`
   width: 100%;
   flex-direction: column;
   align-items: start;
-  font-size: 16px;
+  font-size: medium;
   color: #1c1d1d;
   justify-content: start;
 `;
