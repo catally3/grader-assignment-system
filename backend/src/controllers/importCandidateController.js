@@ -1,3 +1,5 @@
+// backend/src/controllers/importCandidateController.js
+
 const csv = require('csv-parser');
 const XLSX = require('xlsx');
 const fs = require('fs');
@@ -30,34 +32,46 @@ exports.uploadCandidates = async (req, res) => {
       const worksheet = workbook.Sheets[sheetName];
       candidates = XLSX.utils.sheet_to_json(worksheet);
     } else if (fileExt === 'pdf') {
-      // Advanced PDF parsing: handle multi-page CVs.
+      // Advanced PDF parsing for merged resumes.
       const dataBuffer = fs.readFileSync(filePath);
       const data = await pdfParse(dataBuffer);
-      // Split pages using form feed or a candidate marker.
-      const pages = data.text.split('\f');
-      let currentCandidateText = '';
-      candidates = [];
-      pages.forEach(page => {
-        if (page.includes('Candidate Name:')) {
-          if (currentCandidateText) {
-            candidates.push(currentCandidateText);
+      
+      // Split the extracted text into lines.
+      const lines = data.text.split('\n');
+      const candidateBlocks = [];
+      let currentBlock = "";
+      
+      // Heuristic: We assume a new resume begins when we see a line that matches a full name.
+      // For instance, a simple regex that matches two or more words starting with an uppercase letter.
+      // You can add additional keywords (like "WORK EXPERIENCE" or "EDUCATION") if they reliably indicate a new resume.
+      const nameRegex = /^[A-Z][a-z]+( [A-Z][a-z]+)+$/;
+      
+      for (const line of lines) {
+        const trimmed = line.trim();
+        // If the line is non-empty and looks like a name, consider it as a potential new resume header.
+        if (trimmed && nameRegex.test(trimmed)) {
+          // Optionally, you can add further checks (for example, length of line, or adjacent lines having contact info)
+          if (currentBlock.trim().length > 0) {
+            candidateBlocks.push(currentBlock);
+            currentBlock = "";
           }
-          currentCandidateText = page;
-        } else {
-          currentCandidateText += '\n' + page;
         }
-      });
-      if (currentCandidateText) candidates.push(currentCandidateText);
-
-      // Process each candidate text block.
-      candidates = candidates.map(textBlock => {
-        const nameMatch = textBlock.match(/Candidate Name:\s*(.*)/);
-        const majorMatch = textBlock.match(/Major:\s*(.*)/);
-        const gpaMatch = textBlock.match(/GPA:\s*([\d\.]+)/);
+        currentBlock += line + "\n";
+      }
+      // Push any remaining text as the last candidate block.
+      if (currentBlock.trim().length > 0) {
+        candidateBlocks.push(currentBlock);
+      }
+      
+      // Process each candidate block to extract information.
+      candidates = candidateBlocks.map(textBlock => {
+        const nameMatch = textBlock.match(/^[A-Z][a-z]+( [A-Z][a-z]+)+/m); // match the first line that looks like a name
+        const majorMatch = textBlock.match(/Major:\s*(.*)/i);
+        const gpaMatch = textBlock.match(/GPA:\s*([\d\.]+)/i);
         const continuingMatch = textBlock.match(/Continuing:\s*(true|false)/i);
         const coursesMatch = textBlock.match(/Courses Taken:\s*(.*)/i);
         return {
-          name: nameMatch ? nameMatch[1].trim() : 'Unknown',
+          name: nameMatch ? nameMatch[0].trim() : 'Unknown',
           major: majorMatch ? majorMatch[1].trim() : 'Unknown',
           gpa: gpaMatch ? parseFloat(gpaMatch[1]) : 0,
           is_continuing: continuingMatch ? (continuingMatch[1].toLowerCase() === 'true') : false,
@@ -84,7 +98,7 @@ exports.uploadCandidates = async (req, res) => {
     }
 
     // Remove the file after processing.
-    fs.unlinkSync(filePath);
+    // fs.unlinkSync(filePath);
 
     res.status(200).json({ message: 'Candidates imported successfully.', count: candidates.length });
   } catch (error) {
