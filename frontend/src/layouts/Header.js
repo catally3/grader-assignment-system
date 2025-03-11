@@ -8,8 +8,6 @@ const HeaderContainer = styled.div`
   padding: 22px 0px;
   justify-content: end;
   align-items: center;
-  button {
-  }
 `;
 
 const Header = () => {

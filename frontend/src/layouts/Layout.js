@@ -16,6 +16,7 @@ const ContentWrap = styled.div`
   height: 100vh;
   padding: 0 66px 100px 66px;
   background-color: ${(props) => props.theme.colors.background};
+  overflow: scroll;
 `;
 
 const Layout = ({ children }) => {
