@@ -18,12 +18,12 @@
   },
   "homepage": "https://github.com/catally3/grader-assignment-system#readme",
   "dependencies": {
-    "express": "^4.21.2",
     "cors": "^2.8.5",
     "csv-parser": "^3.0.0",
+    "express": "^4.21.2",
+    "multer": "^1.4.4",
     "munkres-js": "^1.2.2",
     "mysql2": "^3.2.0",
-    "multer": "^1.4.4",
     "pdf-parse": "^1.1.1",
     "xlsx": "^0.18.5"
   }
