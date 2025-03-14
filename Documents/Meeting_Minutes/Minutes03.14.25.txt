@@ -1,0 +1,56 @@
+03/14/2025
+Minutes: 50 min
+
+Feedback:
+Figma UI Feedback
+  - Add an auto-assign button next to the manual assign button.
+  - Allow users to input an assignment title (e.g., Spring 25, Trial 1, Trial 2).
+  - Add a select box in the candidate management list page to let users access past candidate lists.
+Matching Algorithm
+  - Test Algorithm using data and prepare a demo for the meeting after Spring Break.
+Database
+  - Test deploying the frontend or backend using Docker and prepare a demo for the meeting after Spring Break.
+Backend
+  - Test parsing PDFs using various resume formats.
+
+Progress So Far:
+
+Madison Hokstad -  10 hours
+        Tasks completed
+            Adjusted matching algorithm code to allow for adjustments after initial assignments (reassignment, new batches)
+            Adjusted scoring formula for matching algorithm
+        Tasks for next week
+            Continue finalizing matching algorithm
+            Testing and edge case protection
+
+Do Kyung Lee -  10 Hours
+        Tasks completed
+            Updated the UI based on the last meeting in figma
+            Completed the Candidate Info Modal UI
+        Tasks for next week:
+            Complete all the UI pages
+            Set up API integration
+
+Alexandra Ontiveros -  6 Hours
+        Tasks Completed:
+            Dockerized frontend, backend, and database
+            Started on populating database with test data
+        Tasks for Next Week 
+            Populate database with test data
+            Work towards deployment using docker onto UTD virtual machine
+
+Gaby Salazar Mejia -  12 Hours
+        Tasks Completed
+            Updated the UI design based on the last meeting in figma
+            Updated previous UI components based on the updated UI design, new format,
+            Added deletion and search functionality 
+        Tasks for Next Week
+            Complete all the UI Components
+
+Anh Tran - 12 Hours
+        Tasks completed:
+            Adjusted parsing functionality for resumes
+            Added CSV and Excel generator functionality 
+            Added splitting merged PDFs functionality
+        Tasks for next week:
+            Continue working on the API endpoints
