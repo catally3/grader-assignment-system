@@ -1,18 +1,12 @@
-const express = require('express');
-const multer = require('multer');
+import express from 'express';
+import { listFiles, downloadFile } from '../controllers/fileController.js';
+
 const router = express.Router();
-const fileController = require('../controllers/fileController');
 
-const storage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, 'uploads/'); // Ensure this folder exists.
-  },
-  filename: function (req, file, cb) {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
-const upload = multer({ storage });
+// Endpoint to list files; use query parameter, e.g., /api/files?category=resumes
+router.get('/', listFiles);
 
-router.post('/upload', upload.single('file'), fileController.uploadFile);
+// Endpoint to download a file by specifying category and filename in the URL.
+router.get('/:category/:filename', downloadFile);
 
-module.exports = router;
+export default router;
