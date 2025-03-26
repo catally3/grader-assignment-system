@@ -31,6 +31,24 @@ exports.uploadCandidates = async (req, res) => {
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
       candidates = XLSX.utils.sheet_to_json(worksheet);
+
+      for (let candidate of candidates) {
+        await pool.query(
+          'INSERT INTO applicants (net_id, applicant_name, applicant_email, school_year, university, school, graduation_date, major, qualified) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [
+            candidate.__EMPTY_2,
+            candidate.__EMPTY_3 + ' ' + candidate.__EMPTY_4,
+            candidate.__EMPTY_5,
+            candidate.__EMPTY_7,
+            candidate.__EMPTY_8,
+            candidate.__EMPTY_9,
+            candidate.__EMPTY_10,
+            candidate.__EMPTY_11,
+            candidate.__EMPTY_6 ? 1 : 0
+          ]
+        );
+      }
+
     } else if (fileExt === 'pdf') {
       // Advanced PDF parsing for merged resumes.
       const dataBuffer = fs.readFileSync(filePath);
