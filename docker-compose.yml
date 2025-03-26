@@ -2,7 +2,7 @@
 
 services:
   mysql:
-    image: mysql:8
+    image: mysql:9
     container_name: gas_mysql
     restart: unless-stopped
     env_file: ./.env
@@ -35,7 +35,9 @@ services:
       - .:/backendapp
 
   frontend:
-    build: ./frontend
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
     container_name: gas_frontend
     restart: unless-stopped
     env_file: .env
@@ -43,8 +45,8 @@ services:
       - "3000:3000"
     depends_on:
       - mysql
-    volumes:
-     - .:/frontendapp
+    #volumes:
+    # - '.:/frontendapp'
     command: npm start
 
 volumes:
