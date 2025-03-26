@@ -1,8 +1,8 @@
-version: "3.8"
+
 
 services:
   mysql:
-    image: mysql:8
+    image: mysql:9
     container_name: gas_mysql
     restart: unless-stopped
     env_file: ./.env
@@ -20,7 +20,7 @@ services:
     build: ./backend
     container_name: gas_backend
     restart: unless-stopped
-    env_file: ./.env
+    env_file: .env
     environment:
       - DB_HOST=mysql
       - MYSQL_LOCAL_PORT=${MYSQL_LOCAL_PORT}
@@ -28,22 +28,26 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     ports:
-      - "3001:3001"
+      - "9000:3000"
     depends_on:
       - mysql
     volumes:
-      - ./backend:/app
+      - .:/backendapp
 
-  # frontend:
-  #   build: ./frontend
-  #   container_name: gas_frontend
-  #   restart: unless-stopped
-  #   ports:
-  #     - "3000:80"
-  #   depends_on:
-  #     - backend
-  #   volumes:
-  #     - ./frontend:/app
+  frontend:
+    build: 
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gas_frontend
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    #volumes:
+    # - '.:/frontendapp'
+    command: npm start
 
 volumes:
-  db_data:
+  db:

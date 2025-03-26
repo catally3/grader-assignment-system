@@ -1,6 +1,6 @@
 FROM node:22-slim
-WORKDIR /app
-COPY package.json /app
+WORKDIR /backendapp
+COPY package.json /backendapp
 RUN npm install
-COPY . /app
-CMD ["node","./src/index.js"]
+COPY . /backendapp
+CMD ["node","./backend/src/index.js"]
