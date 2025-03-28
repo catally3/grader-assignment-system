@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 
 // Welcome! Hiring Manager
-const Title = styled.div`
+const WelcomeTextBox = styled.div`
   font-size: x-large;
   display: flex;
   align-items: center;
@@ -35,7 +35,7 @@ const BoxContainer = styled.div`
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 25px;  
+  margin-top: 15px;  
 `;
 
 const TopBox = styled.div`
@@ -65,14 +65,14 @@ const BoxSubText = styled.div`
   margin-top: 20px;  
 `;
 
-const SubtitleContainer = styled.div`
+const TitleContainer = styled.div`
   display: flex;
   align-items: center;  
   margin-top: 15px;  
 `;
 
 // Latest...
-const Subtitles = styled.div`
+const Title = styled.div`
   font-size: x-large;
   display: flex;
   align-items: center;
@@ -108,8 +108,7 @@ const CenterBox = styled.div`
   font-weight: bold;
   border-radius: 12px;
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-  color: #333;
-  margin-bottom: 20px;  
+  color: #333;  
 `;
 
 const HeaderCenter = styled.div`
@@ -149,87 +148,85 @@ const Column = styled.div`
   padding: 0 10px;
 `;
 
-const BottomBox = styled.div`
-  width: 350px;
-  height: 160px;
-  background-color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 12px;
-  font-weight: bold;
-  border-radius: 12px;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-  font-size: 16px;
-  color: #333;
-`;
-
 const Dashboard = () => {
-  // Define your rows with possible missing columns
-  const data = [
-    { name: 'Computer Science Grader', course: 'CS101', professor: 'Dr. Smith', applicants: 10, assigned: 5, positions: 2 },
-    { name: 'Computer Science Grader', course: 'CS101', professor: 'Dr. Johnson', applicants: 8, assigned: 4, positions: 3 },
-    { name: 'Computer Science Grader', course: 'HCS101', professor: 'Dr. Lee', applicants: 12, assigned: 6, positions: 4 },
-    // Missing a column in this row
-    { name: 'Computer Science Grader', course: 'CS101', professor: null, applicants: 5, assigned: 3, positions: 2 },
-    // Missing a couple of columns
-    { name: null, course: null, professor: 'Dr. Adams', applicants: null, assigned: 4, positions: 1 }
+  const candidateData = [
+    {candidateID:'345135', candidateName:'Gaby Salazar', courseNumber:'3452', professorName:'Dr. Smith'},
+    {candidateID:'325423', candidateName:'Dylan Smith', courseNumber:'6543', professorName:'Dr. Johnson'},
+    {candidateID:'456543', candidateName:'Jenny Lee', courseNumber:'6542', professorName:'Dr. Lee'},
+    {candidateID:'12345', candidateName:'Michelle Thai', courseNumber:'2534', professorName:'Dr. Lee'},
   ];
+
+  const courseData = [
+    {courseNumber:'12345', courseName:'Computer Science', graders: '1', professorName:'Dr. Smith', assignedGrader:'Gaby Salazar'},
+    {courseNumber:'12445', courseName:'Computer Science', graders:'2', professorName:'Dr. Johnson', assignedGrader:'Dylan Smith'},
+    {courseNumber:'12445', courseName:'Computer Science', graders:'3', professorName:'Dr. Lee', assignedGrader:'Jenny Lee'},
+    {courseNumber:'123415', courseName:'Computer Science', graders:'1', professorName:'Dr. Lee', assignedGrader:'Michelle Thai'},
+  ];
+
 
   return (
     <Layout>
-      <Title>
+      <WelcomeTextBox>
         <WelcomeText>Welcome! </WelcomeText>
         <HiringManagerText>Hiring Manager</HiringManagerText>
-      </Title>
+      </WelcomeTextBox>
       <SubTitle>Here is the overview of the grader assignments.</SubTitle>
+      <TitleContainer>
+        <Title>Hello</Title>
+      </TitleContainer>
       <BoxContainer>
         <TopBox>
-          <BoxHeader>Total Assigned</BoxHeader>
+          <BoxHeader>Total Candidate</BoxHeader>
           <BoxSubText>5000</BoxSubText>
         </TopBox>
         <TopBox>
-          <BoxHeader>Total In Progress</BoxHeader>
-          <BoxSubText>50</BoxSubText>
-        </TopBox>
-        <TopBox>
-          <BoxHeader>Total Cancelled</BoxHeader>
+          <BoxHeader>Total Couses</BoxHeader>
           <BoxSubText>50</BoxSubText>
         </TopBox>
       </BoxContainer>
-      <SubtitleContainer>
-        <Subtitles>Latest Courses Overview</Subtitles>
-        <Button>+ Add Course</Button>
-      </SubtitleContainer>
+      <TitleContainer>
+        <Title>Candidate</Title>
+      </TitleContainer>
       <BoxContainer>
         <CenterBox>
           <HeaderCenter>
-            <HeaderText>Applied To Name</HeaderText>
+            <HeaderText>Candidate ID</HeaderText>
+            <HeaderText>Candidate Name</HeaderText>
             <HeaderText>Course Number</HeaderText>
             <HeaderText>Professor Name</HeaderText>
-            <HeaderText>Applicants</HeaderText>
-            <HeaderText>Assigned Graders</HeaderText>
-            <HeaderText>Open Positions</HeaderText>
           </HeaderCenter>
-          {data.map((row, index) => (
+          {candidateData.map((row, index) => (
             <Row key={index}>
-              <Column>{row.name || 'N/A'}</Column>
-              <Column>{row.course || 'N/A'}</Column>
-              <Column>{row.professor || 'N/A'}</Column>
-              <Column>{row.applicants || 'N/A'}</Column>
-              <Column>{row.assigned || 'N/A'}</Column>
-              <Column>{row.positions || 'N/A'}</Column>
+              <Column>{row.candidateID || 'N/A'}</Column>
+              <Column>{row.candidateName || 'N/A'}</Column>
+              <Column>{row.courseNumber || 'N/A'}</Column>
+              <Column>{row.professorName || 'N/A'}</Column>
             </Row>
           ))}
         </CenterBox>
       </BoxContainer>
-      <SubtitleContainer>
-        <Subtitles>Latest Grader Assignments</Subtitles>
-      </SubtitleContainer>
+      <TitleContainer>
+        <Title>Courses</Title>
+      </TitleContainer>
       <BoxContainer>
-        <BottomBox></BottomBox>
-        <BottomBox></BottomBox>
-        <BottomBox></BottomBox>
+        <CenterBox>
+          <HeaderCenter>
+            <HeaderText>Course Number</HeaderText>
+            <HeaderText>Course Name</HeaderText>
+            <HeaderText>Graders</HeaderText>
+            <HeaderText>Professor Name</HeaderText>
+            <HeaderText>Assigned Grader Name</HeaderText>
+          </HeaderCenter>
+          {courseData.map((row, index) => (
+            <Row key={index}>
+              <Column>{row.courseNumber || 'N/A'}</Column>
+              <Column>{row.courseName || 'N/A'}</Column>
+              <Column>{row.graders || 'N/A'}</Column>
+              <Column>{row.professorName || 'N/A'}</Column>
+              <Column>{row.assignedGrader || 'N/A'}</Column>
+            </Row>
+          ))}
+        </CenterBox>
       </BoxContainer>
     </Layout>
   );

@@ -1,4 +1,4 @@
-import styled from "@emotion/styled";
+                                import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import Header from "../../layouts/Header.js";
 import { useState } from "react"; // delete and search states
@@ -18,25 +18,6 @@ const FileTitle = styled.div`
   margin-top: 20px;  
   margin-bottom: 20px;  
   color: rgba(36, 35, 35, 0.88);
-`;
-
-const FileContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  width: 100%;
-  box-sizing: border-box;
-  margin-top: 20px;  
-`;
-
-const FileBox = styled.div`
-  display: flex;
-  width: 1140px;
-  height: 150px;
-  background-color: white;
-  border-radius: 12px; // round corners
-  border: 2px dashed #ccc; /* dashed border */
-  color: #333; // text color
-  padding: 14px; // internal spacing
 `;
 
 const BoxContainer = styled.div`
@@ -208,10 +189,6 @@ const GraderAssignment = () => {
   return (
     <Layout>
       <Title>Course Management</Title>
-      <FileTitle>Upload Course Files</FileTitle>
-      <FileContainer>
-        <FileBox>Upload File</FileBox>
-      </FileContainer>
       <BoxContainer>
         <Box>
           <HeaderContainer>

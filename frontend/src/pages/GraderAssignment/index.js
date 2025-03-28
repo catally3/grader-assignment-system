@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import Header from "../../layouts/Header.js";
-import { useState } from "react"; // delete and search states
+import { useState } from "react"; // delete, add, search states
 
 // Candidate Management
 const Title = styled.div`
@@ -57,6 +57,47 @@ const AddButton = styled(ButtonContainer)`
   &:hover {
     background-color: rgb(224, 226, 230);
   }
+`;
+
+const ModalOverlay = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+`;
+
+const ModalContent = styled.div`
+  background: white;
+  padding: 20px;
+  border-radius: 12px;
+  width: 350px;
+`;
+
+const ModalTitle = styled.h3`
+  margin-bottom: 10px;
+`;
+
+const Input = styled.input`
+  width: 100%;
+  padding: 8px;
+  margin: 5px 0;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+`;
+
+const ModalButtonContainer = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+`;
+
+const ModalButton = styled.button`
+  width: 48%;
 `;
 
 const DeleteButton = styled(ButtonContainer)`
@@ -185,6 +226,17 @@ const GraderAssignment = () => {
   // state used for search
   const [searchTerm, setSearchTerm] = useState(""); 
 
+  // states used to add candidate
+  const [showModal, setShowModal] = useState(false);
+  const [newCandidate, setNewCandidate] = useState({
+    candidateID: "",
+    candidateName: "",
+    number: "",
+    name: "CS",
+    section: "",
+    professor: ""
+  });
+
   // toggles between normal mode and delete mode; selection is resetted after switching to normal mode
   const toggleDeleteMode = () => { 
     setDeleteMode(!deleteMode);
@@ -211,6 +263,33 @@ const GraderAssignment = () => {
     setSearchTerm(event.target.value.toLowerCase()); 
   };
   
+  // update newCandidate when inputting
+  const handleInputChange = (event) => {
+    setNewCandidate((prev) => ({
+      ...prev,
+      [event.target.name]: event.target.value
+    }));
+  };
+  
+  // when add button is clicked, 
+  const handleAddCandidate = () => {
+    if (!newCandidate.candidateID || !newCandidate.candidateName) {
+      alert("Candidate ID and Name are required!"); // prevents adding if
+      return;
+    }
+  
+    setData((prevData) => [...prevData, newCandidate]); // adds new candidates correctly to form 
+    setShowModal(false);
+    setNewCandidate({
+      candidateID: "",
+      candidateName: "",
+      number: "",
+      name: "CS",
+      section: "",
+      professor: ""
+    });
+  };
+  
   // search data array by seeing which entry matches the search entry 
   const filteredData = data.filter((row) =>
     row.candidateID?.toLowerCase().includes(searchTerm) ||
@@ -226,8 +305,8 @@ const GraderAssignment = () => {
         <Box>
           <HeaderContainer>
             <ButtonContainer>
-              <AddButton>+ Add Candidate</AddButton>
-              <DeleteButton onClick={toggleDeleteMode}> {/*when button is clicked, toggle between modes*/}
+            <AddButton onClick={() => setShowModal(true)}>+ Add Candidate</AddButton>
+            <DeleteButton onClick={toggleDeleteMode}> {/*when button is clicked, toggle between modes*/}
                 {deleteMode ? "Cancel" : "Delete"} {/*if deleteMode, then Cancel, else Delete Candidate*/}
               </DeleteButton>
               {/*if deleteMode, then display Confirm, and when clicked Deleted*/}
@@ -283,6 +362,47 @@ const GraderAssignment = () => {
           ))}
         </Box>
       </BoxContainer>
+      {showModal && (
+        <ModalOverlay>
+          <ModalContent>
+            <ModalTitle>Add New Candidate</ModalTitle>
+            <Input
+              name="candidateID"
+              placeholder="Candidate ID"
+              value={newCandidate.candidateID} 
+              onChange={handleInputChange} 
+            />
+            <Input
+              name="candidateName"
+              placeholder="Candidate Name"
+              value={newCandidate.candidateName} 
+              onChange={handleInputChange} 
+            />
+            <Input
+              name="number"
+              placeholder="Course Number"
+              value={newCandidate.number} 
+              onChange={handleInputChange} 
+            />
+            <Input
+              name="section"
+              placeholder="Section"
+              value={newCandidate.section} 
+              onChange={handleInputChange} 
+            />
+            <Input
+              name="professor"
+              placeholder="Professor Name"
+              value={newCandidate.professor} 
+              onChange={handleInputChange} 
+            />
+            <ModalButtonContainer>
+              <ModalButton onClick={handleAddCandidate}>Add</ModalButton>
+              <ModalButton onClick={() => setShowModal(false)}>Cancel</ModalButton>
+            </ModalButtonContainer>
+          </ModalContent>
+        </ModalOverlay>
+      )}
     </Layout>
   );
 };
