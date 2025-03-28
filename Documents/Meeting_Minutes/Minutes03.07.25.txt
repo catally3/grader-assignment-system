@@ -1,0 +1,51 @@
+Minutes: 1 hour
+
+Progress So Far:
+Madison Hokstad -  8 hours
+	Tasks completed
+		Further working on the matching algorithm
+	Further becoming more comfortable in Node.js and familiarizing myself with how the different files of the project fit together
+	Tasks for next week
+		Test on test data to make sure the algorithm works as expected
+	Modify and tune the details of how to score candidates for the algorithm
+
+Do Kyung Lee -  10 Hours
+	Tasks completed
+		Fixed Grader Assignment Modal UI to display resume documents and matching summary
+		Removed unnecessary information in Figma
+		Set up React (Routing, Layout, Sidebar UI)
+	Tasks for next week:
+		Complete the UI for all pages
+		Set up API integration
+
+Alexandra Ontiveros -  10 Hours
+	Tasks Completed:
+		Updated Entity Relationship Diagram
+		Created example PDF of multiple resumes
+		Updated database structure 
+	Tasks for Next Week 
+		Create example data to populate database for testing 
+		Help with PDF parsing 
+
+Gaby Salazar Mejia -  10 Hours
+	Tasks Completed
+		Started building the UI components
+	Tasks for Next Week
+		Fix formatting issues
+		Add missing UI components
+		Implement the Search Algo
+		Complete all the UI Components
+
+Anh Tran - 8 Hours
+	Tasks completed:
+		Working on the parsing functionalities for both single-page and multi-pages resumes
+		Working on the CRUD operations
+	Tasks for next week:
+		Finalized the backend
+
+Feedback:
+- Generalized and simplify the UI/UX, making it just focus on the uploading and assignment of the web app
+- Taking into account the edge when hiring start a new assignment for new semester, the web app will ask if they want to have just current applicants or graders from previous semester also.
+- Using different heuristic to parse and extract the data from the PDF as well as determine the weighting of each data that fits best with the criteria of the courses needed.
+- Having keywords for the job descriptions of the courses needed to make the matching easier.
+- Research about OCR for parsing.

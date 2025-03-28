@@ -1,0 +1,10 @@
+Minutes: 54 mins
+
+Tasks to do:
+- use the template for the grader details sent by the TAs - not too much but highlight the ones needed
+- have tangible work for each weekly progress
+- have test bench samples to test out the parsing and splitting the PDFs for multipages ones.
+- work on the schema diagram
+- working on parsing all the data into structures for the matching algorithms
+- update the project proposal timeline
+- try integrating the VM with the project and host the backend on the VM for frontend to test out APIs.
