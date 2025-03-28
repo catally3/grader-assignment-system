@@ -1,5 +1,6 @@
 import React from "react";
 import styled from "@emotion/styled";
+import CloseIcon from "../../assets/icons/icon_close.svg";
 
 const HeaderContainer = styled.div`
   display: flex;
@@ -10,7 +11,7 @@ const HeaderContainer = styled.div`
   flex-wrap: wrap;
 `;
 
-const Heading = styled.h2`
+const Heading = styled.h3`
   align-self: stretch;
   margin: auto 0;
 `;
@@ -30,7 +31,11 @@ function ModalHeader({ title, closeIconSrc, onClose }) {
   return (
     <HeaderContainer>
       <Heading>{title}</Heading>
-      <CloseButton src={closeIconSrc} alt="Close" onClick={onClose} />
+      <CloseButton
+        src={closeIconSrc ? closeIconSrc : CloseIcon}
+        alt="Close"
+        onClick={onClose}
+      />
     </HeaderContainer>
   );
 }

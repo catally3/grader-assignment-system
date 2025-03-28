@@ -65,22 +65,16 @@ const Sidebar = () => {
       navigate: "/grader-assignment",
     },
     {
-      icon: peopleIcon,
+      icon: listIcon,
       text: "Course Mangement",
       isActive: pathname === "/applicant-management" ? true : false,
       navigate: "/applicant-management",
     },
     {
-      icon: listIcon,
+      icon: peopleIcon,
       text: "Professor Management",
       isActive: pathname === "/course-management" ? true : false,
       navigate: "/course-management",
-    },
-    {
-      icon: settingIcon,
-      text: "Setting",
-      isActive: pathname === "/setting" ? true : false,
-      navigate: "/setting",
     },
   ];
 

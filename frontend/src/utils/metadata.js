@@ -1,3 +1,59 @@
+export const candidatesColumns = [
+  "Candidate ID",
+  "Candidate Name",
+  "Course Number",
+  "Professor Name",
+];
+
+export const assignGraderColumns = [
+  "Candidate ID",
+  "Name (NetId)",
+  "Major",
+  "Document",
+  "Assigned Date",
+];
+
+export const courseData = {
+  courseNumber: "CS4455",
+  courseSection: "004",
+  courseName: "CS Project",
+  openPosition: 3,
+  courseDec: "Algorithm, Java, Dynamic programming",
+};
+
+export const graderList = [
+  { id: 9944288, name: "John Doe", netId: "jsl20001" },
+  { id: 9944298, name: "Kohn Doe", netId: "ksl20001" },
+  { id: 9944278, name: "Tohn Doe", netId: "tsl20001" },
+];
+
+export const assignGraders = [
+  {
+    id: 9944278,
+    name: "John Doe",
+    netId: "jsl20001",
+    major: "Computer Science",
+    doc: "Resume.pdf",
+    AssignedDate: "2024-11-07",
+  },
+  {
+    id: 9944278,
+    name: "Kohn Doe",
+    netId: "ksl20001",
+    major: "Computer Science",
+    doc: "Resume.pdf",
+    AssignedDate: "2024-11-07",
+  },
+  {
+    id: 9944278,
+    name: "Tohn Doe",
+    netId: "tsl20001",
+    major: "Computer Science",
+    doc: "Resume.pdf",
+    AssignedDate: "2024-11-07",
+  },
+];
+
 export const applicationlist = [
   {
     id: "9944825",

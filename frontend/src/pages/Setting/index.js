@@ -5,9 +5,14 @@ import Layout from "../../layouts/Layout.js";
 import Pill from "../../components/Common/Pill.jsx";
 import TableHeader from "../../components/Common/TableHeader.jsx";
 import TableRow from "../../components/Common/TableRow.jsx";
-import AssignmentDetailModal from "../../components/AssignmentDetailModal.jsx";
+import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
+import InputModal from "../../components/Modals/InputModal.jsx";
+// import FileUploadModal from "../../components/Modals/FileUploadModal.jsx";
 
+// meta data
 import { applicationlist } from "../../utils/metadata.js";
+import { candidatesColumns } from "../../utils/metadata.js";
+import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
 
 const Title = styled.h2`
   margin-bottom: 20px;
@@ -27,12 +32,15 @@ const ContentWrapper = styled.div`
 const Setting = () => {
   const [modalOpen, setModalOpen] = useState(false);
   const [assignmentInfo, setAssignmentInfo] = useState({});
+  const [inputValue, setInputValue] = useState("");
+
+  const handleSubmit = () => {};
 
   return (
     <Layout>
       <Title>Applicants Management</Title>
       <ContentWrapper>
-        <TableHeader />
+        <TableHeader columns={candidatesColumns} />
         {applicationlist.map((assignment, index) => {
           return (
             <TableRow
@@ -44,12 +52,25 @@ const Setting = () => {
           );
         })}
       </ContentWrapper>
-      <AssignmentDetailModal
+      {/* <AssignmentDetailModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
         title={"Grader Assignment Detail"}
         assignmentInfo={assignmentInfo}
+      /> */}
+      <InputModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={"New Semester"}
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        onClick={handleSubmit}
       />
+      {/* <FileUploadModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
+      {/* <CourseManagementModal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+      /> */}
     </Layout>
   );
 };

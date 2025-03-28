@@ -3,7 +3,7 @@ import React from "react";
 
 const Container = styled.button`
   padding: 16px 18px;
-
+  width: ${(props) => props.width || ""};
   background-color: ${(props) =>
     props.backgroundColor || props.theme.colors.black};
   border: 1px solid ${(props) => props.borderColor || "transparent"};
@@ -24,13 +24,14 @@ const Button = ({
   TextSize,
   style,
   onClick,
+  width,
 }) => {
   return (
     <Container
       onClick={onClick}
       backgroundColor={backgroundColor}
       borderColor={borderColor}
-      style={style}
+      width={width}
     >
       <TextContainer
         size={TextSize ? TextSize : "medium"}

@@ -5,15 +5,15 @@ import Modal, {
   CustomShadowButtonWrap,
   ModalContainer,
   ModalText,
-} from "./Common/Modal";
-import ModalHeader from "./Common/ModalHeader";
-import InfoSection from "./InfoSection";
-import MatchingResults from "./MatchingResults";
-import DocumentViewer from "./DocumentViewer";
-import ActionButtons from "./ActionButtons";
+} from "../Common/Modal";
+import ModalHeader from "../Common/ModalHeader";
+import InfoSection from "../InfoSection";
+import MatchingResults from "../MatchingResults";
+import DocumentViewer from "../DocumentViewer";
+import ActionButtons from "../ActionButtons";
 
-import CloseIcon from "../assets/icons/icon_close.svg";
-import DownIcon from "../assets/icons/icon_download.svg";
+import CloseIcon from "../../assets/icons/icon_close.svg";
+import DownIcon from "../../assets/icons/icon_download.svg";
 
 const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
   const pdfUrl = "/resume_example.pdf";
