@@ -111,63 +111,129 @@ function parseSkills(skillsText) {
 }
 
 /**
- * Parses the work experience text into an array of job objects.
- * This simple implementation uses a date range regex to separate entries.
- * You may need to adjust this logic depending on resume formats.
- * @param {string} expText 
- * @returns {Object[]} Array of job entries.
+ * Matches skills against experience descriptions.
+ * @param {string[]} skills - List of extracted skills.
+ * @param {string[]} descriptions - Experience description bullets.
+ * @returns {string[]} Matched skills found within descriptions.
  */
-function parseExperience(expText) {
-  // Split the raw experience text by line breaks.
-  const lines = expText.split('\n').map(l => l.trim()).filter(l => l);
-  const entries = [];
-  let currentEntry = null;
+function matchSkills(skills, descriptions) {
+  const matched = new Set();
+  const descriptionText = descriptions.join(' ').toLowerCase();
 
-  // A simple regex to detect a date range, adjust as needed.
-  const dateRegex = /\d{2}\/\d{4}\s*[–—-]\s*(Present|\d{2}\/\d{4})/;
-
-  lines.forEach(line => {
-    // If the line contains a date range, it might signal a new job entry.
-    if (dateRegex.test(line)) {
-      // If there's an existing entry, push it.
-      if (currentEntry) {
-        entries.push(currentEntry);
-      }
-      // Start a new job entry.
-      // Here, we assume the previous line (if any) contains the company and role.
-      // You can adjust this logic based on your resume format.
-      currentEntry = { company: '', role: '', duration: '', description: [] };
-
-      // Example: "Resume Worded, New York, NY\nEntry Level Software Developer 01/2015 – Present"
-      // You can split the line by the date to get the duration.
-      const parts = line.split(dateRegex);
-      if (parts.length > 1) {
-        currentEntry.duration = line.match(dateRegex)[0];
-        // Assume the first part holds company and role.
-        const header = parts[0].trim();
-        // You might further split header by comma or other delimiters.
-        const headerParts = header.split(',');
-        if (headerParts.length >= 2) {
-          currentEntry.company = headerParts.slice(0,2).join(',').trim();
-          currentEntry.role = headerParts.slice(2).join(',').trim() || '';
-        } else {
-          // Fallback: set the whole header as role.
-          currentEntry.role = header;
-        }
-      } else {
-        currentEntry.role = line; // Fallback
-      }
-    } else if (currentEntry) {
-      // Otherwise, consider the line a bullet point description.
-      // Optionally, you can merge wrapped lines here.
-      currentEntry.description.push(line);
-    }
+  skills.forEach(skill => {
+    const skillLower = skill.toLowerCase().split('(')[0].trim();
+    if (descriptionText.includes(skillLower)) matched.add(skill);
   });
-  // Push the last entry if exists.
-  if (currentEntry) {
-    entries.push(currentEntry);
+
+  return Array.from(matched);
+}
+
+/**
+ * Returns a regex that matches durations like:
+ * - "09/2015 – Present"
+ * - "Jun 2018 – Present"
+ * - "June 2010 – Dec 2014"
+ */
+function getDurationRegex() {
+  const datePart = '(?:\\d{2}\\/\\d{4}|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{4})';
+  return new RegExp(`${datePart}\\s*[–-]\\s*(?:Present|${datePart})`, 'i');
+}
+
+/**
+ * Attempts to extract the duration substring from a header line.
+ * @param {string} headerLine
+ * @returns {string|null} the matched duration, or null if not found.
+ */
+function extractDuration(headerLine) {
+  const durationRegex = getDurationRegex();
+  const match = headerLine.match(durationRegex);
+  return match ? match[0].trim() : null;
+}
+
+/**
+ * Splits a header line into two parts: the company portion and the duration.
+ * @param {string} headerLine 
+ * @returns {Object} Object with header and duration properties.
+ */
+function splitHeaderLine(headerLine) {
+  const durationRegex = getDurationRegex();
+  const match = headerLine.match(durationRegex);
+  if (match) {
+    const duration = match[0].trim();
+    const headerPart = headerLine.replace(durationRegex, '').trim();
+    return { header: headerPart, duration };
   }
-  return entries;
+  return { header: headerLine, duration: '' };
+}
+
+/**
+ * Parses the experience section into structured objects by detecting header lines
+ * using duration patterns. When a header line is found, any subsequent non‐empty lines 
+ * (until a new header is encountered) are combined as the role. The remaining lines are 
+ * treated as the description. This version filters out any empty strings.
+ * @param {string} experienceText 
+ * @returns {Array} Array of structured experience objects.
+ */
+function parseExperience(experienceText) {
+  const lines = experienceText.split('\n')
+    .map(line => line.trim())
+    .filter(line => line.length > 0)
+    // Remove common bullet markers from the beginning of lines.
+    .map(line => line.replace(/^[-•●]\s*/, ''));
+  
+  const experiences = [];
+  let i = 0;
+  
+  while (i < lines.length) {
+    const line = lines[i];
+    const duration = extractDuration(line);
+    if (duration) {
+      // Start a new experience using the header line.
+      const { header, duration: extractedDuration } = splitHeaderLine(line);
+      let company = header;
+      let roleLines = [];
+      let descriptionLines = [];
+      
+      i++; // move to the next line to start collecting role lines
+      
+      // Collect role lines until a blank line, a line with a bullet, or a line that itself contains a duration.
+      while (i < lines.length) {
+        const nextLine = lines[i];
+        if (nextLine === "" || nextLine.match(/^[-•●]/) || extractDuration(nextLine)) {
+          break;
+        }
+        // Only add non-empty trimmed lines.
+        if (nextLine.trim()) {
+          roleLines.push(nextLine.trim());
+        }
+        i++;
+      }
+      const role = roleLines.join(' ').trim();
+      
+      // Now collect the description lines until the next header is found.
+      while (i < lines.length) {
+        const nextLine = lines[i];
+        if (extractDuration(nextLine)) {
+          break; // new header detected, stop description collection.
+        }
+        if (nextLine.trim()) {
+          descriptionLines.push(nextLine.trim());
+        }
+        i++;
+      }
+      
+      experiences.push({
+        company,
+        role,
+        duration: extractedDuration,
+        description: descriptionLines,
+        matchedSkills: []  // To be populated later
+      });
+    } else {
+      i++;
+    }
+  }
+  return experiences;
 }
 
 /**
@@ -244,18 +310,15 @@ function extractResumeData(text) {
   // New: Extract skills.
   resumeData.skills = sections["SKILLS"] ? parseSkills(sections["SKILLS"]) : [];
 
-  // Prioritize WORK EXPERIENCE, then PROFESSIONAL EXPERIENCE, then EXPERIENCE.
-  if (sections["WORK EXPERIENCE"]) {
-    resumeData.experience = sections["WORK EXPERIENCE"];
-  } else if (sections["PROFESSIONAL EXPERIENCE"]) {
-    resumeData.experience = sections["PROFESSIONAL EXPERIENCE"];
-  } else if (sections["EXPERIENCE"]) {
-    resumeData.experience = sections["EXPERIENCE"];
-  } else if (sections["EMPLOYMENT HISTORY"]) {
-    resumeData.experience = sections["EMPLOYMENT HISTORY"];
-  } else {
-    resumeData.experience = '';
-  }
+  // Extract and structure experiences
+  const experiences = parseExperience(sections["EMPLOYMENT HISTORY"] || 
+    sections["WORK EXPERIENCE"] || 
+    sections["PROFESSIONAL EXPERIENCE"] || 
+    sections["EXPERIENCE"] || '');
+  experiences.forEach(exp => {
+  exp.matchedSkills = matchSkills(resumeData.skills, exp.description);
+  });
+  resumeData.experience = experiences;
 
   return resumeData;
 }
@@ -268,18 +331,44 @@ async function parseResumePdf(filePath) {
   try {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdfParse(dataBuffer);
-    const text = data.text;
-    const resumeData = extractResumeData(text);
+    // Split raw text into pages using the form feed character.
+    let pages = data.text.split('\f');
     
-    console.log('Extracted Resume Data:', resumeData);
+    // Process each page: split into lines and trim.
+    let pagesLines = pages.map(page => 
+      page.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+    );
+    
+    // If there's only one page, skip header/footer removal.
+    const threshold = pagesLines.length > 1 ? Math.ceil(pagesLines.length / 2) : Infinity;
+    
+    // Count how many pages each line appears in.
+    let lineCount = {};
+    for (const lines of pagesLines) {
+      const uniqueLines = new Set(lines);
+      for (const line of uniqueLines) {
+        lineCount[line] = (lineCount[line] || 0) + 1;
+      }
+    }
+    
+    // Remove lines that appear in at least 'threshold' pages (likely header/footer).
+    let cleanedPages = pagesLines.map(lines => 
+      lines.filter(line => lineCount[line] < threshold)
+    );
+    
+    // Combine the cleaned pages back into a single text.
+    let combinedText = cleanedPages.map(lines => lines.join('\n')).join('\n');
+    
+    // Optionally enhance the combined text.
+    const enhancedText = enhanceText(combinedText);
+    
+    const resumeData = extractResumeData(enhancedText);
+    // console.log('Extracted Resume Data:', resumeData);
+    console.log('Extracted Resume Data:', JSON.stringify(resumeData, null, 2))
     return [resumeData];
   } catch (error) {
     console.error('Error reading or parsing the PDF file:', error);
   }
 }
-
-// Remove example usage below so this module only exports the parsing function
-// const filePath1 = './src/uploads/resumes/sample_cv_first.pdf';
-// parseResumePdf(filePath1);
 
 export default { parseResumePdf };
