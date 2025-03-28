@@ -60,19 +60,19 @@ const Sidebar = () => {
     },
     {
       icon: gradIcon,
-      text: "Grader Assignment",
+      text: "Candidate Management",
       isActive: pathname === "/grader-assignment" ? true : false,
       navigate: "/grader-assignment",
     },
     {
       icon: peopleIcon,
-      text: "Applicants Mangement",
+      text: "Course Mangement",
       isActive: pathname === "/applicant-management" ? true : false,
       navigate: "/applicant-management",
     },
     {
       icon: listIcon,
-      text: "Course Management",
+      text: "Professor Management",
       isActive: pathname === "/course-management" ? true : false,
       navigate: "/course-management",
     },

@@ -1,41 +1,58 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
+import Header from "../../layouts/Header.js";
+import { useState } from "react"; // search state
 
-// Welcome! Hiring Manager
+// Professor Management
 const Title = styled.div`
   font-size: x-large;
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;  
   font-weight: bold;
 `;
 
 const BoxContainer = styled.div`
   display: flex;
-  gap: 45px;  
-  justify-content: flex-start;
-  align-items: flex-start;
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 25px;  
+  margin-top: 20px;  
 `;
 
 const Box = styled.div`
+  display: flex;
   width: 1140px;
   background-color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 16px;
-  font-weight: bold;
-  border-radius: 12px;
+  border-radius: 12px; // round corners
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-  color: #333;
-  margin-bottom: 20px;  
+  color: #333; // text color
+  flex-direction: column; // stacks children vertically
+  padding: 14px; // internal spacing
 `;
 
-const HeaderRow = styled.div`
+const HeaderContainer = styled.div`
+  display: flex;
+  align-items: center; // vertically
+  width: 100%; 
+  padding: 10px;
+  margin-bottom: 10px;
+  justify-content: flex-end;
+  gap: 10px;
+`;
+
+const HeaderText = styled.div`
+  font-size: medium;
+  font-weight: normal;
+  jusitify-content: flex-end;
+`;
+
+const SearchBox = styled.input`
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 150px; 
+`;
+
+const ColumnTitle = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;  
@@ -43,7 +60,7 @@ const HeaderRow = styled.div`
   background-color: rgb(224, 221, 221); 
 `;
 
-const HeaderRowText = styled.div`
+const ColumnTitleText = styled.div`
   flex: 1;
   text-align: center;  
   padding: 0 10px;
@@ -60,6 +77,7 @@ const Row = styled.div`
   font-size: small;
   font-weight: normal;
   border-bottom: 1px solid #ccc; 
+
   &:last-child {
     border-bottom: none; 
   }
@@ -71,39 +89,66 @@ const Column = styled.div`
   padding: 0 10px;
 `;
 
-const CourseManagement = () => {
+const GraderAssignment = () => {
   const data = [
-    {major: 'Computer Science', number: 'CS101', name: 'CSProject', professor: 'Dr. Smith', assigned: 1, assigned: 5, positions: 2, status: 'completed', action : 'edit'},
-    {major: 'Computer Science', number: 'CS101', name: 'CSProject', professor: 'Dr. Johnson', assigned: 0, assigned: 4, positions: 3, status: 'completed', action : 'edit'},
-    {major: 'Computer Science', number: 'HCS101', name: 'CSProject', professor: 'Dr. Lee', assigned: 2, assigned: 6, positions: 4, status: 'completed', action : 'edit'}, 
-    {major: 'Computer Science', number: 'CS101', name: 'CSProject', professor: null, assigned: 1, assigned: 3, positions: 2, status: 'completed', action : 'edit'}, 
-    {major: null, number: null, name: 'CSProject', professor: 'Dr. Adams', assigned: null, assigned: 1, positions: 1, status: 'completed', action : 'edit'}, 
+    {professor:'John Smith', name: 'CS', number: null, section: "501", assigned: 'Mary Smith', recommended: "Maria Salazar", mismatch: "Not in candidate pool"},
+    {professor:'John Smith', name: 'CS', number: "4394", section: "501", assigned: 'Mary Smith', recommended: "Juan Salazar", mismatch: "Already assigned to another professor"},
+    {professor:'John Smith', name: 'CS', number: "4394", section: "501", assigned: 'Mary Smith', recommended: "Manuel Salazar", mismatch: "Not in candidate pool"},
+    {professor:'John Smith', name: null, number: "4394", section: "501", assigned: 'Mary Smith', recommended: "Gustavo Salazar", mismatch: "Not in candidate pool"},
+    {professor:'John Smith', name: 'CS', number: "4394", section: null, assigned: 'Mary Smith', recommended: "Luis Miguel", mismatch: "Already assigned to another professor"},
   ];
+
+  // state used for search
+  const [searchTerm, setSearchTerm] = useState(""); 
+
+  // get user input (search term) and convert it to lowercase for search
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value.toLowerCase()); 
+  };
+  
+  // search data array by seeing which entry matches the search entry 
+  const filteredData = data.filter((row) =>
+    row.professor?.toLowerCase().includes(searchTerm) ||
+    row.name?.toLowerCase().includes(searchTerm) ||
+    row.number?.toLowerCase().includes(searchTerm) ||
+    row.section?.toLowerCase().includes(searchTerm) ||
+    row.assigned?.toLowerCase().includes(searchTerm) ||
+    row.recommended?.toLowerCase().includes(searchTerm) ||
+    row.mismatch?.toLowerCase().includes(searchTerm) 
+  );
+
   return (
     <Layout>
-      <Title>Course Management</Title>
+      <Title>Professor Management</Title>
       <BoxContainer>
         <Box>
-          <HeaderRow>
-            <HeaderRowText>Major</HeaderRowText>
-            <HeaderRowText>Course Number</HeaderRowText>
-            <HeaderRowText>Course Name</HeaderRowText>
-            <HeaderRowText>Professor Name</HeaderRowText>
-            <HeaderRowText>Assigned Graders</HeaderRowText>
-            <HeaderRowText>Open Postitions</HeaderRowText>
-            <HeaderRowText>Status</HeaderRowText>
-            <HeaderRowText>Action</HeaderRowText>
-          </HeaderRow>
-          {data.map((row, index) => (
+          <HeaderContainer>
+            <HeaderText>Search:</HeaderText>
+            <SearchBox
+                type="text"
+                placeholder="Search..."
+                value={searchTerm} // bind input to searchTerm
+                onChange={handleSearchChange} // state updated everytime user inputs
+              />
+          </HeaderContainer>
+          <ColumnTitle>
+            <ColumnTitleText>Professor Name</ColumnTitleText>
+            <ColumnTitleText>Course Name</ColumnTitleText>
+            <ColumnTitleText>Course Number</ColumnTitleText>
+            <ColumnTitleText>Section</ColumnTitleText>
+            <ColumnTitleText>Assigned Candidate</ColumnTitleText>
+            <ColumnTitleText>Recommended Candidate</ColumnTitleText>
+            <ColumnTitleText>Reason for Mismatch</ColumnTitleText>
+          </ColumnTitle>
+          {filteredData.map((row, index) => (
             <Row key={index}>
-              <Column>{row.major || 'N/A'}</Column>
-              <Column>{row.number || 'N/A'}</Column>
+              <Column>{row.professor|| 'N/A'}</Column>
               <Column>{row.name || 'N/A'}</Column>
-              <Column>{row.professor || 'N/A'}</Column>
+              <Column>{row.number || 'N/A'}</Column>
+              <Column>{row.section || 'N/A'}</Column>
               <Column>{row.assigned || 'N/A'}</Column>
-              <Column>{row.positions || 'N/A'}</Column>
-              <Column>{row.status || 'N/A'}</Column>
-              <Column>{row.action || 'N/A'}</Column>
+              <Column>{row.recommended || 'N/A'}</Column>
+              <Column>{row.mismatch || 'N/A'}</Column>
             </Row>
           ))}
         </Box>
@@ -112,4 +157,4 @@ const CourseManagement = () => {
   );
 };
 
-export default CourseManagement;
+export default GraderAssignment;

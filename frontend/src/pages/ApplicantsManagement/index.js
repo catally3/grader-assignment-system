@@ -1,58 +1,104 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
+import Header from "../../layouts/Header.js";
+import { useState } from "react"; // delete and search states
 
-// Welcome! Hiring Manager
+// Course Management
 const Title = styled.div`
   font-size: x-large;
-  display: flex;
-  align-items: center;
-  margin-bottom: 10px;  
   font-weight: bold;
+  
+`;
+
+// Upload Course Files
+const FileTitle = styled.div`
+  font-size: medium;
+  
+  font-weight: bold;
+  margin-top: 20px;  
+  margin-bottom: 20px;  
+  color: rgba(36, 35, 35, 0.88);
+`;
+
+const FileContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 20px;  
+`;
+
+const FileBox = styled.div`
+  display: flex;
+  width: 1140px;
+  height: 150px;
+  background-color: white;
+  border-radius: 12px; // round corners
+  border: 2px dashed #ccc; /* dashed border */
+  color: #333; // text color
+  padding: 14px; // internal spacing
 `;
 
 const BoxContainer = styled.div`
   display: flex;
-  gap: 45px;  
-  justify-content: flex-start;
-  align-items: flex-start;
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 25px;  
+  margin-top: 20px;  
 `;
 
 const Box = styled.div`
+  display: flex;
   width: 1140px;
   background-color: white;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  padding: 16px;
-  font-weight: bold;
-  border-radius: 12px;
+  border-radius: 12px; // round corners
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-  color: #333;
-  margin-bottom: 20px;  
+  color: #333; // text color
+  flex-direction: column; // stacks children vertically
+  padding: 14px; // internal spacing
 `;
 
 const HeaderContainer = styled.div`
   display: flex;
-  align-items: center; 
-  justify-content: space-between; 
+  align-items: center; // vertically
+  justify-content: space-between;
   width: 100%; 
-  padding: 10px 0; 
+  padding: 10px;
   margin-bottom: 10px;
+`;
+
+const ButtonContainer = styled.button`
+  display: flex;
+  width: 130px;
+  height: 35px;
+  justify-content: center; // horizontal text
+  align-items: center; // vertical text
+  border-radius: 12px;
+  font-size: small;  
+  gap: 10px;
+`;
+
+
+const DeleteButton = styled(ButtonContainer)`
+  color: rgb(255, 255, 255);
+  background-color: rgb(243, 4, 4);
+  display: flex;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);  
+  &:hover {
+    background-color: rgb(199, 19, 19);
+  }
+`;
+
+const SearchContainer = styled.div`
+  display: flex;
+  align-items: center;
 `;
 
 const HeaderText = styled.div`
   font-size: medium;
   font-weight: normal;
-  color: #666;
-`;
-
-const DropDownContainer = styled.div`
-  display: flex;
-  gap: 10px; 
+  padding: 10px;
+  jusitify-content: flex-end;
 `;
 
 const SearchBox = styled.input`
@@ -63,33 +109,7 @@ const SearchBox = styled.input`
   width: 150px; 
 `;
 
-const SortByBox = styled.select`
-  padding: 5px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  font-size: 14px;
-  width: 150px; 
-`;
-
-const Button = styled.button`
-  color: rgb(255, 255, 255);
-  background-color: rgb(253, 135, 0);
-  width: 120px;
-  height: 35px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  padding: 10px;  
-  border-radius: 12px;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-  font-size: small;
-  margin-left: 20px;  
-  &:hover {
-    background-color: rgb(218, 118, 5);
-  }
-`;
-
-const HeaderRow = styled.div`
+const ColumnTitle = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;  
@@ -97,7 +117,7 @@ const HeaderRow = styled.div`
   background-color: rgb(224, 221, 221); 
 `;
 
-const HeaderRowText = styled.div`
+const ColumnTitleText = styled.div`
   flex: 1;
   text-align: center;  
   padding: 0 10px;
@@ -114,6 +134,7 @@ const Row = styled.div`
   font-size: small;
   font-weight: normal;
   border-bottom: 1px solid #ccc; 
+
   &:last-child {
     border-bottom: none; 
   }
@@ -125,54 +146,120 @@ const Column = styled.div`
   padding: 0 10px;
 `;
 
-const ApplicantsManagement = () => {
-  const data = [
-    {id: '12345', netid: 'John Smith (gxs190043)', number: 'CS4353', name: 'C++', assigned: 5, recommend: 'C++', date: '2024-07-01' },
-    {id: '12345', netid: 'John Smith (gxs190043)', number: 'CS4353', name: 'C++', assigned: 4, recommend: 'C++', date: '2024-07-01' },
-    {id: '12345', netid: 'John Smith (gxs190043)', number: 'CS4353', name: 'C++', assigned: 6, recommend: 'C++', date: '2024-07-01' },
-    {id: '12345', netid: 'John Smith (gxs190043)', number: null, name: 'C++', assigned: 3, recommend: 'C++', date: '2024-07-01' },
-    {id: null, netid: null, number: 'CS4353', name: null, assigned: 4, recommend: 'C++', date: '2024-07-01' }
-  ];
-  const dataCount = data.length;
+const GraderAssignment = () => {
+  const [data, setData] = useState([
+    {number: null, name: 'CS', graders: 1, section: '501', professor: 'John Smith', assigned: 'Mary Smith'},
+    {number: '4848', name: 'CS', graders: 2, section: '501', professor: 'John Smith', assigned: 'Mary Smith'},
+    {number: '4848', name: 'CS', graders: 6, section: '502', professor: 'John Smith', assigned: 'Mary Smith'},
+    {number: '4848', name: null, graders: 2, section: '503', professor: 'John Smith', assigned: null},
+    {number: '4848', name: 'CS', graders: null, section: '504', professor: 'John Smith', assigned: 'Mary Smith'},
+    {number: '4848', name: 'CS', graders: 2, section: '501', professor: null, assigned: 'Mary Smith'},
+  ]);
+
+  // states used for deletion of course
+  const[deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false
+  const[selected, setSelected] = useState([]); // array of selected for deletion
+
+  // state used for search
+  const [searchTerm, setSearchTerm] = useState(""); 
+
+  // toggles between normal mode and delete mode; selection is resetted after switching to normal mode
+  const toggleDeleteMode = () => { 
+    setDeleteMode(!deleteMode);
+    setSelected([]); 
+  };
+
+  // create unique row identifier, consisting of number, name and section
+  // when user checks/unchecks a checkbox, rowkey is either added or removed from selected
+  const handleCheckboxChange = (row) => { 
+    const { number, name, section } = row;
+    const rowKey = `${number}-${name}-${section}`; 
+    
+    setSelected((prev) =>
+      prev.includes(rowKey) ? prev.filter((item) => item !== rowKey) : [...prev, rowKey]
+    );
+  };
+
+  // user confirmed deletion, DELETE! (if combo matches)
+  const handleDelete = () => { 
+    setData((prevData) => prevData.filter((row) => {
+      const rowKey = `${row.number}-${row.name}-${row.section}`;
+      return !selected.includes(rowKey); 
+    }));
+    setDeleteMode(false);
+    setSelected([]);
+  };
+
+  // get user input (search term) and convert it to lowercase for search
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value.toLowerCase()); 
+  };
+  
+  // search data array by seeing which entry matches the search entry 
+  const filteredData = data.filter((row) =>
+    row.number?.toLowerCase().includes(searchTerm) ||
+    row.name?.toLowerCase().includes(searchTerm) ||
+    row.graders?.toString().includes(searchTerm) ||
+    row.section?.toLowerCase().includes(searchTerm) ||
+    row.professor?.toLowerCase().includes(searchTerm) ||
+    row.assigned?.toLowerCase().includes(searchTerm) 
+  );
+  
   return (
     <Layout>
-      <Title>Applicants Management</Title>
+      <Title>Course Management</Title>
+      <FileTitle>Upload Course Files</FileTitle>
+      <FileContainer>
+        <FileBox>Upload File</FileBox>
+      </FileContainer>
       <BoxContainer>
         <Box>
           <HeaderContainer>
-              <HeaderText>Total: {dataCount}</HeaderText>
-              <DropDownContainer>
-                <HeaderText>Search:</HeaderText>
-                <SearchBox type="text" placeholder="Search..." />
-                <HeaderText>Sort by:</HeaderText>
-                <SortByBox>
-                  <option value="All">All</option>
-                  <option value="Ascending: A-Z">Ascending: A-Z</option>
-                  <option value="Descending: Z-A">Descending: Z-A</option>
-                  <option value="Newest First">Newest First</option>
-                  <option value="Oldest First">Oldest First</option>
-                </SortByBox>
-                <Button>+ Add Resume</Button>
-              </DropDownContainer>
-            </HeaderContainer>
-          <HeaderRow>
-            <HeaderRowText>ID</HeaderRowText>
-            <HeaderRowText>Name (NetID)</HeaderRowText>
-            <HeaderRowText>Last Course Number</HeaderRowText>
-            <HeaderRowText>Last Course Name</HeaderRowText>
-            <HeaderRowText>Assigned count</HeaderRowText>
-            <HeaderRowText>Recommendation Course</HeaderRowText>
-            <HeaderRowText>Date</HeaderRowText>
-          </HeaderRow>
-          {data.map((row, index) => (
+            <ButtonContainer>
+            <DeleteButton onClick={toggleDeleteMode}> {/*when button is clicked, toggle between modes*/}
+                {deleteMode ? "Cancel" : "Delete Course"} {/*if deleteMode, then Cancel, else Delete Course*/}
+              </DeleteButton>
+              {/*if deleteMode, then display Confirm, and when clicked Deleted*/}
+              {deleteMode && ( 
+                <DeleteButton onClick={handleDelete}>Confirm Delete</DeleteButton> 
+              )}
+            </ButtonContainer>
+            <SearchContainer>
+              <HeaderText>Search:</HeaderText>
+              <SearchBox
+                type="text"
+                placeholder="Search..."
+                value={searchTerm} // bind input to searchTerm
+                onChange={handleSearchChange} // state updated everytime user inputs
+              />
+            </SearchContainer>
+          </HeaderContainer>
+          <ColumnTitle>
+            {deleteMode && <ColumnTitleText>Select</ColumnTitleText>} {/*if deleteMode, then display column for Select*/}
+            <ColumnTitleText>Course Number</ColumnTitleText>
+            <ColumnTitleText>Course Name</ColumnTitleText>
+            <ColumnTitleText>Number of Graders</ColumnTitleText>
+            <ColumnTitleText>Section</ColumnTitleText>
+            <ColumnTitleText>Professor Name</ColumnTitleText>
+            <ColumnTitleText>Assigned Candidate</ColumnTitleText>
+          </ColumnTitle>
+          {filteredData.map((row, index) => (
             <Row key={index}>
-              <Column>{row.id || 'N/A'}</Column>
-              <Column>{row.netid || 'N/A'}</Column>
+              {deleteMode && ( 
+                <Column>
+                  <input
+                 type="checkbox"
+                 checked={selected.includes(`${row.number}-${row.name}-${row.section}`)}
+                 onChange={() => handleCheckboxChange(row)}
+                />
+                </Column>
+              )}
               <Column>{row.number || 'N/A'}</Column>
               <Column>{row.name || 'N/A'}</Column>
+              <Column>{row.graders || 'N/A'}</Column>
+              <Column>{row.section || 'N/A'}</Column>
+              <Column>{row.professor || 'N/A'}</Column>
               <Column>{row.assigned || 'N/A'}</Column>
-              <Column>{row.recommend || 'N/A'}</Column>
-              <Column>{row.date || 'N/A'}</Column>
             </Row>
           ))}
         </Box>
@@ -181,4 +268,4 @@ const ApplicantsManagement = () => {
   );
 };
 
-export default ApplicantsManagement;
+export default GraderAssignment;
