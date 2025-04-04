@@ -1,5 +1,5 @@
 import path from 'path';
-import { processMergedPDFWithOCR } from '../utils/splitPdf.js';
+// import processMergedPDFWithOCR from '../utils/splitPDF.js';
 import pdfParser from '../utils/pdfParser.js';
 import excelParser from '../utils/excelParser.js';
 import csvParser from '../utils/csvParser.js';
@@ -102,6 +102,6 @@ export const processMergedPDFPipeline = async (req, res) => {
 export default {
   processCV,
   processCourseFile,
-  processMergedPDF, // add this new function
-  processMergedPDFPipeline
+  // processMergedPDF, // add this new function
+  // processMergedPDFPipeline
 };

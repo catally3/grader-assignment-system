@@ -168,66 +168,82 @@ function splitHeaderLine(headerLine) {
 
 /**
  * Parses the experience section into structured objects by detecting header lines
- * using duration patterns. When a header line is found, any subsequent non‐empty lines 
- * (until a new header is encountered) are combined as the role. The remaining lines are 
- * treated as the description. This version filters out any empty strings.
+ * using duration patterns. When a header line is found, any subsequent non-empty lines 
+ * (until a blank or a line starting with a bullet or a new header is encountered) are combined as the role.
+ * The remaining lines are treated as the description.
  * @param {string} experienceText 
  * @returns {Array} Array of structured experience objects.
  */
 function parseExperience(experienceText) {
-  const lines = experienceText.split('\n')
-    .map(line => line.trim())
-    .filter(line => line.length > 0)
-    // Remove common bullet markers from the beginning of lines.
-    .map(line => line.replace(/^[-•●]\s*/, ''));
+  let lines = experienceText.split('\n')
+    .map(l => l.trim())
+    .filter(l => l.length > 0);
+  // Remove common bullet markers.
+  lines = lines.map(l => l.replace(/^[-•●]\s*/, ''));
   
   const experiences = [];
   let i = 0;
+  const jobTitleKeywords = ["developer", "engineer", "manager", "analyst", "programmer", "consultant", "support", "designer"];
   
   while (i < lines.length) {
     const line = lines[i];
     const duration = extractDuration(line);
     if (duration) {
-      // Start a new experience using the header line.
-      const { header, duration: extractedDuration } = splitHeaderLine(line);
+      // Split header line.
+      let { header, duration: extractedDuration } = splitHeaderLine(line);
       let company = header;
-      let roleLines = [];
+      // If the header doesn't appear to contain company info, use the previous line.
+      if ((!company || !/,/.test(company)) && i > 0) {
+        company = lines[i - 1];
+      }
+      let roleCandidates = [];
       let descriptionLines = [];
+      i++; // Move past the header line.
       
-      i++; // move to the next line to start collecting role lines
-      
-      // Collect role lines until a blank line, a line with a bullet, or a line that itself contains a duration.
-      while (i < lines.length) {
-        const nextLine = lines[i];
-        if (nextLine === "" || nextLine.match(/^[-•●]/) || extractDuration(nextLine)) {
+      // Look ahead up to 5 lines for role candidates.
+      for (let j = 0; j < 5 && i < lines.length; j++, i++) {
+        const candidate = lines[i];
+        // If candidate contains a duration, it's a new header, so break.
+        if (extractDuration(candidate)) {
           break;
         }
-        // Only add non-empty trimmed lines.
-        if (nextLine.trim()) {
-          roleLines.push(nextLine.trim());
+        if (candidate.length < 100 && jobTitleKeywords.some(k => candidate.toLowerCase().includes(k))) {
+          roleCandidates.push(candidate);
         }
-        i++;
       }
-      const role = roleLines.join(' ').trim();
+      const role = roleCandidates.length > 0 ? roleCandidates.reduce((a, b) => a.length <= b.length ? a : b) : "";
       
-      // Now collect the description lines until the next header is found.
+      // Gather description lines:
+      let descBuffer = "";
       while (i < lines.length) {
         const nextLine = lines[i];
-        if (extractDuration(nextLine)) {
-          break; // new header detected, stop description collection.
-        }
-        if (nextLine.trim()) {
-          descriptionLines.push(nextLine.trim());
+        // If nextLine is a new header (contains a duration), then break.
+        if (extractDuration(nextLine)) break;
+        // If the next line starts with a bullet marker, treat it as starting a new bullet.
+        if (nextLine.match(/^[-•●]/)) {
+          if (descBuffer.trim().length > 0) {
+            descriptionLines.push(descBuffer.trim());
+            descBuffer = "";
+          }
+          descBuffer += nextLine.replace(/^[-•●]\s*/, '');
+        } else {
+          // Otherwise, merge the line into the current bullet.
+          descBuffer += (descBuffer ? " " : "") + nextLine;
         }
         i++;
       }
+      if (descBuffer.trim().length > 0) {
+        descriptionLines.push(descBuffer.trim());
+      }
+      // Filter out any empty strings.
+      descriptionLines = descriptionLines.filter(line => line.trim().length > 0);
       
       experiences.push({
         company,
         role,
         duration: extractedDuration,
         description: descriptionLines,
-        matchedSkills: []  // To be populated later
+        matchedSkills: []
       });
     } else {
       i++;
@@ -319,7 +335,7 @@ function extractResumeData(text) {
   exp.matchedSkills = matchSkills(resumeData.skills, exp.description);
   });
   resumeData.experience = experiences;
-
+  
   return resumeData;
 }
 
