@@ -8,46 +8,57 @@ import ApplicantsManagement from "./pages/ApplicantsManagement";
 import CourseManagement from "./pages/CourseManagement";
 import Setting from "./pages/Setting";
 
+// Define ProtectedRoute
+const ProtectedRoute = ({ children }) => {
+  const isLoggedIn = true; // Check if user is logged in
+  
+  if (!isLoggedIn) {
+    return <Navigate to="/login" replace />; // Redirect to login if not logged in
+  }
+
+  return children;
+};
+
 const routesConfig = [
   {
     path: "/",
-    element: () => <Navigate replace to="/dashboard" />,
+    element: () => <Navigate replace to="/login" />,
   },
   {
     label: "login",
     path: "/login",
-    element: Login,
-    guard: GuestRoute,
+    element: Login, 
+    guard: GuestRoute, 
   },
   {
     label: "dashboard",
     path: "/dashboard",
-    element: Dashboard,
-    guard: GuestRoute,
+    element: Dashboard, 
+    guard: ProtectedRoute, 
   },
   {
     label: "grader-assignment",
     path: "/grader-assignment",
-    element: GraderAssignment,
-    guard: GuestRoute,
+    element: GraderAssignment, 
+    guard: ProtectedRoute, 
   },
   {
     label: "applicant-management",
     path: "/applicant-management",
-    element: ApplicantsManagement,
-    guard: GuestRoute,
+    element: ApplicantsManagement, 
+    guard: ProtectedRoute, 
   },
   {
     label: "course-management",
     path: "/course-management",
-    element: CourseManagement,
-    guard: GuestRoute,
+    element: CourseManagement, 
+    guard: ProtectedRoute, 
   },
   {
     label: "setting",
     path: "/setting",
-    element: Setting,
-    guard: GuestRoute,
+    element: Setting, 
+    guard: ProtectedRoute, 
   },
 ];
 
@@ -63,7 +74,7 @@ const renderRoutes = (routes) => (
           path={route.path}
           element={
             <Guard>
-              <Element />
+              <Element /> {}
             </Guard>
           }
         />

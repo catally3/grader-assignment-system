@@ -7,7 +7,7 @@ const ModalWarrper = styled.div`
   position: fixed;
   flex-direction: column;
   justify-content: center;
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.3); /* Dark transparent background (0.3 opacity) */
   width: 100%;
   height: 100%;
   z-index: 10000;

@@ -8,9 +8,11 @@ function InputModal({
   open,
   onClose,
   title,
-  onClick,
   inputValue,
   setInputValue,
+  handleCreateSemester,
+  carryOver,
+  setCarryOver,
 }) {
   return (
     <Modal open={open} onClose={onClose}>
@@ -25,11 +27,23 @@ function InputModal({
               onChange={(e) => setInputValue(e.target.value)}
             />
           </InputWrapper>
+
+          <CheckboxWrapper>
+            <label>
+              <input
+                type="checkbox"
+                checked={carryOver}
+                onChange={() => setCarryOver(!carryOver)}
+              />
+              &nbsp;Carry over data from previous semester
+            </label>
+          </CheckboxWrapper>
+
           <Button
             backgroundColor={"rgba(248, 126, 3, 1)"}
             TextColor={"white"}
             Text={"Create"}
-            onClick={onClose}
+            onClick={handleCreateSemester}
             width={"100%"}
           />
         </ContentSection>
@@ -61,9 +75,16 @@ const Description = styled.p`
 
 const InputWrapper = styled.div`
   margin-top: 16px;
-  margin-bottom: 40px;
+  margin-bottom: 16px;
   width: 346px;
   max-width: 100%;
 `;
 
+const CheckboxWrapper = styled.div`
+  margin-bottom: 24px;
+  font-size: 14px;
+  color: #444;
+`;
+
 export default InputModal;
+

@@ -115,7 +115,7 @@ const ButtonContainer = styled.footer`
   justify-content: flex-end;
   align-items: center;
   gap: 24px;
-  background-color: #f7f7f9;
+  background-color:rgb(249, 247, 247);
   width: calc(100% + 80px);
   margin: 20px 0 -30px -40px;
 `;

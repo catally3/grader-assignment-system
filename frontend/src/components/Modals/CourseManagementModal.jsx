@@ -15,9 +15,18 @@ import {
   courseData,
 } from "../../utils/metadata";
 
-const CourseManagementModal = ({ open, onClose }) => {
+const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
+  if (!courseData) return null; // ensure modal doesn tnot render without data
   const [data, setData] = useState(courseData);
   const [assignGraders, setAssignGraders] = useState(initialAssignGraders);
+  const assignedGraders = allCourses.filter(
+    (row) =>
+      row.number === courseData.number &&
+      row.name === courseData.name &&
+      row.section === courseData.section &&
+      row.professor === courseData.professor &&
+      row.graders === courseData.graders
+  );
 
   const changeForm = (name, value) => {
     setData({
@@ -25,6 +34,22 @@ const CourseManagementModal = ({ open, onClose }) => {
       [name]: value,
     });
   };
+  const ActionButton = styled.button`
+    background-color: ${(props) => (props.danger ? "#ff4d4f" : "#1890ff")};
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 10px;
+    font-size: 12px;
+    margin-right: 5px;
+    cursor: pointer;
+    transition: background 0.3s;
+
+    &:hover {
+      background-color: ${(props) => (props.danger ? "#d9363e" : "#1677ff")};
+    }
+`;
+
 
   // Grader Change function
   const changeGraderSelection = (index, newGraderId) => {
@@ -53,7 +78,7 @@ const CourseManagementModal = ({ open, onClose }) => {
             <Label>Course Number</Label>
             <Input
               placeholder={""}
-              inputValue={data.courseNumber}
+              inputValue={courseData.number}
               onChange={(e) => changeForm("courseNumber", e.target.value)}
             />
           </Field>
@@ -61,7 +86,7 @@ const CourseManagementModal = ({ open, onClose }) => {
             <Label>Course Section</Label>
             <Input
               placeholder={""}
-              inputValue={data.courseSection}
+              inputValue={courseData.section}
               onChange={(e) => changeForm("courseSection", e.target.value)}
             />
           </Field>
@@ -69,51 +94,33 @@ const CourseManagementModal = ({ open, onClose }) => {
             <Label>Course Name</Label>
             <Input
               placeholder={""}
-              inputValue={data.courseName}
+              inputValue={courseData.name}
               onChange={(e) => changeForm("courseName", e.target.value)}
             />
           </Field>
           <Field>
-            <Label>Opened Position</Label>
+            <Label>Professor</Label>
             <Input
               placeholder={""}
-              inputValue={data.openPosition}
+              inputValue={courseData.professor}
               onChange={(e) => changeForm("openPosition", e.target.value)}
             />
           </Field>
         </InfoContainer>
-        <Field style={{ marginTop: "20px" }}>
-          <Label>Course Description</Label>
-          <Input
-            placeholder={""}
-            inputValue={data.courseDec}
-            onChange={(e) => changeForm("courseDec", e.target.value)}
-          />
-        </Field>
         <Divider />
         <TableWrapper>
           <Label>Assigned Grader</Label>
           <TableHeader columns={assignGraderColumns} />
-          {assignGraders.map((grader, index) => (
-            <Row key={grader.candidateId}>
-              <Cell>{grader.id}</Cell>
-              {/* <Cell>
-                <SelectBox
-                  placeholder="Select Grader"
-                  width={"100%"}
-                  value={grader.candidateId}
-                  onChange={(newGraderId) =>
-                    changeGraderSelection(index, newGraderId)
-                  }
-                  options={graderList}
-                />
-              </Cell> */}
-              <Cell>
-                {grader.name} ({grader.netId})
+          {assignedGraders.map((graderRow, index) => (
+            <Row key={`${graderRow.assigned}-${index}`}>
+              <Cell style={{ display: "flex", justifyContent: "center", gap: "3px" }}>
+                <ActionButton onClick={() => handleEdit(graderRow)}>Manual Reassign</ActionButton>
+                <ActionButton danger onClick={() => handleRemove(graderRow)}>Auto Reassign</ActionButton>
               </Cell>
-              <Cell>{grader.major}</Cell>
-              <Cell>{grader.doc}</Cell>
-              <Cell>{grader.AssignedDate}</Cell>
+              <Cell>{graderRow.assigned || "N/A"}</Cell>
+              <Cell>{"-"}</Cell> 
+              <Cell>{"-"}</Cell> 
+              <Cell>{"-"}</Cell> 
             </Row>
           ))}
         </TableWrapper>
@@ -126,7 +133,7 @@ const InfoContainer = styled.section`
   display: flex;
   align-items: start;
   gap: 12px;
-  color: #6f727a;
+  color:rgb(12, 65, 211);
   justify-content: space-between;
   flex-wrap: nowrap;
   margin-top: 20px;

@@ -56,7 +56,7 @@ const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
             <InfoSection.Field
               label="Matched Course"
               value={`${assignmentInfo?.course} - ${assignmentInfo?.courseName}`}
-              value="CS4545.004-Machine Learning course"
+              value1="CS4545.004-Machine Learning course"
             />
           </PositionDetailsSection>
           <PersonalInfoSection>

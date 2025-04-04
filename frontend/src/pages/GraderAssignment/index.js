@@ -1,7 +1,7 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
-import Header from "../../layouts/Header.js";
 import { useState } from "react"; // delete, add, search states
+import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx"; 
 
 // Candidate Management
 const Title = styled.div`
@@ -19,7 +19,7 @@ const BoxContainer = styled.div`
 
 const Box = styled.div`
   display: flex;
-  width: 1140px;
+  width: 1300px;
   background-color: white;
   border-radius: 12px; // round corners
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
@@ -35,6 +35,27 @@ const HeaderContainer = styled.div`
   width: 100%; 
   padding: 10px;
   margin-bottom: 10px;
+`;
+
+const FilterContainer = styled.div`
+  display: flex;
+  gap: 10px;
+  align-items: center;
+`;
+
+const FilterDropdown = styled.select`
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+`;
+
+const FilterInput = styled.input`
+  padding: 5px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 14px;
+  width: 150px;
 `;
 
 const ButtonContainer = styled.button`
@@ -207,42 +228,99 @@ const Column = styled.div`
   flex: 1;
   text-align: center;  
   padding: 0 10px;
+  display: flex;
+  justify-content: center;  
+  align-items: center;      
+`;
+
+const ReassignButton = styled(ButtonContainer)`
+  color: rgb(255, 255, 255);
+  background-color: rgb(17, 16, 16);
+  display: flex;
+  align-items: center;
+  justify-content: center;  // Ensures the button text is centered
+  width: 100px;
+  height: 35px;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);  
+  &:hover {
+    background-color: rgb(59, 57, 57);
+  }
 `;
 
 const GraderAssignment = () => {
   const[data, setData] = useState([
-    {candidateID: '12341', candidateName: 'John Smith (jxs190043)', number: '4302', name: 'CS', section: '501', professor: 'John Smith'},
-    {candidateID: null, candidateName: 'John Doe (jxd190043)', number: '4301', name: 'CS', section: '502', professor: 'John Doe'},
-    {candidateID: '12341', candidateName: 'Jane Smith (jxs190042)', number: '4302', name: 'CS', section: '501', professor: null},
-    {candidateID: '12343', candidateName: 'John Doe (jxd190042)', number: '4303', name: 'CS', section: '504', professor: 'John Smith'},
-    {candidateID: '12344', candidateName: null, number: null, name: 'CS', section: '501', professor: 'John Smith'},
-    {candidateID: '12345', candidateName: 'Gaby Salazar (gxs190043)', number: null, name: 'CS', section: '501', professor: 'John Smith'},
+    {candidateID: '12341', name: 'Anthony Smith (jxs190043)', number: '4302', class: 'CS', section: '509', professor: 'Herlin Villareal'},
+    {candidateID: null, name: 'Gaby Doe (jxd190043)', number: '4301', class: 'CS', section: '502', professor: 'Vanessa Ramirez'},
+    {candidateID: '12345', name: 'May Lee (jxs190042)', number: '4306', class: 'CS', section: '502', professor: null},
+    {candidateID: '12343', name: 'John Alvarez (jxd190042)', number: '4303', class: 'CS', section: '504', professor: 'Caroline Mendez'},
+    {candidateID: '12349', name: null, number: null, class: 'CS', section: '501', professor: 'Jane Smith'},
+    {candidateID: '12345', name: 'Beatrice Salazar (gxs190043)', number: null, class: 'CS', section: '501', professor: 'Mary Salazar'},
   ]); 
   
+  // SEARCH FUNCTIONALITY
+  // state used for search
+  const [searchTerm, setSearchTerm] = useState(""); 
+  // get user input (search term) and convert it to lowercase for search
+  const handleSearchChange = (event) => {
+    setSearchTerm(event.target.value.toLowerCase()); 
+  };
+  
+  /// SORTING FUNCTIONALITY
+  // state used for sorting
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
+  // handle changes to sorting behavior when clicking column header (no sort, ascending, descending)
+  const handleSort = (key) => {
+    let direction = "asc";
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "asc") {
+        direction = "desc";
+      } else if (sortConfig.direction === "desc") {
+        direction = null; // Reset to no sorting
+      }
+    }
+    setSortConfig({ key: direction ? key : null, direction });
+  };
+  // sort data based on key and direction, if no sorting, data is as
+  const sortedData = sortConfig.key
+    ? [...data].sort((a, b) => {
+        const valA = a[sortConfig.key] || "";
+        const valB = b[sortConfig.key] || "";
+        return sortConfig.direction === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+      })
+    : data;
+  // display sort arrows
+  const getSortArrow = (key) => {
+    if (sortConfig.key !== key) return "";  
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+  }; 
+
+  // FILTER FUNCTIONALITY
+  const [selectedColumn, setSelectedColumn] = useState("");
+  const [filterValue, setFilterValue] = useState("");
+  const handleColumnChange = (event) => {
+    setSelectedColumn(event.target.value);
+  };
+  const handleFilterValueChange = (event) => {
+    setFilterValue(event.target.value.toLowerCase());
+  };
+
+  // OUPTPUT WITH SORT, SEARCH AND FILTERS
+  const filteredData = sortedData.filter((row) =>
+    Object.values(row).some((value) =>
+      value && typeof value === "string" && value.toLowerCase().includes(searchTerm)
+    ) &&
+    (selectedColumn ? row[selectedColumn]?.toLowerCase().includes(filterValue) : true)
+  );
+  
+  // DELETE FUNCTIONALITY
   // states used for deletion of candidate
   const[deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false
   const[selected, setSelected] = useState([]); // array of candidate ID's selected for deletion
-
-  // state used for search
-  const [searchTerm, setSearchTerm] = useState(""); 
-
-  // states used to add candidate
-  const [showModal, setShowModal] = useState(false);
-  const [newCandidate, setNewCandidate] = useState({
-    candidateID: "",
-    candidateName: "",
-    number: "",
-    name: "CS",
-    section: "",
-    professor: ""
-  });
-
   // toggles between normal mode and delete mode; selection is resetted after switching to normal mode
   const toggleDeleteMode = () => { 
     setDeleteMode(!deleteMode);
     setSelected([]); 
   };
-
   // when user checks/unchecks a checkbox, id is either added or removed from selected
   // note: if entries have the same candidate id's, selecting one will select the other(s)
   const handleCheckboxChange = (id) => { 
@@ -250,7 +328,6 @@ const GraderAssignment = () => {
       prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
-
   // user confirmed deletion, DELETE!
   const handleDelete = () => { 
     setData((prevData) => prevData.filter((row) => !selected.includes(row.candidateID)));
@@ -258,11 +335,35 @@ const GraderAssignment = () => {
     setSelected([]);
   };
 
-  // get user input (search term) and convert it to lowercase for search
-  const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value.toLowerCase()); 
+  // ADD CANDIDATE FUNCTIONALITY
+  // states used to add candidate
+  const [showModal, setShowModal] = useState(false);
+  const [newCandidate, setNewCandidate] = useState({
+    candidateID: "",
+    name: "",
+    number: "",
+    class: "CS",
+    section: "",
+    professor: ""
+  });
+  // when add button is clicked,  
+  const handleAddCandidate = () => {
+    if (!newCandidate.candidateID || !newCandidate.name) {
+      alert("Candidate ID and Name are required!"); // prevents adding if
+      return;
+    }
+
+    setData((prevData) => [...prevData, newCandidate]); // adds new candidates correctly to form 
+    setShowModal(false);
+    setNewCandidate({
+      candidateID: "",
+      name: "",
+      number: "",
+      class: "CS",
+      section: "",
+      professor: ""
+    });
   };
-  
   // update newCandidate when inputting
   const handleInputChange = (event) => {
     setNewCandidate((prev) => ({
@@ -270,43 +371,39 @@ const GraderAssignment = () => {
       [event.target.name]: event.target.value
     }));
   };
-  
-  // when add button is clicked, 
-  const handleAddCandidate = () => {
-    if (!newCandidate.candidateID || !newCandidate.candidateName) {
-      alert("Candidate ID and Name are required!"); // prevents adding if
-      return;
-    }
-  
-    setData((prevData) => [...prevData, newCandidate]); // adds new candidates correctly to form 
-    setShowModal(false);
-    setNewCandidate({
-      candidateID: "",
-      candidateName: "",
-      number: "",
-      name: "CS",
-      section: "",
-      professor: ""
-    });
+
+  // DISPLAY CANDIDATES DROPWDOWM
+  const [selectedRow, setSelectedRow] = useState(null);
+  const handleAssignCandidate = (row) => {
+    setSelectedRow(row);
+  };
+
+  // REASSIGN FUNCTIONALITY: call the modal
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [selectedCourseData, setSelectedCourseData] = useState(null); 
+  // open the modal when reassign is clicked
+  const handleReassign = (course) => {
+    setSelectedCourseData(course); 
+    setIsModalOpen(true); 
+  };
+  // close the modal
+  const handleCloseModal = () => {
+    setIsModalOpen(false); 
   };
   
-  // search data array by seeing which entry matches the search entry 
-  const filteredData = data.filter((row) =>
-    row.candidateID?.toLowerCase().includes(searchTerm) ||
-    row.candidateName?.toLowerCase().includes(searchTerm) ||
-    row.number?.toLowerCase().includes(searchTerm) ||
-    row.professor?.toLowerCase().includes(searchTerm)
-  );
-
   return (
     <Layout>
       <Title>Candidate Management</Title>
       <BoxContainer>
         <Box>
           <HeaderContainer>
+            <SearchContainer>
+              <HeaderText>Search:</HeaderText>
+              <SearchBox type="text" placeholder="Search..." value={searchTerm} onChange={handleSearchChange} />
+            </SearchContainer>
             <ButtonContainer>
-            <AddButton onClick={() => setShowModal(true)}>+ Add Candidate</AddButton>
-            <DeleteButton onClick={toggleDeleteMode}> {/*when button is clicked, toggle between modes*/}
+              <AddButton onClick={() => setShowModal(true)}>+ Add Candidate</AddButton>
+              <DeleteButton onClick={toggleDeleteMode}> {/*when button is clicked, toggle between modes*/}
                 {deleteMode ? "Cancel" : "Delete"} {/*if deleteMode, then Cancel, else Delete Candidate*/}
               </DeleteButton>
               {/*if deleteMode, then display Confirm, and when clicked Deleted*/}
@@ -314,50 +411,68 @@ const GraderAssignment = () => {
                 <DeleteButton onClick={handleDelete}>Confirm Delete</DeleteButton> 
               )}
             </ButtonContainer>
-            <SearchContainer>
-              <HeaderText>Search:</HeaderText>
-              <SearchBox
+            <FilterContainer>
+              <HeaderText>Filter:</HeaderText>
+              <FilterDropdown onChange={handleColumnChange} value={selectedColumn}>
+                <option value="">Select Column</option>
+                <option value="candidateID">Candidate ID</option>
+                <option value="name">Candidate Name</option>
+                <option value="number">Candidate Number</option>
+                <option value="professor">Professor Name</option>
+              </FilterDropdown>
+              <FilterInput
                 type="text"
-                placeholder="Search..."
-                value={searchTerm} // bind input to searchTerm
-                onChange={handleSearchChange} // state updated everytime user inputs
+                value={filterValue}
+                onChange={handleFilterValueChange}
+                placeholder="Enter filter value"
               />
-            </SearchContainer>
+            </FilterContainer>
           </HeaderContainer>
           <ColumnTitle>
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>} {/*if deleteMode, then display column for Select*/}
-            <ColumnTitleText>Candidate ID</ColumnTitleText>
-            <ColumnTitleText>Candidate Name</ColumnTitleText>
-            <ColumnTitleText>Course Number</ColumnTitleText>
-            <ColumnTitleText>Professor Name</ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("candidateID")}>Candidate ID {getSortArrow("candidateID")}</ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("name")}>Candidate Name {getSortArrow("candidateName")}</ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("number")}>Candidate Number {getSortArrow("number")}</ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("professor")}>Professor Name {getSortArrow("professor")}</ColumnTitleText>
+            <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
-          {/*displays rows of table by iterating through data array*/}
-          {filteredData.map((row, index) => ( 
+          {filteredData.map((row, index) => (
             <Row key={index}>
-              {deleteMode && ( 
+              {deleteMode && (
                 <Column>
                   <input
-                  type="checkbox"
-                  checked={selected.includes(row.candidateID)}
-                  onChange={() => handleCheckboxChange(row.candidateID)}
-                />
+                    type="checkbox"
+                    checked={selected.includes(
+                      `${row.number}-${row.name}-${row.section}`
+                    )}
+                    onChange={() => handleCheckboxChange(row)}
+                  />
                 </Column>
               )}
-              <Column>{row.candidateID || 'N/A'}</Column>
-              <Column>{row.candidateName || 'N/A'}</Column>
+              <Column>{row.candidateID || "N/A"}</Column>
+              <Column>{row.name || "N/A"}</Column>
               <Column>
-                {row.number?(
+                {row.number ? (
                   <TooltipContainer>
-                    {row.number}{}
+                    {row.number}
                     <Tooltip className="tooltip">
-                      {row.name} {row.number}.{row.section}
+                      {row.class ?? "N/A"} {row.number}.{row.section ?? "N/A"}
                     </Tooltip>
                   </TooltipContainer>
-                ):(
-                  'N/A'
+                ) : (
+                  "N/A"
                 )}
               </Column>
-              <Column>{row.professor || 'N/A'}</Column>
+              <Column>{row.professor || "N/A"}</Column>
+              <Column>
+                <ReassignButton onClick={() => handleReassign(row)}>Reassign</ReassignButton>
+                <CourseManagementModal
+                  open={isModalOpen}
+                  onClose={handleCloseModal}
+                  courseData={selectedCourseData} 
+                  allCourses={filteredData} 
+                />
+              </Column>
             </Row>
           ))}
         </Box>
@@ -375,7 +490,7 @@ const GraderAssignment = () => {
             <Input
               name="candidateName"
               placeholder="Candidate Name"
-              value={newCandidate.candidateName} 
+              value={newCandidate.name}
               onChange={handleInputChange} 
             />
             <Input

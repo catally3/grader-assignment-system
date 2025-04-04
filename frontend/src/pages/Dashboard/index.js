@@ -1,5 +1,7 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
+import InputModal from "../../components/Modals/InputModal.jsx"; 
+import React, { useState } from "react";
 
 // Welcome! Hiring Manager
 const WelcomeTextBox = styled.div`
@@ -19,12 +21,13 @@ const HiringManagerText = styled.span`
   font-weight: bold;
 `;
 
-// Here is the overview of the grader assignment.. diff padding than the rest
+// here is the overview of the grader assignment.. diff padding than the rest
 const SubTitle = styled.div`
   font-size: medium;
   font-weight: normal;
   color: #666;
-  margin-top: 10px;  
+  margin-top: 15px;  
+  margin-bottom:15px;
 `;
 
 const BoxContainer = styled.div`
@@ -35,7 +38,7 @@ const BoxContainer = styled.div`
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 15px;  
+  margin-top: 10px;  
 `;
 
 const TopBox = styled.div`
@@ -67,11 +70,9 @@ const BoxSubText = styled.div`
 
 const TitleContainer = styled.div`
   display: flex;
-  align-items: center;  
-  margin-top: 15px;  
+  align-items: center;    
 `;
 
-// Latest...
 const Title = styled.div`
   font-size: x-large;
   display: flex;
@@ -148,22 +149,70 @@ const Column = styled.div`
   padding: 0 10px;
 `;
 
+
 const Dashboard = () => {
-  const candidateData = [
-    {candidateID:'345135', candidateName:'Gaby Salazar', courseNumber:'3452', professorName:'Dr. Smith'},
-    {candidateID:'325423', candidateName:'Dylan Smith', courseNumber:'6543', professorName:'Dr. Johnson'},
-    {candidateID:'456543', candidateName:'Jenny Lee', courseNumber:'6542', professorName:'Dr. Lee'},
-    {candidateID:'12345', candidateName:'Michelle Thai', courseNumber:'2534', professorName:'Dr. Lee'},
-  ];
+  const unmatchedCourses = [
+    {
+      courseNumber: "98765",
+      courseName: "Data Structures",
+      requiredGraders: 2,
+      assignedGraders: 1,
+      professorName: "Dr. Newton",
+      note: "1 more grader needed",
+    },
+    {
+      courseNumber: "87654",
+      courseName: "Algorithms",
+      requiredGraders: 3,
+      assignedGraders: 0,
+      professorName: "Dr. Curie",
+      note: "Urgent - no grader assigned",
+    },
+    {
+      courseNumber: "87654",
+      courseName: "Algorithms",
+      requiredGraders: 3,
+      assignedGraders: 0,
+      professorName: "Dr. Michael",
+      note: "Urgent - no grader assigned",
+    },
+  ]; 
 
-  const courseData = [
-    {courseNumber:'12345', courseName:'Computer Science', graders: '1', professorName:'Dr. Smith', assignedGrader:'Gaby Salazar'},
-    {courseNumber:'12445', courseName:'Computer Science', graders:'2', professorName:'Dr. Johnson', assignedGrader:'Dylan Smith'},
-    {courseNumber:'12445', courseName:'Computer Science', graders:'3', professorName:'Dr. Lee', assignedGrader:'Jenny Lee'},
-    {courseNumber:'123415', courseName:'Computer Science', graders:'1', professorName:'Dr. Lee', assignedGrader:'Michelle Thai'},
-  ];
+  const [inputValue, setInputValue] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [carryOver, setCarryOver] = useState(false);
 
+  const [semesters, setSemesters] = useState([]);
+  const [selectedSemester, setSelectedSemester] = useState("");
 
+  const openModal = () => setIsModalOpen(true);
+  const closeModal = () => setIsModalOpen(false);
+
+  const handleCreateSemester = () => {
+    const prev = semesters.find((s) => s.name === selectedSemester);
+    const newSemester = {
+      name: inputValue,
+      candidates: carryOver && prev ? [...prev.candidates] : [/* placeholder */],
+      courses: carryOver && prev ? [...prev.courses] : [/* placeholder */],
+      stats: {
+        totalCandidates: carryOver && prev ? prev.stats.totalCandidates : 0,
+        totalCourses: carryOver && prev ? prev.stats.totalCourses : 0,
+        pendingCourses: carryOver && prev ? prev.stats.pendingCourses : 0,
+        deletedAssignments: carryOver && prev ? prev.stats.deletedAssignments : 0,
+      }
+    };
+    
+
+    setSemesters((prevSems) => [...prevSems, newSemester]);
+    setSelectedSemester(inputValue);
+    setInputValue("");
+    setCarryOver(false);
+    setIsModalOpen(false);
+  };
+
+  const currentSemData = semesters.find((s) => s.name === selectedSemester);
+
+  
   return (
     <Layout>
       <WelcomeTextBox>
@@ -172,64 +221,86 @@ const Dashboard = () => {
       </WelcomeTextBox>
       <SubTitle>Here is the overview of the grader assignments.</SubTitle>
       <TitleContainer>
-        <Title>Hello</Title>
+        <Title>{selectedSemester || "Select a Semester"}</Title>
+        <Button onClick={openModal}>New Semester</Button>
       </TitleContainer>
-      <BoxContainer>
-        <TopBox>
-          <BoxHeader>Total Candidate</BoxHeader>
-          <BoxSubText>5000</BoxSubText>
-        </TopBox>
-        <TopBox>
-          <BoxHeader>Total Couses</BoxHeader>
-          <BoxSubText>50</BoxSubText>
-        </TopBox>
-      </BoxContainer>
-      <TitleContainer>
-        <Title>Candidate</Title>
-      </TitleContainer>
-      <BoxContainer>
-        <CenterBox>
-          <HeaderCenter>
-            <HeaderText>Candidate ID</HeaderText>
-            <HeaderText>Candidate Name</HeaderText>
-            <HeaderText>Course Number</HeaderText>
-            <HeaderText>Professor Name</HeaderText>
-          </HeaderCenter>
-          {candidateData.map((row, index) => (
-            <Row key={index}>
-              <Column>{row.candidateID || 'N/A'}</Column>
-              <Column>{row.candidateName || 'N/A'}</Column>
-              <Column>{row.courseNumber || 'N/A'}</Column>
-              <Column>{row.professorName || 'N/A'}</Column>
-            </Row>
+      <div style={{ marginTop: "15px" }}>
+        <select
+          value={selectedSemester || ""}
+          onChange={(e) => setSelectedSemester(e.target.value)}
+          style={{
+            padding: "10px",
+            borderRadius: "8px",
+            fontSize: "14px",
+            border: "1px solid #ccc",
+          }}
+        >
+          <option disabled value="">Select Semester</option>
+          {semesters.map((sem) => (
+            <option key={sem.name} value={sem.name}>
+              {sem.name}
+            </option>
           ))}
-        </CenterBox>
-      </BoxContainer>
-      <TitleContainer>
-        <Title>Courses</Title>
-      </TitleContainer>
-      <BoxContainer>
-        <CenterBox>
-          <HeaderCenter>
-            <HeaderText>Course Number</HeaderText>
-            <HeaderText>Course Name</HeaderText>
-            <HeaderText>Graders</HeaderText>
-            <HeaderText>Professor Name</HeaderText>
-            <HeaderText>Assigned Grader Name</HeaderText>
-          </HeaderCenter>
-          {courseData.map((row, index) => (
-            <Row key={index}>
-              <Column>{row.courseNumber || 'N/A'}</Column>
-              <Column>{row.courseName || 'N/A'}</Column>
-              <Column>{row.graders || 'N/A'}</Column>
-              <Column>{row.professorName || 'N/A'}</Column>
-              <Column>{row.assignedGrader || 'N/A'}</Column>
-            </Row>
-          ))}
-        </CenterBox>
-      </BoxContainer>
+        </select>
+      </div>
+      <InputModal
+        open={isModalOpen}
+        onClose={closeModal}
+        title="Create Semester"
+        inputValue={inputValue}
+        setInputValue={setInputValue}
+        carryOver={carryOver}
+        setCarryOver={setCarryOver}
+        handleCreateSemester={handleCreateSemester}
+      />
+      {selectedSemester && (
+        <BoxContainer>
+          {currentSemData && (
+            <BoxContainer style={{ flexDirection: "column", gap: "20px" }}>
+              <div style={{ display: "flex", gap: "45px" }}>
+                <TopBox>
+                  <BoxHeader>Total Candidates</BoxHeader>
+                  <BoxSubText>40</BoxSubText>
+                </TopBox>
+                <TopBox>
+                  <BoxHeader>Total Courses</BoxHeader>
+                  <BoxSubText>50</BoxSubText>
+                </TopBox>
+                <TopBox>
+                  <BoxHeader>Total Unassigned Courses</BoxHeader>
+                  <BoxSubText>10</BoxSubText>
+                </TopBox>
+              
+              </div>
+              <TitleContainer style={{ marginTop: "10px" }}>
+                <Title>Unassigned Course</Title>
+              </TitleContainer>
+              <CenterBox>
+                <HeaderCenter>
+                  <HeaderText>Course Number</HeaderText>
+                  <HeaderText>Course Name</HeaderText>
+                  <HeaderText>Required Graders</HeaderText>
+                  <HeaderText>Assigned Graders</HeaderText>
+                  <HeaderText>Professor Name</HeaderText>
+                  <HeaderText>Note</HeaderText>
+                </HeaderCenter>
+                {unmatchedCourses.map((row, index) => (
+                  <Row key={index} onClick={() => navigate("/applicant-management")}>
+                    <Column>{row.courseNumber}</Column>
+                    <Column>{row.courseName}</Column>
+                    <Column>{row.requiredGraders}</Column>
+                    <Column>{row.assignedGraders}</Column>
+                    <Column>{row.professorName}</Column>
+                    <Column>{row.note}</Column>
+                  </Row>
+                ))}
+              </CenterBox>
+            </BoxContainer>
+          )}
+        </BoxContainer>
+      )}
     </Layout>
-  );
+  );  
 };
 
 export default Dashboard;

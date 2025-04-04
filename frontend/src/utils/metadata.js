@@ -6,11 +6,11 @@ export const candidatesColumns = [
 ];
 
 export const assignGraderColumns = [
-  "Candidate ID",
+  "Reassign",
   "Name (NetId)",
   "Major",
   "Document",
-  "Assigned Date",
+  "Assigned Date"
 ];
 
 export const courseData = {
