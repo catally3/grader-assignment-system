@@ -1,12 +1,13 @@
 /** @jsxImportSource @emotion/react */
-import { css } from '@emotion/react';
-import styled from '@emotion/styled';
-import { useState } from 'react';
-import Dashboard from './Dashboard'; 
+import { css } from "@emotion/react";
+import styled from "@emotion/styled";
+import { useState } from "react";
+import Dashboard from "./Dashboard";
 
+import utdIcon from "../assets/icons/icon_utd.svg";
 
 const globalStyle = css`
-  @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
+  @import url("https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap");
 `;
 
 const MainContent = styled.main`
@@ -29,7 +30,7 @@ const Title = styled.div`
   font-size: 70px;
   font-weight: bold;
   color: rgba(248, 120, 16, 0.9);
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 `;
 
 const UTDButton = styled.a`
@@ -43,11 +44,11 @@ const UTDButton = styled.a`
   color: white;
   font-size: 14px;
   font-weight: medium;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   margin-top: 50px;
   cursor: pointer;
   transition: background-color 0.3s;
-  width: 250px;
+  width: 320px;
   min-width: 250px;
 
   &:hover {
@@ -62,7 +63,7 @@ const UTDButton = styled.a`
 `;
 
 const Subtitle = styled.p`
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: 20px;
   font-weight: bold;
   color: #333;
@@ -79,14 +80,14 @@ export default function App() {
   return (
     <div css={globalStyle}>
       {isLoggedIn ? (
-        <Dashboard /> 
+        <Dashboard />
       ) : (
         <Layout>
           <MainContent>
             <Title>GAS</Title>
             <Subtitle>Grader Assignment System</Subtitle>
             <UTDButton onClick={handleLogin}>
-              <img src="/utd logo.png" alt="UTD Logo" />
+              <img src={utdIcon} alt="UTD Logo" />
               Sign in with UTD Account
             </UTDButton>
           </MainContent>

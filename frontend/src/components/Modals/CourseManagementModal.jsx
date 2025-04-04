@@ -10,7 +10,7 @@ import SelectBox from "../Common/SelectBox";
 
 import {
   assignGraderColumns,
-  assignGraders as initialAssignGraders,
+  assignGraders,
   graderList,
   courseData,
 } from "../../utils/metadata";
@@ -18,7 +18,7 @@ import {
 const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
   if (!courseData) return null; // ensure modal doesn tnot render without data
   const [data, setData] = useState(courseData);
-  const [assignGraders, setAssignGraders] = useState(initialAssignGraders);
+  const [assignGraders, setAssignGraders] = useState(courseData?.name);
   const assignedGraders = allCourses.filter(
     (row) =>
       row.number === courseData.number &&
@@ -48,8 +48,7 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
     &:hover {
       background-color: ${(props) => (props.danger ? "#d9363e" : "#1677ff")};
     }
-`;
-
+  `;
 
   // Grader Change function
   const changeGraderSelection = (index, newGraderId) => {
@@ -113,14 +112,24 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
           <TableHeader columns={assignGraderColumns} />
           {assignedGraders.map((graderRow, index) => (
             <Row key={`${graderRow.assigned}-${index}`}>
-              <Cell style={{ display: "flex", justifyContent: "center", gap: "3px" }}>
-                <ActionButton onClick={() => handleEdit(graderRow)}>Manual Reassign</ActionButton>
-                <ActionButton danger onClick={() => handleRemove(graderRow)}>Auto Reassign</ActionButton>
+              <Cell
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  gap: "3px",
+                }}
+              >
+                <ActionButton onClick={() => handleEdit(graderRow)}>
+                  Manual Reassign
+                </ActionButton>
+                <ActionButton danger onClick={() => handleRemove(graderRow)}>
+                  Auto Reassign
+                </ActionButton>
               </Cell>
               <Cell>{graderRow.assigned || "N/A"}</Cell>
-              <Cell>{"-"}</Cell> 
-              <Cell>{"-"}</Cell> 
-              <Cell>{"-"}</Cell> 
+              <Cell>{"-"}</Cell>
+              <Cell>{"-"}</Cell>
+              <Cell>{"-"}</Cell>
             </Row>
           ))}
         </TableWrapper>
@@ -133,7 +142,7 @@ const InfoContainer = styled.section`
   display: flex;
   align-items: start;
   gap: 12px;
-  color:rgb(12, 65, 211);
+  color: rgb(12, 65, 211);
   justify-content: space-between;
   flex-wrap: nowrap;
   margin-top: 20px;
@@ -168,7 +177,7 @@ const Row = styled.div`
   align-items: center;
   justify-content: start;
   flex-wrap: wrap;
-  font-size: small;
+  font-size: x-small;
   padding: 20px 0px;
   border-bottom: 1px solid #e5e5e5;
 `;

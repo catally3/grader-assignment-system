@@ -1,163 +1,125 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import styled from "@emotion/styled";
 import { css } from "@emotion/react";
 import ArrowIcon from "../../assets/icons/icon_arrow.svg";
 
 const SelectBox = ({
-  width,
-  options,
-  placeholder,
+  width = "auto",
+  options = [],
+  placeholder = "Select",
   value,
   onChange,
-  containerStyle,
-  absoluteStyle,
+  containerStyle = {},
+  absoluteStyle = {},
 }) => {
   const ref = useRef(null);
-
   const [isOpened, setIsOpened] = useState(false);
-  const [zIndex, setZIndex] = useState(100);
+
+  const handleClickOutside = (event) => {
+    if (ref.current && !ref.current.contains(event.target)) {
+      setIsOpened(false);
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleSelect = (id, e) => {
+    e.stopPropagation(); // prevent bubbling
+    onChange(id);
+    setIsOpened(false);
+  };
 
   return (
-    <Container style={{ width: width || "auto", ...containerStyle }} ref={ref}>
-      <Value>{value === null ? placeholder : value}</Value>
-      <Icon src={ArrowIcon} />
-      <AbsoluteWrap
-        isOpen={isOpened}
-        value={value}
-        optionLength={options.length}
-        style={{ zIndex, ...absoluteStyle }}
-      >
-        <AbsoluteValueContainer>
-          <Value style={{ color: value === null ? "#c7c7c7" : "#000" }}>
-            {value === null ? placeholder : value}
-          </Value>
-          <Icon src={isOpened ? ArrowIcon : ArrowIcon} />
-        </AbsoluteValueContainer>
-        <OptionBox>
+    <Container
+      style={{ width, ...containerStyle }}
+      ref={ref}
+      onClick={() => setIsOpened((prev) => !prev)}
+    >
+      <Value isPlaceholder={value === null}>
+        {value === null ? placeholder : value}
+      </Value>
+      <Icon src={ArrowIcon} isOpened={isOpened} />
+      {isOpened && (
+        <Dropdown style={{ ...absoluteStyle }}>
           {options.map((option) => (
-            <OptionText
-              key={option.value}
-              active={value === option.value}
-              onClick={() => onChange(option.value)}
+            <Option
+              key={option.id}
+              active={value === option.id}
+              onClick={(e) => handleSelect(option.id, e)}
             >
-              {option.label}
-            </OptionText>
+              {option.name}
+            </Option>
           ))}
-        </OptionBox>
-      </AbsoluteWrap>
+        </Dropdown>
+      )}
     </Container>
   );
 };
 
 const Container = styled.div`
+  color: #333;
   display: flex;
+  justify-content: space-between;
   align-items: center;
-  padding: 8px;
-  border-radius: 6px;
-  border: solid 1px #c7c7c7;
-  background-color: #fff;
+  border: 1px solid #ccc;
+  padding: 8px 12px;
+  border-radius: 10px;
+  margin-bottom: 4px;
   cursor: pointer;
   position: relative;
   user-select: none;
 `;
 
 const Icon = styled.img`
-  width: 18px;
-  height: 18px;
-  margin-left: 7px;
+  width: 16px;
+  height: 16px;
+  transition: transform 0.2s ease-in-out;
+  ${({ isOpened }) =>
+    isOpened &&
+    css`
+      /* transform: rotate(180deg);
+      transition: transform 0.2s ease; */
+    `}
 `;
 
 const Value = styled.span`
   font-size: 14px;
-  letter-spacing: -0.84px;
-  text-align: left;
-  color: #000;
+  color: ${({ isPlaceholder }) => (isPlaceholder ? "#c7c7c7" : "#000")};
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 `;
 
-const AbsoluteWrap = styled.div(
-  ({ isOpen, optionLength, initalMaxHeight, value }) => css`
-    display: flex;
-    flex-direction: column;
-    position: absolute;
-    top: -1px;
-    left: -1px;
-    width: calc(100% + 2px);
-    padding: 8px;
-    border-radius: 6px;
-    border: solid 1px #e3e3e3;
-    background-color: #fff;
-    z-index: 500;
-    overflow: hidden;
-    transition: max-height 0.15s ease-in-out;
-
-    ${isOpen
-      ? css`
-          max-height: ${42 + 28 * optionLength}px;
-        `
-      : css`
-          max-height: ${initalMaxHeight || 37}px;
-        `}
-
-    ${value !== null &&
-    css`
-      border-color: #777;
-    `}
-  `
-);
-
-const AbsoluteValueContainer = styled.div`
-  display: flex;
+const Dropdown = styled.div`
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
   width: 100%;
-  justify-content: space-between;
-  align-items: center;
+  padding: 8px;
+  border: 1px solid #e3e3e3;
+  border-radius: 6px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
+  z-index: 1000;
+  max-height: 250px;
+  overflow-y: auto;
 `;
 
-const OptionText = styled.span`
-  display: block;
-  cursor: pointer;
+const Option = styled.div`
+  padding: 8px 12px;
   font-size: 14px;
-  text-align: left;
+  cursor: pointer;
+  color: ${({ active }) => (active ? "rgba(248, 126, 3, 1)" : "#000")};
 
-  ${({ active }) =>
-    active
-      ? css`
-          color: #258fff;
-        `
-      : css`
-          color: #000;
-        `}
+  &:hover {
+    background-color: #f4f4f4;
+  }
 
   &:not(:last-child) {
-    margin-bottom: 14px;
-  }
-`;
-
-const OptionBox = styled.div`
-  width: 100%;
-  height: 200px;
-
-  margin-top: 14px;
-  overflow-y: scroll;
-
-  &::-webkit-scrollbar {
-    width: 17px;
-  }
-
-  &::-webkit-scrollbar-thumb {
-    height: 17%;
-    background-color: #c7c7c7;
-    border-radius: 10px;
-
-    background-clip: padding-box;
-    border: 6px solid transparent;
-  }
-
-  &::-webkit-scrollbar-track {
-    background-color: rgba(0, 0, 0, 0);
-    margin: 0;
+    margin-bottom: 4px;
   }
 `;
 

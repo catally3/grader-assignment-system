@@ -27,10 +27,10 @@ const Header = () => {
 
   return (
     <HeaderContainer>
-      <Button 
-        Text={"Sign out"} 
-        TextColor={"#ffffff"} 
-        TextSize={"medium"} 
+      <Button
+        Text={"Sign out"}
+        TextColor={"#ffffff"}
+        TextSize={"medium"}
         onClick={handleSignOut} // Add onClick handler to button
       />
     </HeaderContainer>

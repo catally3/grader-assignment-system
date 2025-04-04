@@ -2,7 +2,7 @@ import styled from "@emotion/styled";
 import React from "react";
 
 const Container = styled.button`
-  padding: 16px 18px;
+  padding: ${(props) => props.padding || "16px 18px"};
   width: ${(props) => props.width || ""};
   background-color: ${(props) =>
     props.backgroundColor || props.theme.colors.black};
@@ -25,6 +25,7 @@ const Button = ({
   style,
   onClick,
   width,
+  padding,
 }) => {
   return (
     <Container
@@ -32,6 +33,7 @@ const Button = ({
       backgroundColor={backgroundColor}
       borderColor={borderColor}
       width={width}
+      padding={padding}
     >
       <TextContainer
         size={TextSize ? TextSize : "medium"}

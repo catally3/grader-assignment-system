@@ -4,7 +4,7 @@ import DocIcon from "../../assets/icons/icon_documents.svg";
 
 const FileUpload = () => {
   const [isDragging, setIsDragging] = useState(false);
-  const [file, setFile] = useState(null);
+  const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
@@ -21,30 +21,48 @@ const FileUpload = () => {
     setIsDragging(false);
 
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      handleFile(e.dataTransfer.files[0]);
+      handleFile(Array.from(e.dataTransfer.files));
     }
   };
 
   const handleFileInputChange = (e) => {
     if (e.target.files && e.target.files.length > 0) {
-      handleFile(e.target.files[0]);
+      handleFile(Array.from(e.target.files));
     }
   };
 
-  const handleFile = (file) => {
-    // Check file type and size
-    if (file.size > 5 * 1024 * 1024) {
-      alert("File size exceeds 5MB limit");
-      return;
+  const handleRemoveFile = (fileNameToRemove) => {
+    setFiles((prev) => prev.filter((f) => f.name !== fileNameToRemove));
+  };
+
+  const handleFile = (newFiles) => {
+    const validFiles = [];
+
+    for (let file of newFiles) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert(`${file.name} exceeds 5MB limit`);
+        continue;
+      }
+
+      const fileExtension = file.name.split(".").pop().toLowerCase();
+      if (fileExtension !== "xlsx") {
+        alert(`${file.name} is not an xlsx file`);
+        continue;
+      }
+
+      // check duplicate
+      const isDuplicate = files.some((f) => f.name === file.name);
+      if (isDuplicate) {
+        alert(`${file.name} is already added`);
+        continue;
+      }
+
+      validFiles.push(file);
     }
 
-    const fileExtension = file.name.split(".").pop().toLowerCase();
-    if (fileExtension !== "xlsx") {
-      alert("Only xlsx files are allowed");
-      return;
+    if (validFiles.length > 0) {
+      setFiles((prev) => [...prev, ...validFiles]);
     }
-
-    setFile(file);
   };
 
   const handleClick = () => {
@@ -52,27 +70,47 @@ const FileUpload = () => {
   };
 
   return (
-    <UploadContainer
-      onDragOver={handleDragOver}
-      onDragLeave={handleDragLeave}
-      onDrop={handleDrop}
-      onClick={handleClick}
-      isDragging={isDragging}
-    >
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileInputChange}
-        accept=".xlsx"
-        style={{ display: "none" }}
-      />
-      <DocumentIcon src={DocIcon} />
-      <UploadText>
-        <UploadLink>Upload a file</UploadLink>
-        <UploadInstruction>or drag and drop</UploadInstruction>
-      </UploadText>
-      <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
-    </UploadContainer>
+    <div>
+      <UploadContainer
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        onClick={handleClick}
+        isDragging={isDragging}
+      >
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileInputChange}
+          accept=".xlsx"
+          multiple
+          style={{ display: "none" }}
+        />
+        <DocumentIcon src={DocIcon} />
+        <UploadText>
+          <UploadLink>Upload a file</UploadLink>
+          <UploadInstruction>or drag and drop</UploadInstruction>
+        </UploadText>
+        <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
+      </UploadContainer>
+      {files.length > 0 && (
+        <FileList>
+          {files.map((file, idx) => (
+            <FileItem key={idx}>
+              <FileName>{file.name}</FileName>
+              <RemoveButton
+                onClick={(e) => {
+                  e.stopPropagation(); // 부모 클릭 이벤트 방지
+                  handleRemoveFile(file.name);
+                }}
+              >
+                ×
+              </RemoveButton>
+            </FileItem>
+          ))}
+        </FileList>
+      )}
+    </div>
   );
 };
 
@@ -125,6 +163,38 @@ const FileTypeInfo = styled.p`
   font-weight: 400;
   line-height: 24px;
   margin: 0;
+`;
+
+const FileList = styled.div`
+  margin-top: 16px;
+`;
+
+const FileName = styled.p`
+  color: #333;
+  font-size: small;
+  font-weight: 500;
+`;
+
+const FileItem = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  background-color: #f9f9f9;
+`;
+
+const RemoveButton = styled.button`
+  border: none;
+  background: none;
+  color: #ff3b30;
+  font-size: 18px;
+  font-weight: bold;
+  cursor: pointer;
+  padding: 0;
+  line-height: 1;
 `;
 
 const DocumentIcon = styled.img`

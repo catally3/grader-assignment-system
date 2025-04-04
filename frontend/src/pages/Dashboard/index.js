@@ -1,14 +1,16 @@
+import React, { useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
-import InputModal from "../../components/Modals/InputModal.jsx"; 
-import React, { useState } from "react";
+import InputModal from "../../components/Modals/InputModal.jsx";
+import FileUploadModal from "../../components/Modals/FileUploadModal.jsx";
 
 // Welcome! Hiring Manager
 const WelcomeTextBox = styled.div`
   font-size: x-large;
   display: flex;
   align-items: center;
-  margin-bottom: 10px;  
+  margin-bottom: 10px;
 `;
 
 const WelcomeText = styled.span`
@@ -26,24 +28,24 @@ const SubTitle = styled.div`
   font-size: medium;
   font-weight: normal;
   color: #666;
-  margin-top: 15px;  
-  margin-bottom:15px;
+  margin-top: 15px;
+  margin-bottom: 15px;
 `;
 
 const BoxContainer = styled.div`
   display: flex;
-  gap: 45px;  
+  gap: 45px;
   justify-content: flex-start;
-  align-items: flex-start;
+  align-items: stretch;
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 10px;  
+  margin-top: 15px;
+  flex: 1;
 `;
 
 const TopBox = styled.div`
   width: 350px;
-  height: 90px;
   background-color: white;
   display: flex;
   flex-direction: column;
@@ -65,12 +67,20 @@ const BoxSubText = styled.div`
   font-size: medium;
   font-weight: normal;
   color: #666;
-  margin-top: 20px;  
+  margin-top: 20px;
+`;
+
+const BoxSmallText = styled.div`
+  font-size: small;
+  font-weight: normal;
+  color: rgb(253, 135, 0);
+  margin-top: 20px;
 `;
 
 const TitleContainer = styled.div`
   display: flex;
-  align-items: center;    
+  align-items: center;
+  margin-top: 40px;
 `;
 
 const Title = styled.div`
@@ -88,11 +98,11 @@ const Button = styled.button`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: 10px;  
+  padding: 10px;
   border-radius: 12px;
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   font-size: small;
-  margin-left: 20px;  
+  margin-left: 20px;
 
   &:hover {
     background-color: rgb(218, 118, 5);
@@ -109,20 +119,20 @@ const CenterBox = styled.div`
   font-weight: bold;
   border-radius: 12px;
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
-  color: #333;  
+  color: #333;
 `;
 
 const HeaderCenter = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;  
+  align-items: center;
   padding: 10px 0;
-  background-color: rgb(224, 221, 221); 
+  background-color: rgb(224, 221, 221);
 `;
 
 const HeaderText = styled.div`
   flex: 1;
-  text-align: center;  
+  text-align: center;
   padding: 0 10px;
   color: #333;
   font-size: medium;
@@ -132,23 +142,26 @@ const HeaderText = styled.div`
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;  
+  align-items: center;
   padding: 15px 0;
   font-size: small;
   font-weight: normal;
-  border-bottom: 1px solid #ccc; 
+  border-bottom: 1px solid #ccc;
 
+  cursor: pointer;
+  &:hover {
+    background-color: rgb(247, 247, 247);
+  }
   &:last-child {
-    border-bottom: none; 
+    border-bottom: none;
   }
 `;
 
 const Column = styled.div`
   flex: 1;
-  text-align: center;  
+  text-align: center;
   padding: 0 10px;
 `;
-
 
 const Dashboard = () => {
   const unmatchedCourses = [
@@ -176,7 +189,7 @@ const Dashboard = () => {
       professorName: "Dr. Michael",
       note: "Urgent - no grader assigned",
     },
-  ]; 
+  ];
 
   const [inputValue, setInputValue] = useState("");
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -192,16 +205,26 @@ const Dashboard = () => {
     const prev = semesters.find((s) => s.name === selectedSemester);
     const newSemester = {
       name: inputValue,
-      candidates: carryOver && prev ? [...prev.candidates] : [/* placeholder */],
-      courses: carryOver && prev ? [...prev.courses] : [/* placeholder */],
+      candidates:
+        carryOver && prev
+          ? [...prev.candidates]
+          : [
+              /* placeholder */
+            ],
+      courses:
+        carryOver && prev
+          ? [...prev.courses]
+          : [
+              /* placeholder */
+            ],
       stats: {
         totalCandidates: carryOver && prev ? prev.stats.totalCandidates : 0,
         totalCourses: carryOver && prev ? prev.stats.totalCourses : 0,
         pendingCourses: carryOver && prev ? prev.stats.pendingCourses : 0,
-        deletedAssignments: carryOver && prev ? prev.stats.deletedAssignments : 0,
-      }
+        deletedAssignments:
+          carryOver && prev ? prev.stats.deletedAssignments : 0,
+      },
     };
-    
 
     setSemesters((prevSems) => [...prevSems, newSemester]);
     setSelectedSemester(inputValue);
@@ -212,7 +235,6 @@ const Dashboard = () => {
 
   const currentSemData = semesters.find((s) => s.name === selectedSemester);
 
-  
   return (
     <Layout>
       <WelcomeTextBox>
@@ -235,7 +257,9 @@ const Dashboard = () => {
             border: "1px solid #ccc",
           }}
         >
-          <option disabled value="">Select Semester</option>
+          <option disabled value="">
+            Select Semester
+          </option>
           {semesters.map((sem) => (
             <option key={sem.name} value={sem.name}>
               {sem.name}
@@ -270,7 +294,6 @@ const Dashboard = () => {
                   <BoxHeader>Total Unassigned Courses</BoxHeader>
                   <BoxSubText>10</BoxSubText>
                 </TopBox>
-              
               </div>
               <TitleContainer style={{ marginTop: "10px" }}>
                 <Title>Unassigned Course</Title>
@@ -285,7 +308,10 @@ const Dashboard = () => {
                   <HeaderText>Note</HeaderText>
                 </HeaderCenter>
                 {unmatchedCourses.map((row, index) => (
-                  <Row key={index} onClick={() => navigate("/applicant-management")}>
+                  <Row
+                    key={index}
+                    onClick={() => navigate("/applicant-management")}
+                  >
                     <Column>{row.courseNumber}</Column>
                     <Column>{row.courseName}</Column>
                     <Column>{row.requiredGraders}</Column>
@@ -300,7 +326,7 @@ const Dashboard = () => {
         </BoxContainer>
       )}
     </Layout>
-  );  
+  );
 };
 
 export default Dashboard;
