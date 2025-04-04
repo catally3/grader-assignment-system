@@ -25,7 +25,11 @@ export const generateCSV = async (candidates, filePath) => {
   // Format the candidate data for CSV
   const formattedCandidates = candidates.map(candidate => ({
     ...candidate,
+    // Ensure phone is output as a text formula to prevent Excel from interpreting it as a calculation.
+    phone: candidate.phone ? `="${candidate.phone}"` : "",
+    // Format skills as a comma-separated string.
     skills: Array.isArray(candidate.skills) ? candidate.skills.join(', ') : candidate.skills,
+    // Format experience (if it's an array, join entries).
     experience: Array.isArray(candidate.experience)
       ? candidate.experience
           .map(entry =>
@@ -33,7 +37,7 @@ export const generateCSV = async (candidates, filePath) => {
           )
           .join('\n')
       : candidate.experience,
-  }));  
+  })); 
 
   await csvWriter.writeRecords(formattedCandidates);
   return filePath;

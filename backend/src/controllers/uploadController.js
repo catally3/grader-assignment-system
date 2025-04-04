@@ -3,8 +3,6 @@ import path from 'path';
 import pdfParser from '../utils/pdfParser.js';
 import excelParser from '../utils/excelParser.js';
 import csvParser from '../utils/csvParser.js';
-import { generateCSV } from '../utils/csvGenerator.js';
-import { generateExcel } from '../utils/excelGenerator.js';
 import db from '../models/index.js';
 const { Candidate, Course } = db;
 
@@ -30,11 +28,29 @@ const processCourseFile = async (req, res) => {
     if (ext === '.csv') {
       // Use CSV parser for CSV files.
       coursesData = await csvParser.parseCSVFile(filePath);
-      coursesData = coursesData.map(row => ({
-        professorName: row.professorName,
-        courseName: row.courseName,
-        criteria: typeof row.criteria === 'string' ? JSON.parse(row.criteria) : row.criteria
-      }));
+      coursesData = coursesData.map(row => {
+        // Extract and process the Keywords field.
+        let keywords = row['Keywords'] || row.keywords || '';
+        if (typeof keywords === 'string' && keywords.trim() !== '') {
+          try {
+            keywords = JSON.parse(keywords);
+          } catch (err) {
+            // If JSON parsing fails, retain the raw string.
+          }
+        }
+        
+        return {
+          professorName: row['Professor Name'] || row.professorName || '',
+          professorEmail: row['Professor Email'] || row.professorEmail || '',
+          courseNumber: row['Course Number'] || row.courseNumber || '',
+          section: row['Section'] || row.section || '',
+          courseName: row['Course Name'] || row.courseName || '',
+          recommendedStudentName: row['Recommended Student Name'] || row.recommendedStudentName || '',
+          recommendedStudentNetid: row['Recommended Student Netid'] || row.recommendedStudentNetid || '',
+          numOfGraders: row['Num of graders'] || row.numOfGraders || '',
+          keywords: keywords
+        };
+      });
     } else {
       // Use Excel parser for Excel files.
       coursesData = await excelParser.parseCourseFile(filePath);
@@ -48,60 +64,7 @@ const processCourseFile = async (req, res) => {
   }
 };
 
-const processMergedPDF = async (req, res) => {
-  try {
-    const filePath = req.file.path; // path to the merged PDF file
-    const outputDir = './exports/resumes'; // or any directory you prefer
-    const splitFiles = await splitMergedPdf(filePath, outputDir);
-    res.json({ message: 'Merged PDF split into individual resumes', files: splitFiles });
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-/**
- * Process a merged PDF: split it, parse each individual resume,
- * save candidate data into the database, and then generate CSV and Excel exports.
- */
-export const processMergedPDFPipeline = async (req, res) => {
-  try {
-    const mergedFilePath = req.file.path;
-    const splitOutputDir = './exports/resumes';
-
-    // Step 1: Split the merged PDF into individual PDFs.
-    const resumeFiles = await processMergedPDFWithOCR(mergedFilePath, splitOutputDir);
-    
-    // Step 2: For each individual PDF, parse the resume data.
-    const candidateDataArray = [];
-    for (const filePath of resumeFiles) {
-      const candidateData = await pdfParser.parseResumePdf(filePath);
-      // Assume parseResumePdf returns an array with one candidate object.
-      candidateDataArray.push(...candidateData);
-    }
-    
-    // Step 3: Save parsed candidate data to the database.
-    const savedCandidates = await Candidate.bulkCreate(candidateDataArray);
-    
-    // Step 4: Generate CSV and Excel exports.
-    const csvPath = './exports/candidates.csv';
-    const excelPath = './exports/candidates.xlsx';
-    await generateCSV(candidateDataArray, csvPath);
-    await generateExcel(candidateDataArray, excelPath);
-    
-    // Respond with details.
-    res.json({
-      message: 'Merged PDF processed; candidates saved and export files generated.',
-      savedCandidates,
-      exportFiles: { csv: csvPath, excel: excelPath }
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-};
-
 export default {
   processCV,
   processCourseFile,
-  // processMergedPDF, // add this new function
-  // processMergedPDFPipeline
 };

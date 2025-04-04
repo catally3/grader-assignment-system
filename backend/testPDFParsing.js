@@ -13,24 +13,22 @@ function logDebug(...args) {
 =============================================== */
 function enhanceText(text) {
   let result = text;
-  // Normalize curly quotes to standard quotes.
+  // Remove control characters completely.
+  result = result.replace(/\u0000/g, "");
+  // Normalize curly quotes.
   result = result.replace(/[“”]/g, '"');
-  // Ensure a space follows a comma if missing.
+  // Ensure a space follows a comma.
   result = result.replace(/,(\S)/g, ', $1');
-  // Insert space between an uppercase abbreviation and a month name.
+  // Insert space between uppercase abbreviation and a month.
   result = result.replace(/([A-Z]{2,})(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/gi, '$1 $2');
-  // Insert space between a letter and a digit, and digit followed by a letter.
+  // Insert space between letters and digits.
   result = result.replace(/([A-Za-z])(\d)/g, '$1 $2');
   result = result.replace(/(\d)([A-Za-z])/g, '$1 $2');
   // Normalize multiple spaces.
   result = result.replace(/\s{2,}/g, ' ');
-  // --- NEW: Normalize common corruption of "Software" ---
-  result = result.replace(/So[\x00]?ware/gi, "Software");
-  
-  // --- NEW: Attempt to insert a newline before a known experience keyword if in SKILLS section ---
-  // This is heuristic: if "Visual Studio" is immediately followed by a capitalized word like "Junior", insert a newline.
-  result = result.replace(/(Visual Studio)([A-Z])/g, "$1\n$2");
-  
+  // --- Normalize corrupted variants of "Software" and "Microsoft"
+  result = result.replace(/So[\s\x00]*ware/gi, "Software");
+  result = result.replace(/Microso[\s\x00]*/gi, "Microsoft");
   return result.trim();
 }
 

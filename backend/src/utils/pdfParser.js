@@ -1,37 +1,40 @@
 import fs from 'fs';
 import pdfParse from 'pdf-parse';
 
-/**
- * Enhances formatting by:
- * • Inserting a space after a comma if missing.
- * • Inserting a space between an uppercase abbreviation and a month (case-insensitive).
- * • Inserting spaces between letters and digits if needed.
- * • Normalizing multiple spaces.
- * @param {string} text 
- * @returns {string} Enhanced text.
- */
+const DEBUG = true;
+function logDebug(...args) {
+  if (DEBUG) {
+    console.log('[DEBUG]', ...args);
+  }
+}
+
+/* ================================
+   TEXT ENHANCEMENT FUNCTIONS
+=============================================== */
 function enhanceText(text) {
   let result = text;
-  // Ensure a space follows a comma if missing.
+  // Remove control characters completely.
+  result = result.replace(/\u0000/g, "");
+  // Normalize curly quotes.
+  result = result.replace(/[“”]/g, '"');
+  // Ensure a space follows a comma.
   result = result.replace(/,(\S)/g, ', $1');
-  // Insert space between an uppercase abbreviation and a month name.
+  // Insert space between uppercase abbreviation and a month.
   result = result.replace(/([A-Z]{2,})(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)/gi, '$1 $2');
-  // Insert space between a letter and a digit, and digit followed by a letter.
+  // Insert space between letters and digits.
   result = result.replace(/([A-Za-z])(\d)/g, '$1 $2');
   result = result.replace(/(\d)([A-Za-z])/g, '$1 $2');
   // Normalize multiple spaces.
   result = result.replace(/\s{2,}/g, ' ');
+  // --- Normalize corrupted variants of "Software" and "Microsoft"
+  result = result.replace(/So[\s\x00]*ware/gi, "Software");
+  result = result.replace(/Microso[\s\x00]*/gi, "Microsoft");
   return result.trim();
 }
 
-/**
- * Combines an array of name fragments intelligently.
- * If a fragment is a single letter, it appends with no space;
- * otherwise, it inserts a space between fragments.
- * For example, ["F", "IRST", "L", "AST"] becomes "FIRST LAST".
- * @param {string[]} fragments 
- * @returns {string} Combined name.
- */
+/* ================================
+   NAME EXTRACTION
+=============================================== */
 function combineNameFragments(fragments) {
   let result = '';
   for (let i = 0; i < fragments.length; i++) {
@@ -39,29 +42,12 @@ function combineNameFragments(fragments) {
     if (i === 0) {
       result = frag;
     } else {
-      // If the previous fragment was a single letter, append without space.
-      if (fragments[i - 1].length === 1) {
-        result += frag;
-      } else {
-        result += ' ' + frag;
-      }
+      result += fragments[i - 1].length === 1 ? frag : ' ' + frag;
     }
   }
   return result;
 }
 
-/**
- * Extracts the candidate's name from the raw text.
- * New approach:
- * 1. Split the text into non-empty lines.
- * 2. If the first line is very short (e.g. less than 10 characters) and consists solely of letters,
- *    then continue collecting subsequent lines that are also short and alphabetic.
- *    Combine these fragments using combineNameFragments().
- * 3. Otherwise, simply return the first non-empty line.
- * (Additional strategies like "line before email" can be added as fallback if needed.)
- * @param {string} text 
- * @returns {string} The candidate's name.
- */
 function extractNameFromText(text) {
   const lines = text.split('\n').map(l => l.trim()).filter(l => l.length > 0);
   if (lines.length === 0) return '';
@@ -78,24 +64,18 @@ function extractNameFromText(text) {
   return lines[0];
 }
 
-/**
- * Splits the skills text into an array of individual skills.
- * @param {string} skillsText 
- * @returns {string[]} Array of skills.
- */
+/* ================================
+   SKILLS EXTRACTION
+=============================================== */
 function parseSkills(skillsText) {
-  // Normalize the skills text: remove newlines so that headers aren’t split.
   const cleanText = skillsText.replace(/\n/g, ' ');
-  // Remove any unwanted header labels from the entire string.
   const cleanedText = cleanText.replace(/(Hard Skills:|Programming Languages:|Tools and Software:|don’t forget.*)/gi, '');
-  // Now split the cleaned text on bullet markers (or commas if needed).
   const rawSkills = cleanedText.split(/[●•,]/);
-  // Define unwanted prefixes for extra safety.
-  const unwantedPrefixes = 
-  ["Hard Skill:", "Hard Skills:", "Programming Languages:", 
+  const unwantedPrefixes = [
+    "Hard Skill:", "Hard Skills:", "Programming Languages:",
     "Tools and Software:", "Soft Skills:", "Soft Skill:",
-    "Technical Skills:", "Technical Skill:"];
-  // Trim each skill and remove any unwanted prefix if it’s at the start.
+    "Technical Skills:", "Technical Skill:", "Technical Skills", "Industry Knowledge", "Docker Products", "Tools & Software"
+  ];
   const skills = rawSkills
     .map(skill => {
       let s = skill.trim();
@@ -106,144 +86,171 @@ function parseSkills(skillsText) {
       }
       return s;
     })
-    .filter(s => s.length > 0);
-  return Array.from(new Set(skills)); // Remove duplicates if any.
+    .filter(s => s.length > 0 && s.length <= 50);
+  return Array.from(new Set(skills));
 }
 
-/**
- * Matches skills against experience descriptions.
- * @param {string[]} skills - List of extracted skills.
- * @param {string[]} descriptions - Experience description bullets.
- * @returns {string[]} Matched skills found within descriptions.
- */
+/* ================================
+   SKILL MATCHING
+=============================================== */
 function matchSkills(skills, descriptions) {
   const matched = new Set();
   const descriptionText = descriptions.join(' ').toLowerCase();
-
   skills.forEach(skill => {
     const skillLower = skill.toLowerCase().split('(')[0].trim();
     if (descriptionText.includes(skillLower)) matched.add(skill);
   });
-
   return Array.from(matched);
 }
 
-/**
- * Returns a regex that matches durations like:
- * - "09/2015 – Present"
- * - "Jun 2018 – Present"
- * - "June 2010 – Dec 2014"
- */
+function extractAdditionalSkillsFromDescription(descriptionLines) {
+  const additional = new Set();
+  descriptionLines.forEach(line => {
+    const regex = /(?:Databases:|Software:|Languages:)(.+?)(?:\.|$)/gi;
+    let match;
+    while ((match = regex.exec(line)) !== null) {
+      const skillsText = match[1];
+      skillsText.split(/,| and /).forEach(skill => {
+        const s = skill.trim();
+        if (s.length > 0) {
+          additional.add(s);
+        }
+      });
+    }
+  });
+  return Array.from(additional);
+}
+
+/* ================================
+   DURATION & HEADER PARSING
+=============================================== */
 function getDurationRegex() {
   const datePart = '(?:\\d{2}\\/\\d{4}|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{4})';
   return new RegExp(`${datePart}\\s*[–-]\\s*(?:Present|${datePart})`, 'i');
 }
 
-/**
- * Attempts to extract the duration substring from a header line.
- * @param {string} headerLine
- * @returns {string|null} the matched duration, or null if not found.
- */
 function extractDuration(headerLine) {
   const durationRegex = getDurationRegex();
   const match = headerLine.match(durationRegex);
-  return match ? match[0].trim() : null;
+  const result = match ? match[0].trim() : null;
+  // logDebug("extractDuration:", headerLine, "->", result);
+  return result;
 }
 
-/**
- * Splits a header line into two parts: the company portion and the duration.
- * @param {string} headerLine 
- * @returns {Object} Object with header and duration properties.
- */
 function splitHeaderLine(headerLine) {
   const durationRegex = getDurationRegex();
   const match = headerLine.match(durationRegex);
   if (match) {
     const duration = match[0].trim();
     const headerPart = headerLine.replace(durationRegex, '').trim();
+    // logDebug("splitHeaderLine:", headerLine, "->", { header: headerPart, duration });
     return { header: headerPart, duration };
   }
   return { header: headerLine, duration: '' };
 }
 
-/**
- * Parses the experience section into structured objects by detecting header lines
- * using duration patterns. When a header line is found, any subsequent non-empty lines 
- * (until a blank or a line starting with a bullet or a new header is encountered) are combined as the role.
- * The remaining lines are treated as the description.
- * @param {string} experienceText 
- * @returns {Array} Array of structured experience objects.
- */
+/* ================================
+   EXPERIENCE EXTRACTION
+=============================================== */
 function parseExperience(experienceText) {
   let lines = experienceText.split('\n')
     .map(l => l.trim())
     .filter(l => l.length > 0);
-  // Remove common bullet markers.
   lines = lines.map(l => l.replace(/^[-•●]\s*/, ''));
+  // logDebug("parseExperience - lines:", lines);
   
   const experiences = [];
   let i = 0;
-  const jobTitleKeywords = ["developer", "engineer", "manager", "analyst", "programmer", "consultant", "support", "designer"];
+  const jobTitleKeywords = ["developer", "engineer", "tester", "manager", "analyst", "programmer", "consultant", "support", "designer"];
   
   while (i < lines.length) {
     const line = lines[i];
     const duration = extractDuration(line);
     if (duration) {
-      // Split header line.
+      // logDebug("Header line detected:", line);
       let { header, duration: extractedDuration } = splitHeaderLine(line);
       let company = header;
-      // If the header doesn't appear to contain company info, use the previous line.
-      if ((!company || !/,/.test(company)) && i > 0) {
-        company = lines[i - 1];
+      let role = "";
+      
+      if (!company) {
+        if (i > 0) {
+          role = lines[i - 1];
+          for (let k = i - 2; k >= 0; k--) {
+            if (/,/.test(lines[k])) {
+              company = lines[k];
+              // logDebug("Using previous lines for company and role:", { company, role });
+              break;
+            }
+          }
+        }
       }
+      
       let roleCandidates = [];
-      let descriptionLines = [];
-      i++; // Move past the header line.
-      
-      // Look ahead up to 5 lines for role candidates.
-      for (let j = 0; j < 5 && i < lines.length; j++, i++) {
-        const candidate = lines[i];
-        // If candidate contains a duration, it's a new header, so break.
-        if (extractDuration(candidate)) {
-          break;
+      let startRoleIndex = i + 1;
+      if (!role) {
+        for (let j = 0; j < 5 && (i + j + 1) < lines.length; j++) {
+          const candidate = lines[i + j + 1];
+          if (extractDuration(candidate)) break;
+          if (candidate.length < 100 && jobTitleKeywords.some(k => candidate.toLowerCase().includes(k))) {
+            roleCandidates.push(candidate);
+            // logDebug("Role candidate found:", candidate);
+          }
         }
-        if (candidate.length < 100 && jobTitleKeywords.some(k => candidate.toLowerCase().includes(k))) {
-          roleCandidates.push(candidate);
+        if (roleCandidates.length > 0) {
+          role = roleCandidates.reduce((a, b) => a.length <= b.length ? a : b);
         }
       }
-      const role = roleCandidates.length > 0 ? roleCandidates.reduce((a, b) => a.length <= b.length ? a : b) : "";
       
-      // Gather description lines:
+      i = startRoleIndex + (roleCandidates.length > 0 ? roleCandidates.length : 0);
+      
       let descBuffer = "";
       while (i < lines.length) {
         const nextLine = lines[i];
-        // If nextLine is a new header (contains a duration), then break.
-        if (extractDuration(nextLine)) break;
-        // If the next line starts with a bullet marker, treat it as starting a new bullet.
-        if (nextLine.match(/^[-•●]/)) {
-          if (descBuffer.trim().length > 0) {
-            descriptionLines.push(descBuffer.trim());
-            descBuffer = "";
-          }
-          descBuffer += nextLine.replace(/^[-•●]\s*/, '');
-        } else {
-          // Otherwise, merge the line into the current bullet.
-          descBuffer += (descBuffer ? " " : "") + nextLine;
+        if (extractDuration(nextLine)) {
+          // logDebug("New header encountered in description, breaking:", nextLine);
+          break;
         }
+        descBuffer += (descBuffer ? " " : "") + nextLine;
         i++;
       }
-      if (descBuffer.trim().length > 0) {
-        descriptionLines.push(descBuffer.trim());
-      }
-      // Filter out any empty strings.
-      descriptionLines = descriptionLines.filter(line => line.trim().length > 0);
       
+      let descriptionLines = [];
+      if (descBuffer.trim().length > 0) {
+        let bullets = descBuffer.split(/\.\s+(?=["']?\s*[A-Z])/g)
+          .map(s => s.trim())
+          .filter(s => s.length > 0)
+          .map(s => s.endsWith('.') ? s : s + '.');
+        bullets = bullets.flatMap(bullet => {
+          const markerRegex = /(?<="App of the Year."\s+)/;
+          if (markerRegex.test(bullet)) {
+            return bullet.split(markerRegex);
+          }
+          return bullet;
+        });
+        descriptionLines.push(...bullets);
+        // logDebug("Final bullet(s) from buffer:", bullets);
+      }
+      
+      descriptionLines = descriptionLines.map(line => line.trim()).filter(line => line !== "");
+      if (role && descriptionLines.length > 0 && descriptionLines[0].toLowerCase().startsWith(role.toLowerCase())) {
+        // logDebug("Removing redundant description bullet:", descriptionLines[0]);
+        descriptionLines[0] = descriptionLines[0].slice(role.length).trim();
+        if (descriptionLines[0] === "") {
+          descriptionLines.shift();
+        }
+      }
+      if (role && descriptionLines.length === 1 && descriptionLines[0].toLowerCase() === role.toLowerCase()) {
+        // logDebug("Clearing description since it's only the role text.");
+        descriptionLines = [];
+      }
+      
+      // logDebug("Parsed experience:", { company, role, duration: extractedDuration, description: descriptionLines });
       experiences.push({
         company,
         role,
         duration: extractedDuration,
         description: descriptionLines,
-        matchedSkills: []
+        matchedSkills: [] // will be merged later
       });
     } else {
       i++;
@@ -252,13 +259,9 @@ function parseExperience(experienceText) {
   return experiences;
 }
 
-/**
- * Splits the resume text into sections based on known headers.
- * Lines that are only separators (underscores/dashes) are filtered out.
- * Lines are joined with "\n" (to preserve bullet points and natural breaks) and then enhanced.
- * @param {string} text 
- * @returns {Object} An object mapping header names to their content.
- */
+/* ================================
+   SECTION EXTRACTION
+=============================================== */
 function extractSections(text) {
   const KNOWN_HEADERS = new Set([
     "CONTACT", "EDUCATION", "EXPERIENCE", "WORK EXPERIENCE",
@@ -274,15 +277,15 @@ function extractSections(text) {
     const upper = line.toUpperCase();
     if (KNOWN_HEADERS.has(upper)) {
       currentHeader = upper;
-      sections[currentHeader] = [];
+      if (!sections[currentHeader]) {
+        sections[currentHeader] = [];
+      }
     } else {
-      // Skip lines that are just separators.
       if (line && !/^[_\s-]+$/.test(line)) {
         sections[currentHeader].push(line);
       }
     }
   }
-  // Join each section’s lines with newlines and enhance them.
   for (const header in sections) {
     const joined = sections[header].join('\n');
     sections[header] = enhanceText(joined);
@@ -290,97 +293,115 @@ function extractSections(text) {
   return sections;
 }
 
-/**
- * Extracts structured resume data from the raw PDF text.
- * Retrieves email, phone, candidate name, education, and work experience.
- * Now also extracts SKILLS.
- * @param {string} text 
- * @returns {Object} Structured resume data.
- */
+/* ================================
+   NOISE FILTER FOR EXPERIENCE
+=============================================== */
+function filterExperienceNoise(text) {
+  return text.split('\n')
+    .filter(line => {
+      return !/(?:@|\d{3}[-.\s]\d{3}[-.\s]\d{3,4}|Ave|St\s)/i.test(line);
+    })
+    .join('\n');
+}
+
+/* ================================
+   RESUME DATA EXTRACTION
+=============================================== */
 function extractResumeData(text) {
   const resumeData = {};
-
-  // Extract email.
+  
   const emailMatch = text.match(/([a-zA-Z0-9._-]+@[a-zA-Z0-9._-]+\.[a-zA-Z0-9._-]+)/);
-  if (emailMatch) {
-    resumeData.email = emailMatch[0];
-  }
-
-  // Extract phone.
+  if (emailMatch) resumeData.email = emailMatch[0];
+  
   const phoneMatch = text.match(/(\+?\d{1,2}[-.\s]?\(?\d{3}\)?[-.\s]?\d{3}[-.\s]?\d{3,4})/);
-  if (phoneMatch) {
-    resumeData.phone = phoneMatch[0];
-  } 
-
-  // Extract candidate name using our updated strategy.
+  if (phoneMatch) resumeData.phone = phoneMatch[0];
+  
   resumeData.name = extractNameFromText(text);
-
-  // Extract sections.
+  
   const sections = extractSections(text);
   resumeData.education = sections["EDUCATION"] || '';
-
-  // Extract GPA
+  
   const gpaMatch = text.match(/GPA\s*[:\-]?\s*([0-9]\.[0-9]+)/i);
   resumeData.gpa = gpaMatch ? parseFloat(gpaMatch[1]) : null;
   
-  // New: Extract skills.
   resumeData.skills = sections["SKILLS"] ? parseSkills(sections["SKILLS"]) : [];
-
-  // Extract and structure experiences
-  const experiences = parseExperience(sections["EMPLOYMENT HISTORY"] || 
-    sections["WORK EXPERIENCE"] || 
-    sections["PROFESSIONAL EXPERIENCE"] || 
-    sections["EXPERIENCE"] || '');
+  
+  let expText = sections["EMPLOYMENT HISTORY"] || sections["WORK EXPERIENCE"] || sections["PROFESSIONAL EXPERIENCE"] || '';
+  if (parseExperience(expText).length === 0) {
+    expText = filterExperienceNoise(sections["PROFILE"] || '');
+    const profileLines = expText.split('\n');
+    if (profileLines.length > 3) {
+      expText = profileLines.slice(2).join('\n');
+    }
+  }
+  
+  const experiences = parseExperience(expText);
   experiences.forEach(exp => {
-  exp.matchedSkills = matchSkills(resumeData.skills, exp.description);
+    const fromSection = matchSkills(resumeData.skills, exp.description);
+    const additional = extractAdditionalSkillsFromDescription(exp.description);
+    exp.matchedSkills = Array.from(new Set([...fromSection, ...additional]));
   });
   resumeData.experience = experiences;
   
   return resumeData;
 }
 
-/**
- * Parses a PDF file (resume) and extracts its structured data.
- * @param {string} filePath - The path to the resume PDF.
- */
+/* ================================
+   PAGE CLEANING FUNCTIONS
+=============================================== */
+function extractHeaderFooterCandidates(pageLines, numLines = 3) {
+  const candidates = [];
+  if (pageLines.length >= numLines) {
+    candidates.push(...pageLines.slice(0, numLines));
+    candidates.push(...pageLines.slice(-numLines));
+  }
+  return candidates;
+}
+
+function buildCandidateFrequency(pagesLines, numLines = 3) {
+  const frequency = {};
+  pagesLines.forEach(lines => {
+    const candidates = extractHeaderFooterCandidates(lines, numLines);
+    candidates.forEach(line => {
+      frequency[line] = (frequency[line] || 0) + 1;
+    });
+  });
+  return frequency;
+}
+
+function cleanPage(lines, frequency, totalPages, thresholdFraction = 0.8, numLines = 3) {
+  const threshold = totalPages * thresholdFraction;
+  const headerCandidates = new Set(
+    extractHeaderFooterCandidates(lines, numLines).filter(line => frequency[line] >= threshold)
+  );
+  return lines.filter(line => !headerCandidates.has(line));
+}
+
+/* ================================
+   PDF PARSING FUNCTION
+=============================================== */
 async function parseResumePdf(filePath) {
   try {
     const dataBuffer = fs.readFileSync(filePath);
     const data = await pdfParse(dataBuffer);
-    // Split raw text into pages using the form feed character.
-    let pages = data.text.split('\f');
-    
-    // Process each page: split into lines and trim.
-    let pagesLines = pages.map(page => 
-      page.split('\n').map(line => line.trim()).filter(line => line.length > 0)
-    );
-    
-    // If there's only one page, skip header/footer removal.
-    const threshold = pagesLines.length > 1 ? Math.ceil(pagesLines.length / 2) : Infinity;
-    
-    // Count how many pages each line appears in.
-    let lineCount = {};
-    for (const lines of pagesLines) {
-      const uniqueLines = new Set(lines);
-      for (const line of uniqueLines) {
-        lineCount[line] = (lineCount[line] || 0) + 1;
-      }
+    const pages = data.text.split('\f');
+    let combinedText = '';
+    if (pages.length === 1) {
+      combinedText = pages[0];
+    } else {
+      const pagesLines = pages.map(page =>
+        page.split('\n').map(line => line.trim()).filter(line => line.length > 0)
+      );
+      const candidateFrequency = buildCandidateFrequency(pagesLines, 3);
+      const cleanedPages = pagesLines.map(lines =>
+        cleanPage(lines, candidateFrequency, pagesLines.length, 0.8, 3)
+      );
+      combinedText = cleanedPages.map(lines => lines.join('\n')).join('\n');
     }
-    
-    // Remove lines that appear in at least 'threshold' pages (likely header/footer).
-    let cleanedPages = pagesLines.map(lines => 
-      lines.filter(line => lineCount[line] < threshold)
-    );
-    
-    // Combine the cleaned pages back into a single text.
-    let combinedText = cleanedPages.map(lines => lines.join('\n')).join('\n');
-    
-    // Optionally enhance the combined text.
     const enhancedText = enhanceText(combinedText);
-    
+    // logDebug("Enhanced combined text:", enhancedText);
     const resumeData = extractResumeData(enhancedText);
-    // console.log('Extracted Resume Data:', resumeData);
-    console.log('Extracted Resume Data:', JSON.stringify(resumeData, null, 2))
+    console.log('Extracted Resume Data:', JSON.stringify(resumeData, null, 2));
     return [resumeData];
   } catch (error) {
     console.error('Error reading or parsing the PDF file:', error);
