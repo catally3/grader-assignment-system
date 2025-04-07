@@ -1,0 +1,67 @@
+04/04/25
+Minutes: 55 min
+
+Progress So Far:
+Madison Hokstad -  6 Hours
+    Tasks completed
+        Continuing to finalize matching algorithm, including adding more functionality for handpicking
+    Tasks for next week
+        Work with frontend to integrate functions
+        Much more in depth testing
+
+Do Kyung Lee -   10 Hours
+    Tasks completed
+        Modified UI - Candidate Management
+        Separated buttons for deleting from candidate pool or removing the candidate from a assignment
+        Added candidate feature(Separate unassigned candidate or assigned candidate with professor)
+        Added a table to Excel export button(All assignments or Modified assignments)
+    Tasks for next week:
+        API integration
+        Complete UI
+
+Alexandra Ontiveros -  10 Hours
+    Tasks Completed:
+        Made react app available through Apache server 
+    Tasks for Next Week 
+        Figure out how to connect react app on server back to API and database
+        Help with connectivity and communication between layers
+
+Gaby Salazar Mejia -  10 Hours
+    Tasks Completed
+        Added sorting and filtering functionalities to each view
+        Added reassign functionalities to each view, either auto assign or manual
+        Added Components to the Dashboard
+    Tasks for Next Week
+        Setup API Integration
+        Complete UI
+
+Anh Tran -  10 Hours
+    Tasks completed:
+        Polishing the parsing more for the PDF
+        Polishing the parsing for CSV/Excel also
+        Polishing the CSV/Excel generator
+        Setting up the APIs
+    Tasks for next week:
+        Connecting the backend with the frontend in the VM
+
+Feedback:
+1. Dashboard
+    - Files uploads should be isolated, ensuring that previous file uploads are not carried over.                                                   
+    - When clicking on an unassgined course, user should be navigates to its corresponding course in Course Management.
+2. Candidate Management
+    - Extend filter functionality to list of candidates when manually reassigning.
+    - Extend to add netID.
+    - Ensure that excel exports only include assigned candidates.
+    - Add flexability to Add Candidate functinality by including these test cases:  
+        1. Not assigning candidate yet, just adding them to the database.
+        2. Assign a candidate to a course, ensure the course is valid.
+        3. If course not valid, may need to enter a new course.                                                                                                                                                                                                                                                                                                                
+        ***Exchange Prof Name to Candidate Name***
+3. Course Management
+    - Current design is redundant. Consolidate the graders of a class into one row, displaying all the graders.
+- Consider datasize and bandwidth limitations when designing and using the APIs.
+- Explanation in the matching algorithm will be used as the highlighted text of the candidate's resumes in the front end.
+- Suggestion: During integration, ensure that at least 15-20 resumes should be added to the database for testing purposes.
+- Final Report Template has guidlines to follow, adding more sections is allowed.
+- Final Report Deadline: Around May 10
+- Demo: May 2
