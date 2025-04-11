@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 import Modal, { ModalContainer } from "../Common/Modal";
-import FileUpload from "../Common/FileUpload";
 import ModalHeader from "../Common/ModalHeader";
 
 import Button from "../Common/Button";
@@ -9,76 +8,94 @@ import Input from "../../components/Common/Input";
 import SelectBox from "../../components/Common/SelectBox";
 
 import ArrowIcon from "../../assets/icons/icon_arrow.svg";
+import { courseOptions } from "../../utils/metadata";
 
-const tabs = ["Course List", "Candidate List", "Resume"];
-
-const FileUploadModal = ({
+const AddCandidateModal = ({
   open,
   onClose,
+  handleSubmit,
   title,
   inputValue,
   setInputValue,
 }) => {
-  const [activeTab, setActiveTab] = useState("Course List");
-  const [uploadedFiles, setUploadedFiles] = useState({
-    "Course List": [],
-    "Candidate List": [],
-    Resume: [],
-  });
-
-  const handleTabChange = (tabName) => {
-    setActiveTab(tabName);
-  };
-
-  const handleFilesChange = (tab, files) => {
-    setUploadedFiles((prev) => ({ ...prev, [tab]: files }));
-  };
+  const [addCourseMode, setAddCourseMode] = useState(false);
 
   const handleAssign = () => {
-    console.log("Files assigned");
+    console.log("Add new Candidate");
+    // Implementation for assign action would go here
   };
 
-  const onCloseFileUpload = () => {
-    setUploadedFiles({});
+  const onCloseAddCandidate = () => {
     onClose();
-  };
-
-  const handleAddCourseMode = () => {};
-
-  const handleSubmit = () => {
-    alert("assignments are created");
-    localStorage.setItem("assignments", true);
-    onClose();
+    setAddCourseMode(false);
   };
 
   return (
-    <Modal open={open} onClose={onCloseFileUpload}>
+    <Modal
+      open={open}
+      onClose={() => {
+        onCloseAddCandidate;
+      }}
+    >
       <ModalContainer>
         <ModalContent>
           <ModalHeader
             title={title ? title : "Upload files"}
-            onClose={onCloseFileUpload}
+            onClose={onCloseAddCandidate}
           />
-          <TabContainer>
-            <TabList>
-              {tabs.map((tab) => (
-                <TabItem
-                  key={tab}
-                  isActive={activeTab === tab}
-                  onClick={() => handleTabChange(tab)}
-                >
-                  {tab}
-                </TabItem>
-              ))}
-            </TabList>
-          </TabContainer>
-          <FileUpload
-            activeTab={activeTab}
-            onFilesChange={handleFilesChange}
-            uploadedFiles={uploadedFiles}
-            onClose={onClose}
-            singleUpload={false}
-          />
+          <InputWrapper>
+            <SingleTabItem style={{ marginBottom: "16px" }}>
+              Student Name
+            </SingleTabItem>
+            <Input
+              placeholder={"Student Name"}
+              inputValue={inputValue?.name}
+              onChange={(e) =>
+                setInputValue({ ...inputValue, name: e.target.value })
+              }
+            />
+            <SingleTabItem
+              style={{
+                marginTop: "10px",
+              }}
+              onClick={() => setAddCourseMode(!addCourseMode)}
+            >
+              Add Course & Professor <Icon src={ArrowIcon} />
+            </SingleTabItem>
+            {addCourseMode && (
+              <AddCourseWrap>
+                <SingleTabItem style={{ marginBottom: "16px" }}>
+                  Course Name
+                </SingleTabItem>
+                <SelectBox
+                  placeholder="Select Course"
+                  width={"100%"}
+                  value={inputValue.courseName}
+                  onChange={(val) =>
+                    setInputValue((prev) => ({
+                      ...prev,
+                      number: val.id,
+                      courseName: val.name,
+                    }))
+                  }
+                  options={courseOptions}
+                />
+                <SingleTabItem style={{ marginBottom: "16px" }}>
+                  Professor Name
+                </SingleTabItem>
+                <Input
+                  placeholder={"Professor Name"}
+                  inputValue={inputValue?.professor}
+                  onChange={(e) =>
+                    setInputValue({
+                      ...inputValue,
+                      professor: e.target.value,
+                    })
+                  }
+                />
+              </AddCourseWrap>
+            )}
+          </InputWrapper>
         </ModalContent>
         <ButtonContainer>
           <Button
@@ -90,7 +107,7 @@ const FileUploadModal = ({
           <Button
             backgroundColor={"rgba(248, 126, 3, 1)"}
             TextColor={"white"}
-            Text={"Assign"}
+            Text={"Add"}
             onClick={handleSubmit}
           />
         </ButtonContainer>
@@ -181,4 +198,4 @@ const AddCourseWrap = styled.div`
   margin-left: 14px;
 `;
 
-export default FileUploadModal;
+export default AddCandidateModal;

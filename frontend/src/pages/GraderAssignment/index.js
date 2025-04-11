@@ -1,14 +1,13 @@
 import styled from "@emotion/styled";
-import * as XLSX from "xlsx";
-import { saveAs } from "file-saver";
 import Layout from "../../layouts/Layout.js";
-import { useState } from "react"; // delete, add, search states
+import { useState, useEffect } from "react"; // delete, add, search states
 import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
-import FileUploadModal from "../../components/Modals/FileUploadModal.jsx";
 import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
 import DropdownButton from "../../components/Common/DropdownButton.jsx";
 import SelectBox from "../../components/Common/SelectBox.jsx";
-import SortIcon from "../../assets/icons/icon_sort.svg"; 
+import SortIcon from "../../assets/icons/icon_sort.svg";
+import AddCandidateModal from "../../components/Modals/AddCandidateModal.jsx";
+import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
 
 // Candidate Management
 const Title = styled.div`
@@ -271,22 +270,6 @@ const RightConatiner = styled.div`
   gap: 16px;
 `;
 
-const ExcelButton = styled.button`
-  color: #333;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  border: 1px solid #ccc;
-  padding: 6px 12px;
-  border-radius: 10px;
-  margin-bottom: 4px;
-  background-color: #f9f9f9;
-
-  &:hover {
-    background-color: rgb(229, 229, 229);
-  }
-`;
-
 const DocumentIcon = styled.img`
   aspect-ratio: 1;
   object-fit: contain;
@@ -318,6 +301,7 @@ const GraderAssignment = () => {
       class: "CS",
       section: "509",
       professor: "Herlin Villareal",
+      updated: true,
     },
     {
       candidateID: null,
@@ -326,6 +310,7 @@ const GraderAssignment = () => {
       class: "CS",
       section: "502",
       professor: "Vanessa Ramirez",
+      updated: false,
     },
     {
       candidateID: "12345",
@@ -334,6 +319,7 @@ const GraderAssignment = () => {
       class: "CS",
       section: "502",
       professor: null,
+      updated: true,
     },
     {
       candidateID: "12343",
@@ -342,6 +328,7 @@ const GraderAssignment = () => {
       class: "CS",
       section: "504",
       professor: "Caroline Mendez",
+      updated: true,
     },
     {
       candidateID: "12349",
@@ -350,6 +337,7 @@ const GraderAssignment = () => {
       class: "CS",
       section: "501",
       professor: "Jane Smith",
+      updated: false,
     },
     {
       candidateID: "12345",
@@ -358,6 +346,7 @@ const GraderAssignment = () => {
       class: "CS",
       section: "501",
       professor: "Mary Salazar",
+      updated: false,
     },
   ]);
 
@@ -373,23 +362,33 @@ const GraderAssignment = () => {
   // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
-    if(sortConfig.key === key){
-      if(sortConfig.direction === "asc"){
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "asc") {
         direction = "desc";
-      } 
-      else if(sortConfig.direction === "desc"){
-        direction = null; 
+      } else if (sortConfig.direction === "desc") {
+        direction = null;
       }
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
   // return the current sort arrow based on current sorting direction, and display default
   const getSortArrow = (key) => {
-  if (sortConfig.key !== key) {
-    return <img src={SortIcon} alt="sort logo" style={{ width: '16px', height: '16px', marginLeft: '8px', verticalAlign: 'baseline' }} />;
-  }
-  return sortConfig.direction === "asc" ? "▲" : "▼";
-};
+    if (sortConfig.key !== key) {
+      return (
+        <img
+          src={SortIcon}
+          alt="sort logo"
+          style={{
+            width: "16px",
+            height: "16px",
+            marginLeft: "8px",
+            verticalAlign: "baseline",
+          }}
+        />
+      );
+    }
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+  };
   // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
@@ -426,7 +425,7 @@ const GraderAssignment = () => {
         : true)
   );
 
-  /******* DELETION  FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  /******* DELETION  FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
   const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
   const [selected, setSelected] = useState([]); // selected stores the candidateIDs chosen to be deleted
   // toggles deleteMode and clears any selected candidates between toggles
@@ -449,49 +448,22 @@ const GraderAssignment = () => {
     );
     setDeleteMode(false);
     setSelected([]);
-  }
+  };
 
-  /******** REASSIGN FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false 
+  /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
   const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
   // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
     setSelectedCourseData(course);
     setIsModalOpen(true);
   };
-  // close the reassignment model for the selected course 
+  // close the reassignment model for the selected course
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
 
-  /******** EXPORT FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  // exports the data to excel based on the file an,e
-  const exportToExcel = (exportData, filename) => {
-    let dataToExport = exportData;
-    if (filename === "Modified_Assignment_Data") {
-      dataToExport = exportData.filter((item) => item.number === null);
-    }
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], {
-      type: "application/octet-stream",
-    });
-    saveAs(blob, `${filename}.xlsx`);
-  };
-  const handleExportAll = () => exportToExcel(data, "All_Assignment_Data"); // trigger the respective export function with approprtiate data
-  const handleExportModified = () => exportToExcel(data, "Modified_Assignment_Data");
-  const handleExportFiltered = () => exportToExcel(filteredData, "Filtered_Data");
-
-
-
   /******** ADD CANDIDATE FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  // professor name input for fileupload modal
-  const [inputValue, setInputValue] = useState({
-    profname: "",
-    coursename: "",
-  });
   const [modalOpen, setModalOpen] = useState(false);
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [assignmentInfo, setAssignmentInfo] = useState({
@@ -524,7 +496,7 @@ const GraderAssignment = () => {
     candidateID: "",
     name: "",
     number: "",
-    class: "CS",
+    courseName: "",
     section: "",
     professor: "",
   });
@@ -537,58 +509,76 @@ const GraderAssignment = () => {
   };
   // when add button is clicked,
   const handleAddCandidate = () => {
-    if (!newCandidate.candidateID || !newCandidate.candidateName) {
-      alert("Candidate ID and Name are required!"); // prevents adding if
+    const newStudentExists = data.some(
+      (v) => v.name === newCandidate.name && v.name.includes(newCandidate.name)
+    );
+
+    const professorExists = data.some(
+      (v) => v.professor === newCandidate.professor && v.professor !== null
+    );
+
+    const courseExists = data.some(
+      (v) => v.number === newCandidate.number && v.number !== null
+    );
+
+    if (!newCandidate.name) {
+      alert("Name is required!");
       return;
     }
-    if (inputValue?.profname === "John") { // should compare againist a list of professors
-      alert("Professor does not exist or already all graders are assigned"); // prevents adding if
+
+    if (newStudentExists) {
+      alert("Candidate already has an assigned!");
       return;
     }
-    const newCandiwithProf = {
+
+    if (professorExists) {
+      alert("This professor already has an assigned grader!");
+      return;
+    }
+
+    if (courseExists) {
+      alert("This course already has an assigned!");
+      return;
+    }
+
+    const newCandidateInfo = {
       candidateID: "TEST",
-      candidateName: inputValue?.profname ? "Assigned Data" : "NEW Candidate",
-      number: inputValue?.profname ? "222" : null,
-      name: "CS",
-      section: "222",
-      professor: inputValue?.profname ? inputValue?.profname : "",
+      name: newCandidate?.name,
+      number: newCandidate?.professor ? "4548" : null,
+      courseName: newCandidate?.professor ? "CS Project" : null,
+      section: newCandidate?.professor ? "002" : null,
+      professor: newCandidate?.professor ? newCandidate?.professor : null,
     };
-    setData((prevData) => [...prevData, newCandiwithProf]); // adds new candidates correctly to form
+
+    setData((prevData) => [...prevData, newCandidateInfo]); // adds new candidates correctly to form
     setShowModal(false);
     setNewCandidate({
       candidateID: "",
-      candidateName: "",
+      name: "",
+      courseName: "",
       number: "",
-      name: "CS",
       section: "",
       professor: "",
     });
-
-    setInputValue({
-      profname: "",
-      coursename: "",
-    });
   };
 
-  
-  // when add button is clicked,
-  // const handleAddCandidate = () => {
-  //   if (!newCandidate.candidateID || !newCandidate.name) {
-  //     alert("Candidate ID and Name are required!"); // prevents adding if
-  //     return;
-  //   }
-
-  //   setData((prevData) => [...prevData, newCandidate]); // adds new candidates correctly to form
-  //   setShowModal(false);
-  //   setNewCandidate({
-  //     candidateID: "",
-  //     name: "",
-  //     number: "",
-  //     class: "CS",
-  //     section: "",
-  //     professor: ""
-  //   });
-  // };
+  //Cancel Assignment button
+  const handleCancelAssignment = () => {
+    setData((prevData) =>
+      prevData.map((item) =>
+        selected.includes(item.candidateID)
+          ? {
+              ...item,
+              number: null,
+              name: null,
+              section: null,
+            }
+          : item
+      )
+    );
+    setDeleteMode(false);
+    setSelected([]);
+  };
 
   return (
     <Layout>
@@ -609,6 +599,9 @@ const GraderAssignment = () => {
                   <DeleteButton onClick={handleDelete}>
                     Delete Candidate
                   </DeleteButton>
+                  <DeleteButton onClick={handleCancelAssignment}>
+                    Cancel Assignment
+                  </DeleteButton>
                 </DeleteButtonWrap>
               )}
               <HeaderText>Select Term:</HeaderText>
@@ -616,11 +609,11 @@ const GraderAssignment = () => {
                 placeholder="Select Term"
                 width={"180px"}
                 value={selectedSemester}
-                onChange={setSelectedSemester}
+                onChange={(val) => setSelectedSemester(val.id)}
                 options={[
-                  { id: "Spring2025", name: "Spring2025" },
-                  { id: "Fall2024", name: "Fall2024" },
-                  { id: "Spring2024", name: "Spring2024" },
+                  { id: 1, name: "Spring2025" },
+                  { id: 2, name: "Fall2024" },
+                  { id: 3, name: "Spring2024" },
                 ]}
               />
             </ButtonContainer>
@@ -656,29 +649,13 @@ const GraderAssignment = () => {
                 />
               </SearchContainer>
               {/* Excel Download Button */}
-              <DropdownButton
-                label="Export"
-                options={[
-                  {
-                    label: "Export Assigments (XLSX)",
-                    onClick: handleExportAll,
-                  },
-                  {
-                    label: "Export Modified Assignment (XLSX)",
-                    onClick: handleExportModified,
-                  },
-                  {
-                    label: "Export Filtered (XLSX)",
-                    onClick: handleExportFiltered,
-                  },
-                ]}
-              />
+              <ExcelExportButton data={data} filteredData={filteredData} />
               <AddButton onClick={() => setShowModal(true)}>
                 + Add Candidate
               </AddButton>
             </RightConatiner>
           </HeaderContainer>
-          <ColumnTitle> 
+          <ColumnTitle>
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}{" "}
             {/*if deleteMode, then display column for Select*/}
             <ColumnTitleText onClick={() => handleSort("candidateID")}>
@@ -739,14 +716,23 @@ const GraderAssignment = () => {
           ))}
         </Box>
       </BoxContainer>
-      <FileUploadModal
+      <AddCandidateModal
         open={showModal}
-        onClose={() => setShowModal(false)}
+        onClose={() => {
+          setShowModal(false);
+          setNewCandidate({
+            candidateID: "",
+            name: "",
+            courseName: "",
+            number: "",
+            section: "",
+            professor: "",
+          });
+        }}
         handleSubmit={handleAddCandidate}
-        singleUpload={"Resume"}
         title={"Add Candidate"}
-        inputValue={inputValue}
-        setInputValue={setInputValue}
+        inputValue={newCandidate}
+        setInputValue={setNewCandidate}
       />
       <AssignmentDetailModal
         open={assignmentModalOpen}
@@ -759,5 +745,3 @@ const GraderAssignment = () => {
 };
 
 export default GraderAssignment;
-
-

@@ -1,5 +1,6 @@
 /** @jsxImportSource @emotion/react */
 import { css } from "@emotion/react";
+import { useNavigate } from "react-router-dom"; // To navigate to login page
 import styled from "@emotion/styled";
 import { useState } from "react";
 import Dashboard from "./Dashboard";
@@ -71,15 +72,18 @@ const Subtitle = styled.p`
 `;
 
 export default function App() {
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  // const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const navigate = useNavigate(); // Get the navigate function
+  const isLoggedIn = localStorage.getItem("authToken");
 
   const handleLogin = () => {
-    setIsLoggedIn(true);
+    localStorage.setItem("authToken", "1234");
+    navigate("/dashboard");
   };
 
   return (
     <div css={globalStyle}>
-      {isLoggedIn ? (
+      {isLoggedIn === "1234" ? (
         <Dashboard />
       ) : (
         <Layout>

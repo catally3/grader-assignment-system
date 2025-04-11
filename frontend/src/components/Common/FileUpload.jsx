@@ -2,9 +2,14 @@ import React, { useState, useRef } from "react";
 import styled from "@emotion/styled";
 import DocIcon from "../../assets/icons/icon_documents.svg";
 
-const FileUpload = () => {
+const FileUpload = ({
+  activeTab,
+  onFilesChange,
+  uploadedFiles,
+  onClose,
+  singleUpload,
+}) => {
   const [isDragging, setIsDragging] = useState(false);
-  const [files, setFiles] = useState([]);
   const fileInputRef = useRef(null);
 
   const handleDragOver = (e) => {
@@ -19,7 +24,6 @@ const FileUpload = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     setIsDragging(false);
-
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       handleFile(Array.from(e.dataTransfer.files));
     }
@@ -29,39 +33,40 @@ const FileUpload = () => {
     if (e.target.files && e.target.files.length > 0) {
       handleFile(Array.from(e.target.files));
     }
+    e.target.value = null;
   };
 
-  const handleRemoveFile = (fileNameToRemove) => {
-    setFiles((prev) => prev.filter((f) => f.name !== fileNameToRemove));
+  const handleRemoveFile = (tab, fileNameToRemove) => {
+    const newFiles = uploadedFiles[tab].filter(
+      (f) => f.name !== fileNameToRemove
+    );
+    onFilesChange(tab, newFiles);
   };
 
   const handleFile = (newFiles) => {
     const validFiles = [];
-
     for (let file of newFiles) {
       if (file.size > 5 * 1024 * 1024) {
         alert(`${file.name} exceeds 5MB limit`);
         continue;
       }
-
       const fileExtension = file.name.split(".").pop().toLowerCase();
       if (fileExtension !== "xlsx") {
         alert(`${file.name} is not an xlsx file`);
         continue;
       }
-
-      // check duplicate
-      const isDuplicate = files.some((f) => f.name === file.name);
+      const isDuplicate = uploadedFiles[activeTab]?.some(
+        (f) => f.name === file.name
+      );
       if (isDuplicate) {
-        alert(`${file.name} is already added`);
+        alert(`${file.name} is already added in ${activeTab}`);
         continue;
       }
-
       validFiles.push(file);
     }
-
     if (validFiles.length > 0) {
-      setFiles((prev) => [...prev, ...validFiles]);
+      const updatedFiles = [...(uploadedFiles[activeTab] || []), ...validFiles];
+      onFilesChange(activeTab, updatedFiles);
     }
   };
 
@@ -71,44 +76,94 @@ const FileUpload = () => {
 
   return (
     <div>
-      <UploadContainer
-        onDragOver={handleDragOver}
-        onDragLeave={handleDragLeave}
-        onDrop={handleDrop}
-        onClick={handleClick}
-        isDragging={isDragging}
-      >
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={handleFileInputChange}
-          accept=".xlsx"
-          multiple
-          style={{ display: "none" }}
-        />
-        <DocumentIcon src={DocIcon} />
-        <UploadText>
-          <UploadLink>Upload a file</UploadLink>
-          <UploadInstruction>or drag and drop</UploadInstruction>
-        </UploadText>
-        <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
-      </UploadContainer>
-      {files.length > 0 && (
-        <FileList>
-          {files.map((file, idx) => (
-            <FileItem key={idx}>
-              <FileName>{file.name}</FileName>
-              <RemoveButton
-                onClick={(e) => {
-                  e.stopPropagation(); // 부모 클릭 이벤트 방지
-                  handleRemoveFile(file.name);
-                }}
-              >
-                ×
-              </RemoveButton>
-            </FileItem>
+      {singleUpload ? (
+        <UploadContainer
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onDrop={handleDrop}
+          onClick={handleClick}
+          isDragging={isDragging}
+        >
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileInputChange}
+            accept=".xlsx"
+            multiple
+            style={{ display: "none" }}
+          />
+          <DocumentIcon src={DocIcon} />
+          <UploadText>
+            <UploadLink>Upload a file</UploadLink>
+            <UploadInstruction>or drag and drop</UploadInstruction>
+          </UploadText>
+          <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
+        </UploadContainer>
+      ) : (
+        <>
+          <UploadContainer
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleClick}
+            isDragging={isDragging}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileInputChange}
+              accept=".xlsx"
+              multiple
+              style={{ display: "none" }}
+            />
+            <DocumentIcon src={DocIcon} />
+            <UploadText>
+              <UploadLink>Upload a file</UploadLink>
+              <UploadInstruction>or drag and drop</UploadInstruction>
+            </UploadText>
+            <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
+          </UploadContainer>
+
+          <FileList>
+            {(uploadedFiles[activeTab] || []).map((file, idx) => (
+              <ProgressFileItem key={idx}>
+                <ProgressBarContainer>
+                  <ProgressBar style={{ width: "100%" }} />
+                </ProgressBarContainer>
+                <FileName>{file.name}</FileName>
+                <RemoveButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(activeTab, file.name);
+                  }}
+                >
+                  ×
+                </RemoveButton>
+              </ProgressFileItem>
+            ))}
+          </FileList>
+
+          {Object.entries(uploadedFiles).map(([category, files]) => (
+            <div key={category}>
+              <CategoryTitle>{category}</CategoryTitle>
+              <FileList>
+                {files.map((file, idx) => (
+                  <ProgressFileItem key={idx}>
+                    <FileName>{file.name}</FileName>
+                    <RemoveButton
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleRemoveFile(category, file.name);
+                      }}
+                    >
+                      ×
+                    </RemoveButton>
+                  </ProgressFileItem>
+                ))}
+              </FileList>
+            </div>
           ))}
-        </FileList>
+        </>
       )}
     </div>
   );
@@ -165,25 +220,48 @@ const FileTypeInfo = styled.p`
   margin: 0;
 `;
 
-const FileList = styled.div`
+const SectionTitle = styled.h4`
+  margin-top: 24px;
+  font-size: 15px;
+  font-weight: 700;
+  color: #f87e03;
+`;
+
+const CategoryTitle = styled.h5`
   margin-top: 16px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #333;
+`;
+
+const FileList = styled.div`
+  margin-top: 8px;
 `;
 
 const FileName = styled.p`
-  color: #333;
+  color: #b2b2b2;
   font-size: small;
   font-weight: 500;
 `;
 
-const FileItem = styled.div`
+const ProgressFileItem = styled.div`
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border: 1px solid #ccc;
-  padding: 6px 12px;
-  border-radius: 8px;
-  margin-bottom: 4px;
-  background-color: #f9f9f9;
+  gap: 12px;
+  margin-bottom: 8px;
+`;
+
+const ProgressBarContainer = styled.div`
+  flex: 1;
+  height: 8px;
+  background: #eee;
+  border-radius: 4px;
+  overflow: hidden;
+`;
+
+const ProgressBar = styled.div`
+  height: 100%;
+  background-color: #f87e03;
 `;
 
 const RemoveButton = styled.button`
