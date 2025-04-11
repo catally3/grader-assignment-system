@@ -1,10 +1,15 @@
+// src/controllers/candidateController.js
 import db from '../models/index.js';
-const { Candidate } = db;
+import transformCandidates from '../utils/transformCandidate.js';
+const Candidate = db.Candidate;
 
 const getAllCandidates = async (req, res) => {
   try {
     const candidates = await Candidate.findAll();
-    res.json(candidates);
+    // Convert candidates to JSON and then transform them.
+    const candidateJSON = candidates.map(c => c.toJSON());
+    const lightweightCandidates = transformCandidates.transformCandidatesForListing(candidateJSON);
+    res.json(lightweightCandidates);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
@@ -13,8 +18,8 @@ const getAllCandidates = async (req, res) => {
 const getCandidateById = async (req, res) => {
   try {
     const candidate = await Candidate.findByPk(req.params.id);
-    if (!candidate)
-      return res.status(404).json({ error: 'Candidate not found' });
+    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
+    // Return full candidate details here.
     res.json(candidate);
   } catch (err) {
     res.status(500).json({ error: err.message });

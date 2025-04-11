@@ -1,4 +1,6 @@
 import fs from 'fs';
+import path from 'path';
+import AdmZip from 'adm-zip';
 import pdfParse from 'pdf-parse';
 
 const DEBUG = true;
@@ -408,4 +410,44 @@ async function parseResumePdf(filePath) {
   }
 }
 
-export default { parseResumePdf };
+/**
+ * NEW FUNCTION: Parses a ZIP file containing multiple individual resume PDFs.
+ * - Extracts the ZIP file to a temporary folder.
+ * - For each PDF file, calls parseResumePdf().
+ * - Optionally renames each PDF file to include the candidate’s name.
+ * - Returns an array of candidate objects.
+ * @param {string} zipFilePath - Path to the uploaded ZIP file.
+ * @returns {Promise<Array>} Array of candidate objects.
+ */
+async function parseZipResumes(zipFilePath) {
+  try {
+    const tempDir = './temp_resumes';
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    }
+    const zip = new AdmZip(zipFilePath);
+    zip.extractAllTo(tempDir, true);
+    const files = fs.readdirSync(tempDir);
+    const allCandidates = [];
+    for (const file of files) {
+      if (path.extname(file).toLowerCase() === '.pdf') {
+        const filePath = path.join(tempDir, file);
+        const candidateData = await parseResumePdf(filePath);
+        if (candidateData && candidateData.length > 0) {
+          // Rename file to include the candidate name (replace spaces with underscores)
+          const candidateName = candidateData[0].name.replace(/\s+/g, '_');
+          const newFileName = `${candidateName}_${file}`;
+          const newFilePath = path.join(tempDir, newFileName);
+          fs.renameSync(filePath, newFilePath);
+          allCandidates.push(...candidateData);
+        }
+      }
+    }
+    return allCandidates;
+  } catch (error) {
+    console.error('Error parsing ZIP resumes:', error);
+    throw error;
+  }
+}
+
+export default { parseResumePdf, parseZipResumes };
