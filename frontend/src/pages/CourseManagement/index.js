@@ -2,6 +2,7 @@ import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import { useState } from "react"; // search state
 import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx"; 
+import SortIcon from "../../assets/icons/icon_sort.svg"; 
 
 // Professor Management
 const Title = styled.div`
@@ -154,57 +155,69 @@ const GraderAssignment = () => {
     {professor:'Vanessa Ramirez', name: 'CS', number: "1394", section: null, assigned: 'Mary Jane', recommended: "Luis Miguel", mismatch: "Already assigned to another professor"},
   ];
 
-  // SEARCH FUNCTIONALITY
-  // state used for search term input
-  const [searchTerm, setSearchTerm] = useState(""); 
-  // handles changes of search term user input (case-insensitive approach)
+  /******* SEARCH FUNCTIONALITY  *******/
+  const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
+  // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
-    setSearchTerm(event.target.value.toLowerCase()); 
+    setSearchTerm(event.target.value.toLowerCase());
   };
 
-  // SORTING FUNCTIONALITY
-  // state used for sorting
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  // handle changes to sorting behavior when clicking column header (no sort, ascending, descending)
+  /******* SORTING FUNCTIONALITY  *******/
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
+  // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "asc") {
+    if(sortConfig.key === key){
+      if(sortConfig.direction === "asc"){
         direction = "desc";
-      } else if (sortConfig.direction === "desc") {
-        direction = null; // Reset to no sorting
+      } 
+      else if(sortConfig.direction === "desc"){
+        direction = null; 
       }
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
-  // sort data based on key and direction, if no sorting, data is as
+  // return the current sort arrow based on current sorting direction, and display default
+  const getSortArrow = (key) => {
+    if (sortConfig.key !== key) {
+      return <img src={SortIcon} alt="sort logo" style={{ width: '16px', height: '16px', marginLeft: '8px', verticalAlign: 'baseline' }} />;
+    }
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+  };
+  // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
         const valA = a[sortConfig.key] || "";
         const valB = b[sortConfig.key] || "";
-        return sortConfig.direction === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return sortConfig.direction === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
       })
     : data;
-  // display sort arrows
-  const getSortArrow = (key) => {
-    if (sortConfig.key !== key) return "";  
-    return sortConfig.direction === "asc" ? "▲" : "▼";
-  }; 
 
-  // FILTER FUNCTIONALITY
-  const [selectedColumn, setSelectedColumn] = useState("");
-  const [filterValue, setFilterValue] = useState("");
+  /******* FILTER FUNCTIONALITY  *******/
+  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
+  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
+  // update selectedColumn when user selects a column
   const handleColumnChange = (event) => {
     setSelectedColumn(event.target.value);
   };
+  // update filterValue based on user input
   const handleFilterValueChange = (event) => {
     setFilterValue(event.target.value.toLowerCase());
   };
-
-  // OUPTPUT WITH SORT, SEARCH AND FILTERS
-   const filteredData = sortedData.filter((row) =>
-    Object.values(row).some((value) => value?.toLowerCase().includes(searchTerm)) &&
-    (selectedColumn ? row[selectedColumn]?.toLowerCase().includes(filterValue) : true)
+  // output based on SORTING and FILTER functionality
+  const filteredData = sortedData.filter(
+    (row) =>
+      Object.values(row).some(
+        (value) =>
+          value &&
+          typeof value === "string" &&
+          value.toLowerCase().includes(searchTerm)
+      ) &&
+      (selectedColumn
+        ? row[selectedColumn]?.toLowerCase().includes(filterValue)
+        : true)
   );
 
   // DISPLAY CANDIDATES DROPWDOWM
@@ -213,17 +226,17 @@ const GraderAssignment = () => {
     setSelectedRow(row);
   };
 
-  // REASSIGN FUNCTIONALITY: call the modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCourseData, setSelectedCourseData] = useState(null); 
-  // open the modal when reassign is clicked
+  /******** REASSIGN FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false 
+  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
+  // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
-    setSelectedCourseData(course); 
-    setIsModalOpen(true); 
+    setSelectedCourseData(course);
+    setIsModalOpen(true);
   };
-  // close the modal
+  // close the reassignment model for the selected course 
   const handleCloseModal = () => {
-    setIsModalOpen(false); 
+    setIsModalOpen(false);
   };
 
   return (

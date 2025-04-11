@@ -1,13 +1,11 @@
 import React, { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import styled from "@emotion/styled";
-
 import SidebarMenuItem from "./SidebarMenuItem";
 import gradIcon from "../assets/icons/icon_graduation.svg";
 import homeIcon from "../assets/icons/icon_home.svg";
 import listIcon from "../assets/icons/icon_list.svg";
 import peopleIcon from "../assets/icons/icon_people.svg";
-import settingIcon from "../assets/icons/icon_setting.svg";
 
 const SidebarContainer = styled.nav`
   max-width: 320px;

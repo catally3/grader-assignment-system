@@ -23,7 +23,7 @@ const HiringManagerText = styled.span`
   font-weight: bold;
 `;
 
-// here is the overview of the grader assignment.. diff padding than the rest
+// Here is the overview of the grader assignment.. diff padding than the rest
 const SubTitle = styled.div`
   font-size: medium;
   font-weight: normal;
@@ -70,12 +70,6 @@ const BoxSubText = styled.div`
   margin-top: 20px;
 `;
 
-const BoxSmallText = styled.div`
-  font-size: small;
-  font-weight: normal;
-  color: rgb(253, 135, 0);
-  margin-top: 20px;
-`;
 
 const TitleContainer = styled.div`
   display: flex;

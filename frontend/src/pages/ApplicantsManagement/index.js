@@ -1,8 +1,10 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
-import { useState } from "react"; // delete and search states
+import React, { useState } from "react";
 import FileUpload from "../../components/Common/FileUpload.jsx";
 import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx"; 
+import SortIcon from "../../assets/icons/icon_sort.svg"; 
+import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
 
 // Course Management
 const Title = styled.div`
@@ -184,112 +186,150 @@ const GraderAssignment = () => {
     { number: "4848", name: "CS", graders: "2", section: "501", professor: "Beatrice Smith", assigned: "Jose Jose"}
   ]);
 
-  // SEARCH FUNCTIONALITY
-  // state used for search
-  const [searchTerm, setSearchTerm] = useState("");
-  // get user input (search term) and convert it to lowercase for search
+  /******* SEARCH FUNCTIONALITY  *******/
+  const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
+  // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
-  /// SORTING FUNCTIONALITY
-  // state used for sorting
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  // handle changes to sorting behavior when clicking column header (no sort, ascending, descending)
+  /******* SORTING FUNCTIONALITY  *******/
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
+  // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "asc") {
+    if(sortConfig.key === key){
+      if(sortConfig.direction === "asc"){
         direction = "desc";
-      } else if (sortConfig.direction === "desc") {
-        direction = null; // Reset to no sorting
+      } 
+      else if(sortConfig.direction === "desc"){
+        direction = null; 
       }
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
-  // sort data based on key and direction, if no sorting, data is as
+  // return the current sort arrow based on current sorting direction, and display default
+  const getSortArrow = (key) => {
+    if (sortConfig.key !== key) {
+      return <img src={SortIcon} alt="sort logo" style={{ width: '16px', height: '16px', marginLeft: '8px', verticalAlign: 'baseline' }} />;
+    }
+    return sortConfig.direction === "asc" ? "▲" : "▼";
+    };
+  // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
         const valA = a[sortConfig.key] || "";
         const valB = b[sortConfig.key] || "";
-        return sortConfig.direction === "asc" ? valA.localeCompare(valB) : valB.localeCompare(valA);
+        return sortConfig.direction === "asc"
+          ? valA.localeCompare(valB)
+          : valB.localeCompare(valA);
       })
     : data;
-  // display sort arrows
-  const getSortArrow = (key) => {
-    if (sortConfig.key !== key) return "";  
-    return sortConfig.direction === "asc" ? "▲" : "▼";
-  }; 
 
-  // FILTER FUNCTIONALITY
-  const [selectedColumn, setSelectedColumn] = useState("");
-  const [filterValue, setFilterValue] = useState("");
+  /******* FILTER FUNCTIONALITY  *******/
+  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
+  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
+  // update selectedColumn when user selects a column
   const handleColumnChange = (event) => {
     setSelectedColumn(event.target.value);
   };
+  // update filterValue based on user input
   const handleFilterValueChange = (event) => {
     setFilterValue(event.target.value.toLowerCase());
   };
-
-  // OUPTPUT WITH SORT, SEARCH AND FILTERS
-  const filteredData = sortedData.filter((row) =>
-    Object.values(row).some((value) =>
-      value && typeof value === "string" && value.toLowerCase().includes(searchTerm)
-    ) &&
-    (selectedColumn ? row[selectedColumn]?.toLowerCase().includes(filterValue) : true)
+  // output based on SORTING and FILTER functionality
+  const filteredData = sortedData.filter(
+    (row) =>
+      Object.values(row).some(
+        (value) =>
+          value &&
+          typeof value === "string" &&
+          value.toLowerCase().includes(searchTerm)
+      ) &&
+      (selectedColumn
+        ? row[selectedColumn]?.toLowerCase().includes(filterValue)
+        : true)
   );
   
-  // DELETE FUNCTIONALITY
-  // states used for deletion of course
-  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false
-  const [selected, setSelected] = useState([]); // array of selected for deletion
-  // toggles between normal mode and delete mode; selection is resetted after switching to normal mode
+  /******* DELETION  FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
+  const [selected, setSelected] = useState([]); // selected stores the candidateIDs chosen to be deleted
+  // toggles deleteMode and clears any selected candidates between toggles
   const toggleDeleteMode = () => {
     setDeleteMode(!deleteMode);
     setSelected([]);
   };
-  // user confirmed deletion, DELETE! (if combo matches)
+  // adds/removes candidateIDs from selected when checkboxes are toggles
+  const handleCheckboxChange = (candidateID) => {
+    setSelected((prev) =>
+      prev.includes(candidateID)
+        ? prev.filter((item) => item !== candidateID)
+        : [...prev, candidateID]
+    );
+  };
+  // user confirmed deletion, DELETE!
   const handleDelete = () => {
     setData((prevData) =>
-      prevData.filter((row) => {
-        const rowKey = `${row.number}-${row.name}-${row.section}`;
-        return !selected.includes(rowKey);
-      })
+      prevData.filter((row) => !selected.includes(row.candidateID))
     );
     setDeleteMode(false);
     setSelected([]);
-  };
-  // create unique row identifier, consisting of number, name and section
-  // when user checks/unchecks a checkbox, rowkey is either added or removed from selected
-  const handleCheckboxChange = (row) => {
-    const { number, name, section } = row;
-    const rowKey = `${number}-${name}-${section}`;
+  }
 
-    setSelected((prev) =>
-      prev.includes(rowKey)
-        ? prev.filter((item) => item !== rowKey)
-        : [...prev, rowKey]
-    );
+  /******** REASSIGN FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false 
+  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
+  // open the reassignmnet modal for the selected course
+  const handleReassign = (course) => {
+    setSelectedCourseData(course);
+    setIsModalOpen(true);
+  };
+  // close the reassignment model for the selected course 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
   };
 
   // DISPLAY CANDIDATES DROPWDOWM
   const [selectedRow, setSelectedRow] = useState(null);
-  const handleAssignCandidate = (row) => {
-    setSelectedRow(row);
-  };
-
-  // REASSIGN FUNCTIONALITY: call the modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCourseData, setSelectedCourseData] = useState(null); 
-  // open the modal when reassign is clicked
-  const handleReassign = (course) => {
-    setSelectedCourseData(course); 
-    setIsModalOpen(true); 
-  };
-  // close the modal
-  const handleCloseModal = () => {
-    setIsModalOpen(false); 
-  };
+  const groupedData = filteredData.reduce((acc, row) => {
+    const courseKey = `${row.number}-${row.section}-${row.professor}`;
+    if (!acc[courseKey]) {
+      acc[courseKey] = [];
+    }
+    acc[courseKey].push(row);
+    return acc;
+  }, {});
+  
+  const renderGroupedRow = (group, key) => (
+    <Row key={key}>
+      {deleteMode && (
+        <Column>
+          <input
+            type="checkbox"
+            checked={selected.includes(key)}
+            onChange={() => handleCheckboxChange(group[0])}
+          />
+        </Column>
+      )}
+      <Column>{group[0].number || "N/A"}</Column>
+      <Column>{group[0].name || "N/A"}</Column>
+      <Column>{group[0].graders || "N/A"}</Column>
+      <Column>{group[0].professor || "N/A"}</Column>
+      <Column>
+        {/* Removed the onClick handler */}
+        <span>{group.map(row => row.assigned || "N/A").join(", ")}</span>
+      </Column>
+      <Column>
+        <ReassignButton onClick={() => handleReassign(group)}>Reassign</ReassignButton>
+        <CourseManagementModal
+          open={isModalOpen}
+          onClose={handleCloseModal}
+          courseData={selectedCourseData} 
+          allCourses={filteredData} 
+        />
+      </Column>
+    </Row>
+  );
   
   return (
     <Layout>
@@ -307,20 +347,17 @@ const GraderAssignment = () => {
             </SearchContainer>
             <ButtonContainer>
               <DeleteButton onClick={toggleDeleteMode}>
-                {" "}
-                {deleteMode ? "Cancel" : "Delete Course"}{" "}
+                {deleteMode ? "Cancel" : "Delete Course"}
               </DeleteButton>
               {deleteMode && (
-                <DeleteButton onClick={handleDelete}>
-                  Confirm Delete
-                </DeleteButton>
+                <DeleteButton onClick={handleDelete}>Confirm Delete</DeleteButton>
               )}
             </ButtonContainer>
             <FilterContainer>
               <HeaderText>Filter:</HeaderText>
               <FilterDropdown onChange={handleColumnChange} value={selectedColumn}>
                 <option value="">Select Column</option>
-                <option value="number"> Course Number</option>
+                <option value="number">Course Number</option>
                 <option value="name">Course Name</option>
                 <option value="graders">Number of Graders</option>
                 <option value="professor">Professor Name</option>
@@ -335,7 +372,7 @@ const GraderAssignment = () => {
             </FilterContainer>
           </HeaderContainer>
           <ColumnTitle>
-            {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}{" "}
+            {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}
             <ColumnTitleText onClick={() => handleSort("number")}>Course Number {getSortArrow("number")}</ColumnTitleText>
             <ColumnTitleText onClick={() => handleSort("name")}>Course Name {getSortArrow("name")}</ColumnTitleText>
             <ColumnTitleText onClick={() => handleSort("graders")}>Number of Graders {getSortArrow("graders")}</ColumnTitleText>
@@ -343,77 +380,12 @@ const GraderAssignment = () => {
             <ColumnTitleText onClick={() => handleSort("assigned")}>Assigned Candidate {getSortArrow("assigned")}</ColumnTitleText>
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
-          {filteredData.map((row, index) => (
-            <Row key={index}>
-              {deleteMode && (
-                <Column>
-                  <input
-                    type="checkbox"
-                    checked={selected.includes(
-                      `${row.number}-${row.name}-${row.section}`
-                    )}
-                    onChange={() => handleCheckboxChange(row)}
-                  />
-                </Column>
-              )}
-              <Column>{row.number || "N/A"}</Column>
-              <Column>{row.name || "N/A"}</Column>
-              <Column>{row.graders || "N/A"}</Column>
-              <Column>{row.professor || "N/A"}</Column>
-              <Column onClick={() => handleAssignCandidate(row)}>
-                {selectedRow === row ? (
-                  <div style={{
-                    backgroundColor: "#f0f0f0",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    padding: "5px",
-                    width: "150px",
-                    color: "#333",
-                    maxHeight: "150px",
-                    overflowY: "auto", 
-                    pointerEvents: "none", 
-                    userSelect: "none", 
-                  }}>
-                    {filteredData
-                      .filter(
-                        (r) =>
-                          r.number === row.number &&
-                          r.name === row.name &&
-                          r.section === row.section &&
-                          r.professor === row.professor &&
-                          r.graders === row.graders
-                      )
-                      .map((filteredRow, index, array) => (
-                        <div 
-                          key={filteredRow.assigned} 
-                          style={{
-                            padding: "5px 0",
-                            borderBottom: index === array.length - 1 ? "none" : "1px solid #ccc" // Remove border on the last item
-                          }}
-                        >
-                          {filteredRow.assigned || "N/A"}
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <span>{row.assigned || "N/A"}</span>
-                )}
-              </Column>
-              <Column>
-                <ReassignButton onClick={() => handleReassign(row)}>Reassign</ReassignButton>
-                <CourseManagementModal
-                  open={isModalOpen}
-                  onClose={handleCloseModal}
-                  courseData={selectedCourseData} 
-                  allCourses={filteredData} 
-                />
-              </Column>
-            </Row>
-          ))}
+  
+          {/* Render grouped data */}
+          {Object.entries(groupedData).map(([key, group]) => renderGroupedRow(group, key))}
         </Box>
       </BoxContainer>
     </Layout>
   );
-};
-
+}
 export default GraderAssignment;

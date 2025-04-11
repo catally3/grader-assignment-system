@@ -1,17 +1,14 @@
 import styled from "@emotion/styled";
-
 import * as XLSX from "xlsx";
 import { saveAs } from "file-saver";
-
 import Layout from "../../layouts/Layout.js";
 import { useState } from "react"; // delete, add, search states
 import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
-
 import FileUploadModal from "../../components/Modals/FileUploadModal.jsx";
 import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
-
 import DropdownButton from "../../components/Common/DropdownButton.jsx";
 import SelectBox from "../../components/Common/SelectBox.jsx";
+import SortIcon from "../../assets/icons/icon_sort.svg"; 
 
 // Candidate Management
 const Title = styled.div`
@@ -364,30 +361,36 @@ const GraderAssignment = () => {
     },
   ]);
 
-  // SEARCH FUNCTIONALITY
-  // state used for search
-  const [searchTerm, setSearchTerm] = useState("");
-  // get user input (search term) and convert it to lowercase for search
+  /******* SEARCH FUNCTIONALITY  *******/
+  const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
+  // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
-  /// SORTING FUNCTIONALITY
-  // state used for sorting
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" });
-  // handle changes to sorting behavior when clicking column header (no sort, ascending, descending)
+  /******* SORTING FUNCTIONALITY  *******/
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
+  // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
-    if (sortConfig.key === key) {
-      if (sortConfig.direction === "asc") {
+    if(sortConfig.key === key){
+      if(sortConfig.direction === "asc"){
         direction = "desc";
-      } else if (sortConfig.direction === "desc") {
-        direction = null; // Reset to no sorting
+      } 
+      else if(sortConfig.direction === "desc"){
+        direction = null; 
       }
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
-  // sort data based on key and direction, if no sorting, data is as
+  // return the current sort arrow based on current sorting direction, and display default
+  const getSortArrow = (key) => {
+  if (sortConfig.key !== key) {
+    return <img src={SortIcon} alt="sort logo" style={{ width: '16px', height: '16px', marginLeft: '8px', verticalAlign: 'baseline' }} />;
+  }
+  return sortConfig.direction === "asc" ? "▲" : "▼";
+};
+  // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
         const valA = a[sortConfig.key] || "";
@@ -397,23 +400,19 @@ const GraderAssignment = () => {
           : valB.localeCompare(valA);
       })
     : data;
-  // display sort arrows
-  const getSortArrow = (key) => {
-    if (sortConfig.key !== key) return "";
-    return sortConfig.direction === "asc" ? "▲" : "▼";
-  };
 
-  // FILTER FUNCTIONALITY
-  const [selectedColumn, setSelectedColumn] = useState("");
-  const [filterValue, setFilterValue] = useState("");
+  /******* FILTER FUNCTIONALITY  *******/
+  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
+  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
+  // update selectedColumn when user selects a column
   const handleColumnChange = (event) => {
     setSelectedColumn(event.target.value);
   };
+  // update filterValue based on user input
   const handleFilterValueChange = (event) => {
     setFilterValue(event.target.value.toLowerCase());
   };
-
-  // OUPTPUT WITH SORT, SEARCH AND FILTERS
+  // output based on SORTING and FILTER functionality
   const filteredData = sortedData.filter(
     (row) =>
       Object.values(row).some(
@@ -427,17 +426,72 @@ const GraderAssignment = () => {
         : true)
   );
 
-  // DELETE FUNCTIONALITY
-  // states used for deletion of candidate
-  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false
-  const [selected, setSelected] = useState([]); // array of candidate ID's selected for deletion
+  /******* DELETION  FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
+  const [selected, setSelected] = useState([]); // selected stores the candidateIDs chosen to be deleted
+  // toggles deleteMode and clears any selected candidates between toggles
+  const toggleDeleteMode = () => {
+    setDeleteMode(!deleteMode);
+    setSelected([]);
+  };
+  // adds/removes candidateIDs from selected when checkboxes are toggles
+  const handleCheckboxChange = (candidateID) => {
+    setSelected((prev) =>
+      prev.includes(candidateID)
+        ? prev.filter((item) => item !== candidateID)
+        : [...prev, candidateID]
+    );
+  };
+  // user confirmed deletion, DELETE!
+  const handleDelete = () => {
+    setData((prevData) =>
+      prevData.filter((row) => !selected.includes(row.candidateID))
+    );
+    setDeleteMode(false);
+    setSelected([]);
+  }
 
+  /******** REASSIGN FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false 
+  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
+  // open the reassignmnet modal for the selected course
+  const handleReassign = (course) => {
+    setSelectedCourseData(course);
+    setIsModalOpen(true);
+  };
+  // close the reassignment model for the selected course 
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+  };
+
+  /******** EXPORT FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  // exports the data to excel based on the file an,e
+  const exportToExcel = (exportData, filename) => {
+    let dataToExport = exportData;
+    if (filename === "Modified_Assignment_Data") {
+      dataToExport = exportData.filter((item) => item.number === null);
+    }
+    const ws = XLSX.utils.json_to_sheet(dataToExport);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
+    const blob = new Blob([excelBuffer], {
+      type: "application/octet-stream",
+    });
+    saveAs(blob, `${filename}.xlsx`);
+  };
+  const handleExportAll = () => exportToExcel(data, "All_Assignment_Data"); // trigger the respective export function with approprtiate data
+  const handleExportModified = () => exportToExcel(data, "Modified_Assignment_Data");
+  const handleExportFiltered = () => exportToExcel(filteredData, "Filtered_Data");
+
+
+
+  /******** ADD CANDIDATE FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
   // professor name input for fileupload modal
   const [inputValue, setInputValue] = useState({
     profname: "",
     coursename: "",
   });
-
   const [modalOpen, setModalOpen] = useState(false);
   const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
   const [assignmentInfo, setAssignmentInfo] = useState({
@@ -462,48 +516,7 @@ const GraderAssignment = () => {
     school: "The University of Texas at Dallas",
     year: "masters",
   });
-
   const [selectedSemester, setSelectedSemester] = useState(null);
-
-  // toggles between normal mode and delete mode; selection is resetted after switching to normal mode
-  const toggleDeleteMode = () => {
-    setDeleteMode(!deleteMode);
-    setSelected([]);
-  };
-  // when user checks/unchecks a checkbox, id is either added or removed from selected
-  // note: if entries have the same candidate id's, selecting one will select the other(s)
-  const handleCheckboxChange = (id) => {
-    setSelected((prev) =>
-      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
-    );
-  };
-
-  // user confirmed deletion, DELETE!
-  const handleDelete = () => {
-    setData((prevData) =>
-      prevData.filter((row) => !selected.includes(row.candidateID))
-    );
-    setDeleteMode(false);
-    setSelected([]);
-  };
-
-  const handleCancelAssignment = () => {
-    setData((prevData) =>
-      prevData.map((item) =>
-        selected.includes(item.candidateID)
-          ? {
-              ...item,
-              number: null,
-              name: null,
-              section: null,
-            }
-          : item
-      )
-    );
-    setDeleteMode(false);
-    setSelected([]);
-  };
-
   // ADD CANDIDATE FUNCTIONALITY
   // states used to add candidate
   const [showModal, setShowModal] = useState(false);
@@ -515,7 +528,6 @@ const GraderAssignment = () => {
     section: "",
     professor: "",
   });
-
   // update newCandidate when inputting
   const handleInputChange = (event) => {
     setNewCandidate((prev) => ({
@@ -523,38 +535,16 @@ const GraderAssignment = () => {
       [event.target.name]: event.target.value,
     }));
   };
-
-  // DISPLAY CANDIDATES DROPWDOWM
-  const [selectedRow, setSelectedRow] = useState(null);
-  const handleAssignCandidate = (row) => {
-    setSelectedRow(row);
-  };
-
-  // REASSIGN FUNCTIONALITY: call the modal
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [selectedCourseData, setSelectedCourseData] = useState(null);
-  // open the modal when reassign is clicked
-  const handleReassign = (course) => {
-    setSelectedCourseData(course);
-    setIsModalOpen(true);
-  };
-  // close the modal
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
-  };
-
   // when add button is clicked,
   const handleAddCandidate = () => {
     if (!newCandidate.candidateID || !newCandidate.candidateName) {
       alert("Candidate ID and Name are required!"); // prevents adding if
       return;
     }
-
-    if (inputValue?.profname === "John") {
+    if (inputValue?.profname === "John") { // should compare againist a list of professors
       alert("Professor does not exist or already all graders are assigned"); // prevents adding if
       return;
     }
-
     const newCandiwithProf = {
       candidateID: "TEST",
       candidateName: inputValue?.profname ? "Assigned Data" : "NEW Candidate",
@@ -563,7 +553,6 @@ const GraderAssignment = () => {
       section: "222",
       professor: inputValue?.profname ? inputValue?.profname : "",
     };
-
     setData((prevData) => [...prevData, newCandiwithProf]); // adds new candidates correctly to form
     setShowModal(false);
     setNewCandidate({
@@ -581,6 +570,7 @@ const GraderAssignment = () => {
     });
   };
 
+  
   // when add button is clicked,
   // const handleAddCandidate = () => {
   //   if (!newCandidate.candidateID || !newCandidate.name) {
@@ -599,31 +589,6 @@ const GraderAssignment = () => {
   //     professor: ""
   //   });
   // };
-
-  // export to Excel
-  const exportToExcel = (exportData, filename) => {
-    let dataToExport = exportData;
-
-    if (filename === "Modified_Assignment_Data") {
-      dataToExport = exportData.filter((item) => item.number === null);
-    }
-
-    const ws = XLSX.utils.json_to_sheet(dataToExport);
-    const wb = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-
-    const excelBuffer = XLSX.write(wb, { bookType: "xlsx", type: "array" });
-    const blob = new Blob([excelBuffer], {
-      type: "application/octet-stream",
-    });
-    saveAs(blob, `${filename}.xlsx`);
-  };
-
-  const handleExportAll = () => exportToExcel(data, "All_Assignment_Data");
-  const handleExportModified = () =>
-    exportToExcel(data, "Modified_Assignment_Data");
-  const handleExportFiltered = () =>
-    exportToExcel(filteredData, "Filtered_Data");
 
   return (
     <Layout>
@@ -644,9 +609,6 @@ const GraderAssignment = () => {
                   <DeleteButton onClick={handleDelete}>
                     Delete Candidate
                   </DeleteButton>
-                  <DeleteButton onClick={handleCancelAssignment}>
-                    Cancel Assignment
-                  </DeleteButton>
                 </DeleteButtonWrap>
               )}
               <HeaderText>Select Term:</HeaderText>
@@ -662,7 +624,6 @@ const GraderAssignment = () => {
                 ]}
               />
             </ButtonContainer>
-
             {/* SelectBox(move to previous candidates) */}
             <ButtonContainer></ButtonContainer>
             <RightConatiner>
@@ -717,14 +678,14 @@ const GraderAssignment = () => {
               </AddButton>
             </RightConatiner>
           </HeaderContainer>
-          <ColumnTitle>
+          <ColumnTitle> 
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}{" "}
             {/*if deleteMode, then display column for Select*/}
             <ColumnTitleText onClick={() => handleSort("candidateID")}>
               Candidate ID {getSortArrow("candidateID")}
             </ColumnTitleText>
             <ColumnTitleText onClick={() => handleSort("name")}>
-              Candidate Name {getSortArrow("candidateName")}
+              Candidate Name {getSortArrow("name")}
             </ColumnTitleText>
             <ColumnTitleText onClick={() => handleSort("number")}>
               Candidate Number {getSortArrow("number")}
@@ -741,10 +702,8 @@ const GraderAssignment = () => {
                 <Column>
                   <input
                     type="checkbox"
-                    checked={selected.includes(
-                      `${row.number}-${row.name}-${row.section}`
-                    )}
-                    onChange={() => handleCheckboxChange(row.id)}
+                    checked={selected.includes(row.candidateID)}
+                    onChange={() => handleCheckboxChange(row.candidateID)}
                   />
                 </Column>
               )}
@@ -795,61 +754,10 @@ const GraderAssignment = () => {
         title={"Grader Assignment Detail"}
         assignmentInfo={assignmentInfo}
       />
-      {/* {showModal && (
-        <ModalOverlay>
-          <ModalContent>
-            <ModalTitle>Add New Candidate</ModalTitle>
-            <Input
-              name="candidateID"
-              placeholder="Candidate ID"
-              value={newCandidate.candidateID}
-              onChange={handleInputChange}
-            />
-            <Input
-              name="candidateName"
-              placeholder="Candidate Name"
-              value={newCandidate.name}
-              onChange={handleInputChange} 
-            />
-            <Input
-              name="number"
-              placeholder="Course Number"
-              value={newCandidate.number}
-              onChange={handleInputChange}
-            />
-            <Input
-              name="section"
-              placeholder="Section"
-              value={newCandidate.section}
-              onChange={handleInputChange}
-            />
-            <Input
-              name="professor"
-              placeholder="Professor Name"
-              value={newCandidate.professor}
-              onChange={handleInputChange}
-            />
-            <ModalButtonContainer>
-              <ModalButton onClick={handleAddCandidate}>Add</ModalButton>
-              <ModalButton onClick={() => setShowModal(false)}>
-                Cancel
-              </ModalButton>
-            </ModalButtonContainer>
-          </ModalContent>
-        </ModalOverlay>
-      )} */}
     </Layout>
   );
 };
 
 export default GraderAssignment;
 
-/*
-Delete Candidate Process:
-  - There are 2 modes, normal mode and delete mode. You switched between by the Delete Candidate and Cancel button
-    - Normal Mode: Default, you just see the list of candidates
-    - Delete Mode: Checkboxes appear next to the each candidate entry 
-      - Checking Box: candidate id is added to selected array
-      - Unchecking Box: candidate id is removed from selected
-    - Confirm Deletion: When user confirms, candidates ids in slected are removed from data array
-*/
+

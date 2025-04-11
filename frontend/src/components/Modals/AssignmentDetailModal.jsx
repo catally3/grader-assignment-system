@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
-
 import Modal, {
   CustomShadowButtonWrap,
   ModalContainer,
@@ -11,7 +10,6 @@ import InfoSection from "../InfoSection";
 import MatchingResults from "../MatchingResults";
 import DocumentViewer from "../DocumentViewer";
 import ActionButtons from "../ActionButtons";
-
 import CloseIcon from "../../assets/icons/icon_close.svg";
 import DownIcon from "../../assets/icons/icon_download.svg";
 
@@ -23,6 +21,9 @@ const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
     document.body.style = `overflow: hidden`;
     return () => (document.body.style = `overflow: auto`);
   }, []);
+
+
+
 
   return (
     <Modal open={open} onClose={onClose}>
