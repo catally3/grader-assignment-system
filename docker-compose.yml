@@ -1,5 +1,3 @@
-
-
 services:
   mysql:
     image: mysql:9
@@ -28,14 +26,14 @@ services:
       - MYSQL_USER=${MYSQL_USER}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     ports:
-      - "9000:3000"
+      - "3001:3001"
     depends_on:
       - mysql
     volumes:
       - .:/backendapp
 
   frontend:
-    build: 
+    build:
       context: ./frontend
       dockerfile: Dockerfile
     container_name: gas_frontend

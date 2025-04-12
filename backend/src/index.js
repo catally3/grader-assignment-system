@@ -7,18 +7,30 @@ const matchingRoutes = require('./routes/matchingRoutes');
 const importRoutes = require('./routes/importRoutes');
 
 const app = express();
+const cors = require('cors');
 const port = process.env.APP_PORT || 3001;
 
+// **[Kay] Add cors**
+app.use(cors());
 app.use(express.json());
 
-// Create a MySQL connection pool using mysql2/promise.
+// **[Kay] Edited properties**
 const pool = mysql.createPool({
   host: process.env.DB_HOST || 'mysql',
-  port: process.env.MYSQL_LOCAL_PORT,
-  database: process.env.MYSQL_DATABASE,
-  user: process.env.MYSQL_USER,
-  password: process.env.MYSQL_ROOT_PASSWORD
+  port: process.env.DB_PORT,
+  database: process.env.DB_NAME,
+  user: process.env.DB_USER,
+  password: process.env.DB_PASSWORD,
 });
+
+// Create a MySQL connection pool using mysql2/promise.
+// const pool = mysql.createPool({
+//   host: process.env.DB_HOST || 'mysql',
+//   port: process.env.MYSQL_LOCAL_PORT,
+//   database: process.env.MYSQL_DATABASE,
+//   user: process.env.MYSQL_USER,
+//   password: process.env.MYSQL_ROOT_PASSWORD
+// });
 
 // Make the pool available to all controllers via app.locals.
 app.locals.pool = pool;
