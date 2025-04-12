@@ -9,9 +9,9 @@ import App from "./App";
 import themeColor from "./utils/theme";
 import reportWebVitals from "./reportWebVitals";
 
-import { configureAxios } from "./api/configureAxios";
+import { axiosInstance } from "./api/axiosInstance";
 
-// configureAxios();
+// axiosInstance();
 
 const root = ReactDOM.createRoot(document.getElementById("root"));
 root.render(

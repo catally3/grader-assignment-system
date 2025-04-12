@@ -8,6 +8,7 @@ import SelectBox from "../../components/Common/SelectBox.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
 import AddCandidateModal from "../../components/Modals/AddCandidateModal.jsx";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
+import { getCandidates } from "../../api/candidates.js";
 
 // Candidate Management
 const Title = styled.div`
@@ -293,6 +294,18 @@ const ArrowIcon = styled.img`
 `;
 
 const GraderAssignment = () => {
+  const [candidates, setCandidates] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getCandidates();
+      // setCandidates(data);
+      console.log(data);
+    };
+
+    fetchData();
+  }, []);
+
   const [data, setData] = useState([
     {
       candidateID: "12341",
