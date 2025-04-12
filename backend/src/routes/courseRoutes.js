@@ -1,9 +1,12 @@
-// backend/src/routes/courseRoutes.js
-const express = require('express');
+import express from 'express';
+import courseController from '../controllers/courseController.js';
+
 const router = express.Router();
-const courseController = require('../controllers/courseController');
 
-// GET /api/courses
-router.get('/', courseController.getCourses);
+router.get('/', courseController.getAllCourses);
+router.get('/:id', courseController.getCourseById);
+router.post('/', courseController.createCourse);
+router.put('/:id', courseController.updateCourse);
+router.delete('/:id', courseController.deleteCourse);
 
-module.exports = router;
+export default router;

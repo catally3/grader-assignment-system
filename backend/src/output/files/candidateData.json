@@ -1,0 +1,270 @@
+[
+  {
+    "email": "email@resumeworded.com",
+    "phone": "+1-234-456-789",
+    "name": "First Last",
+    "education": "Resume Worded University\nBachelor of Science\nComputer Science\nBoston, MA — 05/2010\nAwards: Resume Worded Teaching\nFellow (only 5 awarded to class), Dean’s\nList 2012 (Top 10%)",
+    "gpa": null,
+    "skills": [
+      "Coding (Advanced)",
+      "Debugging (Experienced)",
+      "Software Design and Testing",
+      "Web Development",
+      "Rentals",
+      "JavaScript",
+      "Python",
+      "C++",
+      "Git",
+      "Ansible",
+      "LoadRunner",
+      "JUnit",
+      "Selenium"
+    ],
+    "experience": [
+      {
+        "company": "",
+        "role": "",
+        "duration": "01/2015 – Present",
+        "description": [
+          "",
+          "Created new features to RW's SPA network that allowed 2.6 K users to",
+          "retrieve data about a web path utilizing Google maps.",
+          "",
+          "Repaired a bug that reduced 800 user complaints on the company's",
+          "library website by 82%.",
+          "",
+          "Created a feature that improved the click-through rate of RW's",
+          "website by 75%.",
+          "",
+          "Provided networking, account maintenance, and desktop support to",
+          "1.8 K customers.",
+          "Growthsi, San Francisco, CA",
+          "Desktop Support Engineer"
+        ],
+        "matchedSkills": []
+      },
+      {
+        "company": "",
+        "role": "",
+        "duration": "06/2010 – 12/2014",
+        "description": [
+          "",
+          "Create processes that enable online access to community forums on",
+          "Growthsi website, improving internet traffic by 30%.",
+          "",
+          "Resolved support calls from 1.1 K end-users, boosting customer",
+          "satisfaction rating by 73%."
+        ],
+        "matchedSkills": []
+      }
+    ]
+  },
+  {
+    "email": "email@example.com",
+    "name": "Dan Clark",
+    "education": "Courses\nProtocol Testing\nUser Documentation\nTraining Manuals",
+    "gpa": 3.21,
+    "skills": [
+      "R Python C#.Net HTML JavaScript Oracle Linux Ruby Embedded So\u0000ware Systems Architecture Design Smalltalk Visual Studio Conduct debugging and fix system incompatibilities arising a\u0000er new so\u0000ware was implemented Junior Level So\u0000ware Engineer at Coca Cola",
+      "San Diego July 2011 – December 2011 Assisting Senior So\u0000ware Engineer with designing algorithms for error analysis purposes on the Intel i 32 servers reducing systems downtime by 28% a\u0000er running those algorithms. Assist in developing so\u0000ware solutions to meet customer requirements Participate in the full development life cycle of products including requirement analysis",
+      "architectural design and component so\u0000ware features through to implementation of test plans and documenting final product solution Assist in groundwork development of applications written in PHP",
+      "JavaScript",
+      "Perl",
+      "C++",
+      "C#",
+      "or Java. Other duties include reviewing code",
+      "writing documentation",
+      "and following test procedures Also involved with UI (user interface) design",
+      "graphics development",
+      "and 3-D programming Masters Degree in Computer Science",
+      "Kaplan University",
+      "Orlando March 2014 – December 2015 Majors: IT Infrastructure",
+      "Game Apps Design Bachelor of Science in Electrical and Computer Engineering",
+      "Carnegie Mellon University",
+      "Pittsburgh July 2011 – December 2013 Majors: Electrical Engineering",
+      "Computer Engineering Overall GPA: 3.21/4.00 Associates Degree in So\u0000ware Engineering",
+      "Milwaukee School of Engineering",
+      "Milwaukee July 2008 – March 2010 Certified Network Professional (CNP)",
+      "Florida Institute of Technology February 2010 – December 2011 Certificate in Multi-platform So\u0000ware Development",
+      "Institute for Certification of Computer Professionals (ICCP) March 2019 – Present"
+    ],
+    "experience": []
+  },
+  {
+    "email": "professionalemail@resumeworded.com",
+    "phone": "+1-234-456-789",
+    "name": "First Last",
+    "education": "Resume Worded University, New York, NY 06/2005\nBachelor of Science — Computer Science",
+    "gpa": null,
+    "skills": [
+      "SEO Integration (Advanced)",
+      "Unit Testing(Experienced)",
+      "TDD/BDD",
+      "UI Development",
+      "Debugging",
+      "Coding.  PHP",
+      "MySQL",
+      "MongoDB (Advanced)",
+      "C++",
+      "Java",
+      "JSX",
+      "Angular",
+      "Sigma",
+      "DevOps",
+      "JUnit."
+    ],
+    "experience": [
+      {
+        "company": "Resume Worded, New York, NY",
+        "role": "Education technology startup with 50+ employees and $100 m+ annual revenue React Developer",
+        "duration": "09/2015 – Present",
+        "description": [
+          "",
+          "Decreased load times by 58% using isomorphic React and Node.js for 13 web applications one month after",
+          "taking over the project.",
+          "",
+          "Partnered with a team of 5 developers to create 14 e-commerce websites using React and NodeJS in the",
+          "first month on the job.",
+          "",
+          "Reduced the time spent on development by 73% by creating maintainable reusable components.",
+          "",
+          "Created an interactive and user-friendly website experience by working with a team of 25 developers for",
+          "one month."
+        ],
+        "matchedSkills": []
+      },
+      {
+        "company": "Polyhire, London, United Kingdom",
+        "role": "NYSE-listed recruitment and employer branding company Mobile Application Developer",
+        "duration": "10/2012 – 08/2015",
+        "description": [
+          "",
+          "Created a web service used by 200 K clients and generates $100 K monthly within 20 days after inception.",
+          "",
+          "Devised a system to host mobile applications using Polyhire servers instead of remote, leading to cost",
+          "savings of $940 K per month.",
+          "",
+          "Designed a video game idea for 2 M children on Ubuntu-based PCs scaled for large TV displays across the",
+          "country."
+        ],
+        "matchedSkills": []
+      },
+      {
+        "company": "Growthsi, London, United Kingdom",
+        "role": "Career training and membership SaaS with 150, 000 paying users Mobile Developer",
+        "duration": "07/2010 – 09/2012",
+        "description": [
+          "",
+          "Launched a new mobile app, BMI First, that generated 100 K downloads and was featured in Time Magazine",
+          "as the “App of the Year.\"",
+          "",
+          "Created a mobile game 'SpaceX' program that was downloaded 200 K times and played by 15 M people.",
+          "",
+          "Established Objective-C libraries & APIs, utilizing OOP and modeled data structures that can be used on 48",
+          "different apps."
+        ],
+        "matchedSkills": []
+      },
+      {
+        "company": "UI Developer, ABC Company, London, United Kingdom",
+        "role": "",
+        "duration": "10/2008 – 06/2009",
+        "description": [],
+        "matchedSkills": []
+      },
+      {
+        "company": "Programmer, XYZ Company, London, United Kingdom",
+        "role": "",
+        "duration": "07/2005– 09/2008",
+        "description": [],
+        "matchedSkills": []
+      }
+    ]
+  },
+  {
+    "email": "professionalemail@resumeworded.com",
+    "phone": "+1-234-456-789",
+    "name": "FIRST LAST",
+    "education": "Resume Worded University,\nSan Francisco, CA\nMay 2010\nMaster of Science; Major in Information Technology",
+    "gpa": null,
+    "skills": [
+      "Technical Skills",
+      "Industry Knowledge",
+      "Tools & Software",
+      "Docker Products",
+      "Software Development",
+      "Maven",
+      "Web Development",
+      "Agile Methodologies",
+      "Microsoft Visual Studio",
+      "Coding.",
+      ".NET Framework.",
+      "Jenkins"
+    ],
+    "experience": [
+      {
+        "company": "Resume Worded, New York, NY",
+        "role": "Software Developer",
+        "duration": "Jun 2018 – Present",
+        "description": [
+          "",
+          "Created a new system that tracked and examined customer data, increasing sales by 23% within 32 days of",
+          "implementation.",
+          "",
+          "Conceived and introduced an automated email response system, which reduced response time to 3 K email",
+          "messages by 71%.",
+          "",
+          "Saved 13 person-hours daily by writing scripts to automate 25 tasks like database backups, restores, and server",
+          "provisioning.",
+          "",
+          "Developed a user interface as a single-page application using React and MobX, which increased the",
+          "productivity of 10 K users by 87%."
+        ],
+        "matchedSkills": []
+      },
+      {
+        "company": "Growthsi, New York, NY",
+        "role": "Software Tester",
+        "duration": "Jan 2015 – May 2018",
+        "description": [
+          "",
+          "Introduced the idea of bug fixing during graveyard shifts, which led to a quarterly savings of $950 K in labor",
+          "costs.",
+          "",
+          "Championed a major decision to abandon 17 projects by discovering critical defects in a high-level application",
+          "worth $2 M",
+          "",
+          "Completed and achieved the launch of 15 products within 35 days with a moderate error rate of 1%, an",
+          "improvement over previous years.",
+          "",
+          "Performed penetration tests with zero-day vulnerability discovery devices on 25 internally developed",
+          "applications; identified that 75% of the software code was vulnerable to attack."
+        ],
+        "matchedSkills": []
+      },
+      {
+        "company": "Resume Worded Exciting Company, San Diego, CA",
+        "role": "IT Support Engineer",
+        "duration": "June 2010 – Dec 2014",
+        "description": [
+          "",
+          "Overhauled Growthsi help desk by reducing average ticket time from 7 business days to 30 minutes in the",
+          "first month of employment.",
+          "",
+          "Contributed to developing a new access system that reduced 65% of data collection by completing 25 projects",
+          "on schedule with zero server downtime.",
+          "",
+          "Established a naming convention for all files and identified 18 process improvement opportunities, reducing",
+          "helpdesk calls from 27% of total IT calls to <2%.",
+          "",
+          "Developed an automated software to resolve customers' issues based on user performance analysis and error",
+          "reports; reduced resolution time from 24 hours to 15 minutes.",
+          "",
+          "Saved the company over $78 K in repair costs by performing data recovery after its server was destroyed by",
+          "malware."
+        ],
+        "matchedSkills": []
+      }
+    ]
+  }
+]

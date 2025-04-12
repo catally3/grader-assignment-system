@@ -11,6 +11,21 @@ USE `grader_assignment`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
+-- Create Courses table
+CREATE TABLE Courses (
+  id INT AUTO_INCREMENT PRIMARY KEY,
+  professorName VARCHAR(255) NOT NULL,
+  professorEmail VARCHAR(255),
+  courseNumber VARCHAR(50),
+  section VARCHAR(50),
+  courseName VARCHAR(255) NOT NULL,
+  recommendedStudentName VARCHAR(255),
+  recommendedStudentNetid VARCHAR(255),
+  numOfGraders INT,
+  keywords JSON,
+  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
+  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+);
 
 -- **[Kay] Reorder applicant_skill down**
 

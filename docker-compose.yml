@@ -6,6 +6,7 @@ services:
     env_file: ./.env
     environment:
       - MYSQL_USER=${MYSQL_USER}
+      - MYSQL_PASSWORD=${MYSQL_PASSWORD}
       - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
       - MYSQL_DATABASE=${MYSQL_DATABASE}
     ports:
@@ -13,6 +14,11 @@ services:
     volumes:
       - ./db:/var/lib/mysql
       - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
 
   backend:
     build: ./backend
@@ -20,15 +26,16 @@ services:
     restart: unless-stopped
     env_file: .env
     environment:
-      - DB_HOST=mysql
-      - MYSQL_LOCAL_PORT=${MYSQL_LOCAL_PORT}
-      - MYSQL_DATABASE=${MYSQL_DATABASE}
-      - MYSQL_USER=${MYSQL_USER}
-      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
+      - DB_HOST=${DB_HOST}
+      - DB_PORT=${DB_PORT}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
     ports:
       - "3001:3001"
     depends_on:
-      - mysql
+      mysql:
+        condition: service_healthy
     volumes:
       - .:/backendapp
 
