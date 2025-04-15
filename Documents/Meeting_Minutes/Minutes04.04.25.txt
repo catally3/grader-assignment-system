@@ -47,21 +47,21 @@ Anh Tran -  10 Hours
 Feedback:
 1. Dashboard
     - Files uploads should be isolated, ensuring that previous file uploads are not carried over.                                                   
-    - When clicking on an unassgined course, user should be navigates to its corresponding course in Course Management.
+    - When clicking on an unassigned course, the user should be navigated to its corresponding course in Course Management.
 2. Candidate Management
     - Extend filter functionality to list of candidates when manually reassigning.
     - Extend to add netID.
     - Ensure that excel exports only include assigned candidates.
-    - Add flexability to Add Candidate functinality by including these test cases:  
-        1. Not assigning candidate yet, just adding them to the database.
+    - Add flexibility to Add Candidate functionality by including these test cases:  
+        1. Not assigning candidates yet, just adding them to the database.
         2. Assign a candidate to a course, ensure the course is valid.
-        3. If course not valid, may need to enter a new course.                                                                                                                                                                                                                                                                                                                
+        3. If the course is not valid, may need to enter a new course.                                         
         ***Exchange Prof Name to Candidate Name***
 3. Course Management
     - Current design is redundant. Consolidate the graders of a class into one row, displaying all the graders.
-- Consider datasize and bandwidth limitations when designing and using the APIs.
+- Consider data size and bandwidth limitations when designing and using the APIs.
 - Explanation in the matching algorithm will be used as the highlighted text of the candidate's resumes in the front end.
 - Suggestion: During integration, ensure that at least 15-20 resumes should be added to the database for testing purposes.
-- Final Report Template has guidlines to follow, adding more sections is allowed.
+- Final Report Template has guidelines to follow, adding more sections is allowed.
 - Final Report Deadline: Around May 10
 - Demo: May 2
