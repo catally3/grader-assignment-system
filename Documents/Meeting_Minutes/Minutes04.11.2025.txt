@@ -1,0 +1,60 @@
+04/04/25
+Minutes: 53 min
+
+Progress So Far:
+Madison Hokstad - 10 Hours
+  Tasks completed
+    Changed matching algorithm based on database changes
+    Other adjustments to algorithm based on feedback
+  Tasks for next week
+    Continue working on integration with the frontend
+
+Do Kyung Lee - 10 Hours
+  Tasks completed
+    Updated add candidate UI
+    Updated dashboard/fileupload 
+  Tasks for next week:
+    API integration
+    Complete UI
+
+Alexandra Ontiveros - 10 Hours
+  Tasks Completed:
+    Changed settings within the server so it can run the full stack of the app
+    Updated database structure 
+    Created partial test data
+  Tasks for Next Week 
+    Assist with integration of layers
+
+Gaby Salazar Mejia - 10 Hours
+  Tasks Completed
+    Reassign Functionality
+    Delete Functionality
+  Tasks for Next Week
+    Continue working on the API integration
+    Fix any remaining frontend bugs
+
+Anh Tran - 12 Hours
+    Tasks completed:
+    Implemented unpacking ZIP file and accessing and parsing the individual PDF resumes
+    Adjust API endpoints to show shorter infos when calling all applicants and more detail when selecting individual ones
+    Still polishing parsing for multi-page resumes
+    Polish export data based on CSV/Excel format for database as well as for matching algorithm
+  Tasks for next week:
+    More work on the last two bullet points
+    Integrate with front end more
+
+Feedback:
+1. Dashboard
+  - Needs to be more flexible!
+  - Current implementation is allowing multiple assignments per semester, change to only allowing one assignment per semester.
+  - When carrying over grader data from previous semesters, must cross check with the list of current graders. Graders who are re-applying automatically get assigned, as they should be given preference.
+  - When creating a new semester, it should not automatically assign.
+  - When creating a new semester, not all files may be available, so only uploading a few files should be acceptable.
+  - For all pages, when viewing previous semesters, user is only allowed to view and get data (export), and not allowed the delete or add functionalities.
+2. Candidate Management
+  - Should be able to handle either individual or batch uploads of candidates.
+3. Course Management
+  - Add section to course number
+  - When adding a new course, you should only assign from the pool of students that have not been assigned.
+4. Login
+  - Suggested to add an admin ID
