@@ -1,4 +1,5 @@
 import express from 'express';
+import cors from 'cors';
 import bodyParser from 'body-parser';
 
 import candidateRoutes from './src/routes/candidateRoutes.js';
@@ -13,6 +14,7 @@ import './src/models/index.js'; // ensure database initialization runs
 
 const app = express();
 
+app.use(cors());
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
