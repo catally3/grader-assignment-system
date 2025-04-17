@@ -1,7 +1,8 @@
 import Sequelize from 'sequelize';
-import candidate from './candidate.js';
+import applicant from './applicant.js';
 import course from './course.js';
 import assignment from './assignment.js';
+import recommendation from './recommendation.js';
 
 const {
   DB_NAME,
@@ -23,15 +24,20 @@ const sequelize = new Sequelize(DB_NAME, DB_USER, DB_PASSWORD, {
 
 const db = { Sequelize, sequelize };
 
-db.Candidate = candidate(sequelize, Sequelize);
+db.Applicant = applicant(sequelize, Sequelize);
 db.Course = course(sequelize, Sequelize);
 db.Assignment = assignment(sequelize, Sequelize);
+db.Recommendation = recommendation(sequelize, Sequelize);
 
 // Define associations
-db.Candidate.hasMany(db.Assignment, { foreignKey: 'candidateId' });
-db.Assignment.belongsTo(db.Candidate, { foreignKey: 'candidateId' });
-db.Course.hasMany(db.Assignment, { foreignKey: 'courseId' });
-db.Assignment.belongsTo(db.Course, { foreignKey: 'courseId' });
+db.Applicant.hasMany(db.Assignment, { foreignKey: 'net_id' });
+db.Assignment.belongsTo(db.Applicant, { foreignKey: 'net_id' });
+db.Course.hasMany(db.Assignment, { foreignKey: 'course_id' });
+db.Assignment.belongsTo(db.Course, { foreignKey: 'course_id' });
+db.Course.hasMany(db.Recommendation, {foreignKey: 'professor_id'});
+db.Recommendation.belongsTo(db.Course, {foreignKey: 'professor_id'});
+db.Applicant.hasMany(db.Recommendation, {foreignKey: 'applicant_net_id'});
+db.Recommendation.belongsTo(db.Applicant, {foreignKey: 'applicant_net_id'});
 
 /**
  * Wait for the database connection to succeed.
