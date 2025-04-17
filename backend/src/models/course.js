@@ -1,13 +1,13 @@
 export default (sequelize, DataTypes) => {
-  const Course = sequelize.define('Course', {
-    professorName: { type: DataTypes.STRING, allowNull: false },
-    professorEmail: { type: DataTypes.STRING },
-    courseNumber: { type: DataTypes.STRING },
-    section: { type: DataTypes.STRING },
-    courseName: { type: DataTypes.STRING, allowNull: false },
-    recommendedStudentName: { type: DataTypes.STRING },
-    recommendedStudentNetid: { type: DataTypes.STRING },
-    numOfGraders: { type: DataTypes.INTEGER },
+  const Course = sequelize.define('course', {
+    id: {type: DataTypes.INTEGER.UNSIGNED, autoIncrement: true, primaryKey: true},
+    semester: {type: DataTypes.STRING, allowNull: false, primaryKey: true, defaultValue: "Semester"},
+    professor_name: { type: DataTypes.STRING},
+    professor_email: { type: DataTypes.STRING, defaultValue: "xxx000000@utdallas.edu"},
+    course_number: { type: DataTypes.STRING(10) },
+    course_section: { type: DataTypes.STRING(5) },
+    course_name: { type: DataTypes.STRING},
+    number_of_graders: { type: DataTypes.INTEGER },
     keywords: { type: DataTypes.JSON }
   });
   return Course;
