@@ -1,6 +1,7 @@
 // src/controllers/candidateController.js
 import db from '../models/index.js';
 import transformCandidates from '../utils/transformCandidate.js';
+
 const Candidate = db.Candidate;
 
 const getAllCandidates = async (req, res) => {
@@ -15,11 +16,16 @@ const getAllCandidates = async (req, res) => {
   }
 };
 
+/**
+ * Retrieves a candidate by the applicantId provided in the URL parameter.
+ * The applicantId is the one that gets extracted from the PDF filename.
+ */
 const getCandidateById = async (req, res) => {
   try {
-    const candidate = await Candidate.findByPk(req.params.id);
+    // req.params.id is now interpreted as the applicantId.
+    const applicantId = req.params.id;
+    const candidate = await Candidate.findOne({ where: { applicantId } });
     if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-    // Return full candidate details here.
     res.json(candidate);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -37,7 +43,8 @@ const createCandidate = async (req, res) => {
 
 const updateCandidate = async (req, res) => {
   try {
-    const candidate = await Candidate.findByPk(req.params.id);
+    // Update candidate by applicantId instead of PK.
+    const candidate = await Candidate.findOne({ where: { applicantId: req.params.id } });
     if (!candidate)
       return res.status(404).json({ error: 'Candidate not found' });
     await candidate.update(req.body);
@@ -49,7 +56,8 @@ const updateCandidate = async (req, res) => {
 
 const deleteCandidate = async (req, res) => {
   try {
-    const candidate = await Candidate.findByPk(req.params.id);
+    // Delete candidate by applicantId.
+    const candidate = await Candidate.findOne({ where: { applicantId: req.params.id } });
     if (!candidate)
       return res.status(404).json({ error: 'Candidate not found' });
     await candidate.destroy();
@@ -61,8 +69,8 @@ const deleteCandidate = async (req, res) => {
 
 export default {
   getAllCandidates,
-  getCandidateById,
+  getCandidateById,    // Uses applicantId
   createCandidate,
-  updateCandidate,
-  deleteCandidate,
+  updateCandidate,     // Uses applicantId
+  deleteCandidate      // Uses applicantId
 };
