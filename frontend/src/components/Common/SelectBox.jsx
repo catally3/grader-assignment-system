@@ -26,11 +26,13 @@ const SelectBox = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (id, e) => {
+  const handleSelect = (id, name, e) => {
     e.stopPropagation(); // prevent bubbling
-    onChange(id);
+    onChange({ id: id, name: name });
     setIsOpened(false);
   };
+
+  const mergedOptions = [{ id: null, name: placeholder }, ...options];
 
   return (
     <Container
@@ -44,11 +46,12 @@ const SelectBox = ({
       <Icon src={ArrowIcon} isOpened={isOpened} />
       {isOpened && (
         <Dropdown style={{ ...absoluteStyle }}>
-          {options.map((option) => (
+          {mergedOptions.map((option) => (
             <Option
-              key={option.id}
+              key={option.id === null ? "placeholder" : option.id}
               active={value === option.id}
-              onClick={(e) => handleSelect(option.id, e)}
+              onClick={(e) => handleSelect(option.id, option.name, e)}
+              isPlaceholder={option.id === null}
             >
               {option.name}
             </Option>
@@ -64,8 +67,8 @@ const Container = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
-  border: 1px solid #ccc;
-  padding: 8px 12px;
+  border: 1px solid #e0e2e7;
+  padding: 10px 12px;
   border-radius: 10px;
   margin-bottom: 4px;
   cursor: pointer;
@@ -103,16 +106,17 @@ const Dropdown = styled.div`
   border-radius: 6px;
   background-color: #fff;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
-  z-index: 1000;
+  z-index: 2147483647;
   max-height: 250px;
   overflow-y: auto;
 `;
 
 const Option = styled.div`
   padding: 8px 12px;
-  font-size: 14px;
+  font-size: medium;
   cursor: pointer;
   color: ${({ active }) => (active ? "rgba(248, 126, 3, 1)" : "#000")};
+  color: ${({ isPlaceholder }) => (isPlaceholder ? "#999" : "#000")};
 
   &:hover {
     background-color: #f4f4f4;

@@ -7,16 +7,16 @@ const InputContainer = styled.div`
 `;
 
 const StyledInput = styled.input`
-  border-radius: 8px;
-  border: 1px solid var(--Secondary-Gray-2, #e0e2e7);
+  border-radius: 10px;
+  border: 1px solid #e0e2e7;
   background-color: #fff;
   width: 100%;
-  padding: 12px 16px;
-  font-size: 16px;
+  padding: 10px 12px;
+  font-size: medium;
   outline: none;
 
   &::placeholder {
-    color: #6f727a;
+    color: #999;
   }
 `;
 

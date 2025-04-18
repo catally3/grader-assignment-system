@@ -1,7 +1,6 @@
 import React, { useState } from "react";
 import styled from "@emotion/styled";
 import Modal, { ModalContainer } from "../Common/Modal";
-import FileUpload from "../Common/FileUpload";
 import ModalHeader from "../Common/ModalHeader";
 import Input from "../Common/Input";
 import Button from "../Common/Button";

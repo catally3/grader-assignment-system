@@ -17,6 +17,9 @@ const Header = () => {
   const handleSignOut = () => {
     // Clear any authentication data (localStorage, sessionStorage, etc.)
     localStorage.removeItem("authToken"); // Example: Clear auth token
+    localStorage.removeItem("semester"); // Example: Clear auth token
+    localStorage.removeItem("semesters"); // Example: Clear auth token
+    localStorage.removeItem("assignments"); // Example: Clear auth token
     sessionStorage.removeItem("authToken"); // Example: Clear session token
 
     // Optionally, clear any global state if using context or a global store

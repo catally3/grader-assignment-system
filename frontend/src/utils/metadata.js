@@ -10,7 +10,7 @@ export const assignGraderColumns = [
   "Name (NetId)",
   "Major",
   "Document",
-  "Assigned Date"
+  "Assigned Date",
 ];
 
 export const courseData = {
@@ -318,5 +318,40 @@ export const applicationlist = [
     major: "Computer Science",
     school: "The University of Texas at Dallas",
     year: "masters",
+  },
+];
+
+export const courseOptions = [
+  {
+    id: "4302",
+    name: "CS4302 - Intro to Computer Science",
+    department: "Computer Science",
+    section: "001",
+    credits: 3,
+    professor: "John Smith",
+  },
+  {
+    id: "4301",
+    name: "MATH4301 - Linear Algebra",
+    department: "Mathematics",
+    section: "002",
+    credits: 3,
+    professor: "Jane Doe",
+  },
+  {
+    id: "4306",
+    name: "PHYS4306 - General Physics I",
+    department: "Physics",
+    section: "003",
+    credits: 4,
+    professor: "Michael Newton",
+  },
+  {
+    id: "4251",
+    name: "HIST201 - Modern History",
+    department: "History",
+    section: "004",
+    credits: 2,
+    professor: "Clover Adams",
   },
 ];

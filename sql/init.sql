@@ -11,8 +11,8 @@ USE `grader_assignment`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
--- Create Courses table
-CREATE TABLE Courses (
+/*-- Create Courses table
+CREATE TABLE courses (
   id INT AUTO_INCREMENT PRIMARY KEY,
   professorName VARCHAR(255) NOT NULL,
   professorEmail VARCHAR(255),
@@ -25,8 +25,75 @@ CREATE TABLE Courses (
   keywords JSON,
   createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
   updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-);
+); */
 
+-- **[Kay] Reorder applicant_skill down**
+
+--
+-- Table structure for table `applicants`
+--
+
+DROP TABLE IF EXISTS `applicants`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `applicants` (
+  `net_id` varchar(10) NOT NULL DEFAULT 'xxx000000',
+  `candidate_id` varchar(8) DEFAULT '0000000',
+  `semester` varchar(255) NOT NULL DEFAULT 'Semester',
+  `applicant_name` varchar(255) DEFAULT NULL,
+  `applicant_email` varchar(25) DEFAULT 'xxx000000@utdallas.edu',
+  `school_year` varchar(10) DEFAULT 'Masters',
+  `university` varchar(35) DEFAULT 'The University of Texas at Dallas',
+  `school` varchar(255) DEFAULT 'Erik Jonsson School of Engineering and Computer Science',
+  `graduation_date` varchar(10) DEFAULT '2026-05-01',
+  `major` varchar(255) DEFAULT 'Computer Science',
+  `qualified` tinyint DEFAULT NULL,
+  `continuing` tinyint DEFAULT NULL,
+  `gpa` float unsigned DEFAULT NULL,
+  `resume_path` varchar(255) DEFAULT NULL,
+  `skills` text DEFAULT NULL,
+  `experience` text DEFAULT NULL,
+  PRIMARY KEY (`net_id`,`semester`),
+  UNIQUE KEY `candidate_id_UNIQUE` (`candidate_id`,`semester`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+LOCK TABLES `applicants` WRITE;
+/*!40000 ALTER TABLE `applicants` DISABLE KEYS */;
+/*!40000 ALTER TABLE `applicants` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `professor_courses`
+--
+
+DROP TABLE IF EXISTS `courses`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!50503 SET character_set_client = utf8mb4 */;
+CREATE TABLE `courses` (
+  `id` int unsigned NOT NULL AUTO_INCREMENT,
+  `semester` varchar(255) NOT NULL DEFAULT 'Semester',
+  `professor_name` varchar(255) DEFAULT NULL,
+  `professor_email` varchar(255) DEFAULT 'xxx000000@utdallas.edu',
+  `course_number` varchar(10) DEFAULT NULL,
+  `course_section` varchar(5) DEFAULT NULL,
+  `course_name` varchar(255) DEFAULT NULL,
+  `number_of_graders` int DEFAULT NULL,
+  `keywords` JSON DEFAULT NULL,
+  PRIMARY KEY (`id`,`semester`),
+  UNIQUE KEY `id_UNIQUE` (`id`,`semester`) /*!80000 INVISIBLE */
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+LOCK TABLES `courses` WRITE;
+/*!40000 ALTER TABLE `professor_courses` DISABLE KEYS */;
+/*!40000 ALTER TABLE `professor_courses` ENABLE KEYS */;
+UNLOCK TABLES;
+
+--
+-- Table structure for table `applicant_skills`
+--
+/*
 DROP TABLE IF EXISTS `applicant_skills`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -42,39 +109,9 @@ CREATE TABLE `applicant_skills` (
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `applicant_skills` WRITE;
+*/
 /*!40000 ALTER TABLE `applicant_skills` DISABLE KEYS */;
 /*!40000 ALTER TABLE `applicant_skills` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `applicants`
---
-
-DROP TABLE IF EXISTS `applicants`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `applicants` (
-  `net_id` char(10) NOT NULL DEFAULT 'xxx000000',
-  `candidate_id` char(8) DEFAULT '0000000',
-  `semester` varchar(45) NOT NULL DEFAULT 'Semester',
-  `applicant_name` varchar(45) DEFAULT NULL,
-  `applicant_email` char(25) DEFAULT 'xxx000000@utdallas.edu',
-  `school_year` char(10) DEFAULT 'Masters',
-  `university` char(35) DEFAULT 'The University of Texas at Dallas',
-  `school` varchar(60) DEFAULT 'Erik Jonsson School of Engineering and Computer Science',
-  `graduation_date` char(10) DEFAULT '2026-05-01',
-  `major` varchar(170) DEFAULT 'Computer Science',
-  `qualified` tinyint DEFAULT NULL,
-  `continuing` tinyint DEFAULT NULL,
-  `gpa` float unsigned DEFAULT NULL,
-  PRIMARY KEY (`net_id`,`semester`),
-  UNIQUE KEY `candidate_id_UNIQUE` (`candidate_id`,`semester`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-LOCK TABLES `applicants` WRITE;
-/*!40000 ALTER TABLE `applicants` DISABLE KEYS */;
-/*!40000 ALTER TABLE `applicants` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -86,8 +123,11 @@ DROP TABLE IF EXISTS `assignments`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `assignments` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `applicant_net_id` char(10) DEFAULT NULL,
+  `applicant_net_id` varchar(10) DEFAULT NULL,
   `course_id` int unsigned DEFAULT NULL,
+  `score` float DEFAULT NULL,
+  `reasoning` text DEFAULT NULL,
+  `status` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_prof_id_idx` (`course_id`),
   KEY `fk_applicant_id_idx` (`applicant_net_id`),
@@ -105,7 +145,7 @@ UNLOCK TABLES;
 --
 -- Table structure for table `course_skills`
 --
-
+/*
 DROP TABLE IF EXISTS `course_skills`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
@@ -125,31 +165,7 @@ LOCK TABLES `course_skills` WRITE;
 /*!40000 ALTER TABLE `course_skills` DISABLE KEYS */;
 /*!40000 ALTER TABLE `course_skills` ENABLE KEYS */;
 UNLOCK TABLES;
-
---
--- Table structure for table `professor_courses`
---
-
-DROP TABLE IF EXISTS `professor_courses`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `professor_courses` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `semester` varchar(45) NOT NULL DEFAULT 'Semester',
-  `professor_name` varchar(45) DEFAULT NULL,
-  `professor_email` varchar(45) DEFAULT 'xxx000000@utdallas.edu',
-  `course_number` char(10) DEFAULT NULL,
-  `course_section` char(5) DEFAULT NULL,
-  `course_name` varchar(45) DEFAULT NULL,
-  PRIMARY KEY (`id`,`semester`),
-  UNIQUE KEY `id_UNIQUE` (`id`,`semester`) /*!80000 INVISIBLE */
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-LOCK TABLES `professor_courses` WRITE;
-/*!40000 ALTER TABLE `professor_courses` DISABLE KEYS */;
-/*!40000 ALTER TABLE `professor_courses` ENABLE KEYS */;
-UNLOCK TABLES;
+*/
 
 --
 -- Table structure for table `recommendations`
@@ -160,10 +176,10 @@ DROP TABLE IF EXISTS `recommendations`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `recommendations` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `semester` varchar(45) NOT NULL DEFAULT 'Semester',
+  `semester` varchar(255) NOT NULL DEFAULT 'Semester',
   `professor_id` int unsigned DEFAULT NULL,
-  `applicant_name` varchar(45) DEFAULT NULL,
-  `applicant_net_id` char(10) DEFAULT 'xxx000000',
+  `applicant_name` varchar(255) DEFAULT NULL,
+  `applicant_net_id` varchar(10) DEFAULT 'xxx000000',
   PRIMARY KEY (`id`),
   KEY `fk_prof_id_idx` (`professor_id`),
   KEY `fk_student_id_idx` (`applicant_net_id`)

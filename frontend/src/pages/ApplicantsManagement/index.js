@@ -2,9 +2,10 @@ import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import React, { useState } from "react";
 import FileUpload from "../../components/Common/FileUpload.jsx";
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx"; 
-import SortIcon from "../../assets/icons/icon_sort.svg"; 
+import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import SortIcon from "../../assets/icons/icon_sort.svg";
 import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
+import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
 
 // Course Management
 const Title = styled.div`
@@ -95,7 +96,7 @@ const DeleteButton = styled(ButtonContainer)`
   display: flex;
   width: 120px;
   height: 35px;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);  
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   &:hover {
     background-color: rgb(59, 57, 57);
   }
@@ -157,8 +158,8 @@ const Column = styled.div`
   text-align: center;
   padding: 0 10px;
   display: flex;
-  justify-content: center;  
-  align-items: center;      
+  justify-content: center;
+  align-items: center;
 `;
 
 const ReassignButton = styled(ButtonContainer)`
@@ -166,10 +167,10 @@ const ReassignButton = styled(ButtonContainer)`
   background-color: rgb(17, 16, 16);
   display: flex;
   align-items: center;
-  justify-content: center;  // Ensures the button text is centered
+  justify-content: center; // Ensures the button text is centered
   width: 100px;
   height: 35px;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);  
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   &:hover {
     background-color: rgb(59, 57, 57);
   }
@@ -177,13 +178,62 @@ const ReassignButton = styled(ButtonContainer)`
 
 const GraderAssignment = () => {
   const [data, setData] = useState([
-    { number: null, name: "CS", graders:  "1", section: "501", professor: "Beatrice Smith", assigned: "Anthony Hernandez"},
-    { number: "1200", name: "CS", graders: "2", section: "503", professor: "Herlin Villareal", assigned: "Caroline Mendez"},
-    { number: "1200", name: "CS", graders: "2", section: "503", professor: "Herlin Villareal", assigned: "Mary Smith"},
-    { number: "4884", name: null, graders: "1", section: "503", professor: "Gabriela Smith", assigned: null},
-    { number: "4841", name: "CS", graders: null, section: "504", professor: "Jose Alvarez",assigned: "Mary Jane"},
-    { number: "4848", name: "CS", graders: "2", section: "501", professor: "Beatrice Smith", assigned: "Anthony Martinez"},
-    { number: "4848", name: "CS", graders: "2", section: "501", professor: "Beatrice Smith", assigned: "Jose Jose"}
+    {
+      number: null,
+      name: "CS",
+      graders: "1",
+      section: "501",
+      professor: "Beatrice Smith",
+      assigned: "Anthony Hernandez",
+    },
+    {
+      number: "1200",
+      name: "CS",
+      graders: "2",
+      section: "503",
+      professor: "Herlin Villareal",
+      assigned: "Caroline Mendez",
+    },
+    {
+      number: "1200",
+      name: "CS",
+      graders: "2",
+      section: "503",
+      professor: "Herlin Villareal",
+      assigned: "Mary Smith",
+    },
+    {
+      number: "4884",
+      name: null,
+      graders: "1",
+      section: "503",
+      professor: "Gabriela Smith",
+      assigned: null,
+    },
+    {
+      number: "4841",
+      name: "CS",
+      graders: null,
+      section: "504",
+      professor: "Jose Alvarez",
+      assigned: "Mary Jane",
+    },
+    {
+      number: "4848",
+      name: "CS",
+      graders: "2",
+      section: "501",
+      professor: "Beatrice Smith",
+      assigned: "Anthony Martinez",
+    },
+    {
+      number: "4848",
+      name: "CS",
+      graders: "2",
+      section: "501",
+      professor: "Beatrice Smith",
+      assigned: "Jose Jose",
+    },
   ]);
 
   /******* SEARCH FUNCTIONALITY  *******/
@@ -198,12 +248,11 @@ const GraderAssignment = () => {
   // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
-    if(sortConfig.key === key){
-      if(sortConfig.direction === "asc"){
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "asc") {
         direction = "desc";
-      } 
-      else if(sortConfig.direction === "desc"){
-        direction = null; 
+      } else if (sortConfig.direction === "desc") {
+        direction = null;
       }
     }
     setSortConfig({ key: direction ? key : null, direction });
@@ -211,10 +260,21 @@ const GraderAssignment = () => {
   // return the current sort arrow based on current sorting direction, and display default
   const getSortArrow = (key) => {
     if (sortConfig.key !== key) {
-      return <img src={SortIcon} alt="sort logo" style={{ width: '16px', height: '16px', marginLeft: '8px', verticalAlign: 'baseline' }} />;
+      return (
+        <img
+          src={SortIcon}
+          alt="sort logo"
+          style={{
+            width: "16px",
+            height: "16px",
+            marginLeft: "8px",
+            verticalAlign: "baseline",
+          }}
+        />
+      );
     }
     return sortConfig.direction === "asc" ? "▲" : "▼";
-    };
+  };
   // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
@@ -250,8 +310,8 @@ const GraderAssignment = () => {
         ? row[selectedColumn]?.toLowerCase().includes(filterValue)
         : true)
   );
-  
-  /******* DELETION  FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+
+  /******* DELETION  FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
   const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
   const [selected, setSelected] = useState([]); // selected stores the candidateIDs chosen to be deleted
   // toggles deleteMode and clears any selected candidates between toggles
@@ -274,17 +334,17 @@ const GraderAssignment = () => {
     );
     setDeleteMode(false);
     setSelected([]);
-  }
+  };
 
-  /******** REASSIGN FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false 
+  /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
   const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
   // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
     setSelectedCourseData(course);
     setIsModalOpen(true);
   };
-  // close the reassignment model for the selected course 
+  // close the reassignment model for the selected course
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -299,7 +359,7 @@ const GraderAssignment = () => {
     acc[courseKey].push(row);
     return acc;
   }, {});
-  
+
   const renderGroupedRow = (group, key) => (
     <Row key={key}>
       {deleteMode && (
@@ -317,45 +377,57 @@ const GraderAssignment = () => {
       <Column>{group[0].professor || "N/A"}</Column>
       <Column>
         {/* Removed the onClick handler */}
-        <span>{group.map(row => row.assigned || "N/A").join(", ")}</span>
+        <span>{group.map((row) => row.assigned || "N/A").join(", ")}</span>
       </Column>
       <Column>
-        <ReassignButton onClick={() => handleReassign(group)}>Reassign</ReassignButton>
+        <ReassignButton onClick={() => handleReassign(group)}>
+          Reassign
+        </ReassignButton>
         <CourseManagementModal
           open={isModalOpen}
           onClose={handleCloseModal}
-          courseData={selectedCourseData} 
-          allCourses={filteredData} 
+          courseData={selectedCourseData}
+          allCourses={filteredData}
         />
       </Column>
     </Row>
   );
-  
+
   return (
     <Layout>
       <Title>Course Management</Title>
       <FileTitle>Upload Course Files</FileTitle>
       <FileContainer>
-        <FileUpload />
+        <FileUpload singleUpload={true} />
       </FileContainer>
       <BoxContainer>
         <Box>
           <HeaderContainer>
             <SearchContainer>
               <HeaderText>Search:</HeaderText>
-              <SearchBox type="text" placeholder="Search..." value={searchTerm} onChange={handleSearchChange} />
+              <SearchBox
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
             </SearchContainer>
             <ButtonContainer>
               <DeleteButton onClick={toggleDeleteMode}>
                 {deleteMode ? "Cancel" : "Delete Course"}
               </DeleteButton>
               {deleteMode && (
-                <DeleteButton onClick={handleDelete}>Confirm Delete</DeleteButton>
+                <DeleteButton onClick={handleDelete}>
+                  Confirm Delete
+                </DeleteButton>
               )}
             </ButtonContainer>
             <FilterContainer>
               <HeaderText>Filter:</HeaderText>
-              <FilterDropdown onChange={handleColumnChange} value={selectedColumn}>
+              <FilterDropdown
+                onChange={handleColumnChange}
+                value={selectedColumn}
+              >
                 <option value="">Select Column</option>
                 <option value="number">Course Number</option>
                 <option value="name">Course Name</option>
@@ -369,23 +441,36 @@ const GraderAssignment = () => {
                 onChange={handleFilterValueChange}
                 placeholder="Enter filter value"
               />
+              <ExcelExportButton data={data} filteredData={filteredData} />
             </FilterContainer>
           </HeaderContainer>
           <ColumnTitle>
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}
-            <ColumnTitleText onClick={() => handleSort("number")}>Course Number {getSortArrow("number")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("name")}>Course Name {getSortArrow("name")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("graders")}>Number of Graders {getSortArrow("graders")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("professor")}>Professor Name {getSortArrow("professor")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("assigned")}>Assigned Candidate {getSortArrow("assigned")}</ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("number")}>
+              Course Number {getSortArrow("number")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("name")}>
+              Course Name {getSortArrow("name")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("graders")}>
+              Number of Graders {getSortArrow("graders")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("professor")}>
+              Professor Name {getSortArrow("professor")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("assigned")}>
+              Assigned Candidate {getSortArrow("assigned")}
+            </ColumnTitleText>
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
-  
+
           {/* Render grouped data */}
-          {Object.entries(groupedData).map(([key, group]) => renderGroupedRow(group, key))}
+          {Object.entries(groupedData).map(([key, group]) =>
+            renderGroupedRow(group, key)
+          )}
         </Box>
       </BoxContainer>
     </Layout>
   );
-}
+};
 export default GraderAssignment;

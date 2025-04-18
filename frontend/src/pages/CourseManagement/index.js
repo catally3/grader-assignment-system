@@ -1,8 +1,9 @@
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import { useState } from "react"; // search state
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx"; 
-import SortIcon from "../../assets/icons/icon_sort.svg"; 
+import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import SortIcon from "../../assets/icons/icon_sort.svg";
+import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
 
 // Professor Management
 const Title = styled.div`
@@ -15,7 +16,7 @@ const BoxContainer = styled.div`
   flex-wrap: wrap;
   width: 100%;
   box-sizing: border-box;
-  margin-top: 20px;  
+  margin-top: 20px;
 `;
 
 const Box = styled.div`
@@ -32,7 +33,7 @@ const Box = styled.div`
 const HeaderContainer = styled.div`
   display: flex;
   align-items: center; // vertically
-  width: 100%; 
+  width: 100%;
   padding: 10px;
   margin-bottom: 10px;
   justify-content: space-between;
@@ -77,20 +78,20 @@ const SearchBox = styled.input`
   border: 1px solid #ccc;
   border-radius: 5px;
   font-size: 14px;
-  width: 150px; 
+  width: 150px;
 `;
 
 const ColumnTitle = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;  
+  align-items: center;
   padding: 10px 0;
-  background-color: rgb(224, 221, 221); 
+  background-color: rgb(224, 221, 221);
 `;
 
 const ColumnTitleText = styled.div`
   flex: 1;
-  text-align: center;  
+  text-align: center;
   padding: 0 10px;
   color: #333;
   font-size: medium;
@@ -100,24 +101,24 @@ const ColumnTitleText = styled.div`
 const Row = styled.div`
   display: flex;
   justify-content: space-between;
-  align-items: center;  
+  align-items: center;
   padding: 15px 0;
   font-size: small;
   font-weight: normal;
-  border-bottom: 1px solid #ccc; 
+  border-bottom: 1px solid #ccc;
 
   &:last-child {
-    border-bottom: none; 
+    border-bottom: none;
   }
 `;
 
 const Column = styled.div`
   flex: 1;
-  text-align: center;  
+  text-align: center;
   padding: 0 10px;
   display: flex;
-  justify-content: center;  
-  align-items: center;  
+  justify-content: center;
+  align-items: center;
 `;
 
 const ButtonContainer = styled.button`
@@ -137,10 +138,10 @@ const ReassignButton = styled(ButtonContainer)`
   display: flex;
 
   align-items: center;
-  justify-content: center;  // Ensures the button text is centered
+  justify-content: center; // Ensures the button text is centered
   width: 100px;
   height: 35px;
-  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);  
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   &:hover {
     background-color: rgb(59, 57, 57);
   }
@@ -148,11 +149,51 @@ const ReassignButton = styled(ButtonContainer)`
 
 const GraderAssignment = () => {
   const data = [
-    {professor:'John Smith', name: 'CS', number: "4348",  section: "504", assigned: 'Jenny Lee', recommended: "Mary Salazar", mismatch: "Not in candidate pool"},
-    {professor:'John Smith', name: 'CS', number: "4348", section: "504", assigned: 'Beatrice Smith', recommended: "Mary Salazar", mismatch: "Not in candidate pool"},
-    {professor:'Herlin Villareal', name: 'CS', number: "3394", section: "503", assigned: 'Gaby Alvarez', recommended: "Manuel Smith", mismatch: "Not in candidate pool"},
-    {professor:'Caroline Mendez', name: null, number: "1204", section: "502", assigned: 'Anthony Martinez', recommended: "Gustavo Jane", mismatch: "Not in candidate pool"},
-    {professor:'Vanessa Ramirez', name: 'CS', number: "1394", section: null, assigned: 'Mary Jane', recommended: "Luis Miguel", mismatch: "Already assigned to another professor"},
+    {
+      professor: "John Smith",
+      name: "CS",
+      number: "4348",
+      section: "504",
+      assigned: "Jenny Lee",
+      recommended: "Mary Salazar",
+      mismatch: "Not in candidate pool",
+    },
+    {
+      professor: "John Smith",
+      name: "CS",
+      number: "4348",
+      section: "504",
+      assigned: "Beatrice Smith",
+      recommended: "Mary Salazar",
+      mismatch: "Not in candidate pool",
+    },
+    {
+      professor: "Herlin Villareal",
+      name: "CS",
+      number: "3394",
+      section: "503",
+      assigned: "Gaby Alvarez",
+      recommended: "Manuel Smith",
+      mismatch: "Not in candidate pool",
+    },
+    {
+      professor: "Caroline Mendez",
+      name: null,
+      number: "1204",
+      section: "502",
+      assigned: "Anthony Martinez",
+      recommended: "Gustavo Jane",
+      mismatch: "Not in candidate pool",
+    },
+    {
+      professor: "Vanessa Ramirez",
+      name: "CS",
+      number: "1394",
+      section: null,
+      assigned: "Mary Jane",
+      recommended: "Luis Miguel",
+      mismatch: "Already assigned to another professor",
+    },
   ];
 
   /******* SEARCH FUNCTIONALITY  *******/
@@ -167,12 +208,11 @@ const GraderAssignment = () => {
   // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
-    if(sortConfig.key === key){
-      if(sortConfig.direction === "asc"){
+    if (sortConfig.key === key) {
+      if (sortConfig.direction === "asc") {
         direction = "desc";
-      } 
-      else if(sortConfig.direction === "desc"){
-        direction = null; 
+      } else if (sortConfig.direction === "desc") {
+        direction = null;
       }
     }
     setSortConfig({ key: direction ? key : null, direction });
@@ -180,7 +220,18 @@ const GraderAssignment = () => {
   // return the current sort arrow based on current sorting direction, and display default
   const getSortArrow = (key) => {
     if (sortConfig.key !== key) {
-      return <img src={SortIcon} alt="sort logo" style={{ width: '16px', height: '16px', marginLeft: '8px', verticalAlign: 'baseline' }} />;
+      return (
+        <img
+          src={SortIcon}
+          alt="sort logo"
+          style={{
+            width: "16px",
+            height: "16px",
+            marginLeft: "8px",
+            verticalAlign: "baseline",
+          }}
+        />
+      );
     }
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
@@ -226,15 +277,15 @@ const GraderAssignment = () => {
     setSelectedRow(row);
   };
 
-  /******** REASSIGN FUNCTIONALITY  *******/  // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false 
+  /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
   const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
   // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
     setSelectedCourseData(course);
     setIsModalOpen(true);
   };
-  // close the reassignment model for the selected course 
+  // close the reassignment model for the selected course
   const handleCloseModal = () => {
     setIsModalOpen(false);
   };
@@ -247,11 +298,19 @@ const GraderAssignment = () => {
           <HeaderContainer>
             <SearchContainer>
               <HeaderText>Search:</HeaderText>
-              <SearchBox type="text" placeholder="Search..." value={searchTerm} onChange={handleSearchChange} />
+              <SearchBox
+                type="text"
+                placeholder="Search..."
+                value={searchTerm}
+                onChange={handleSearchChange}
+              />
             </SearchContainer>
             <FilterContainer>
               <HeaderText>Filter:</HeaderText>
-              <FilterDropdown onChange={handleColumnChange} value={selectedColumn}>
+              <FilterDropdown
+                onChange={handleColumnChange}
+                value={selectedColumn}
+              >
                 <option value="">Select Column</option>
                 <option value="professor">Professor</option>
                 <option value="name">Course Name</option>
@@ -266,38 +325,55 @@ const GraderAssignment = () => {
                 onChange={handleFilterValueChange}
                 placeholder="Enter filter value"
               />
+              <ExcelExportButton data={data} filteredData={filteredData} />
             </FilterContainer>
           </HeaderContainer>
           <ColumnTitle>
-            <ColumnTitleText onClick={() => handleSort("professor")}>Professor Name {getSortArrow("professor")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("name")}>Course Name {getSortArrow("name")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("number")}>Course Number {getSortArrow("number")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("section")}>Section {getSortArrow("section")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("assigned")}>Assigned Candidate {getSortArrow("assigned")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("recommended")}>Recommended Candidate {getSortArrow("recommended")}</ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("mismatch")}>Reason for Mismatch {getSortArrow("mismatch")}</ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("professor")}>
+              Professor Name {getSortArrow("professor")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("name")}>
+              Course Name {getSortArrow("name")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("number")}>
+              Course Number {getSortArrow("number")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("section")}>
+              Section {getSortArrow("section")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("assigned")}>
+              Assigned Candidate {getSortArrow("assigned")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("recommended")}>
+              Recommended Candidate {getSortArrow("recommended")}
+            </ColumnTitleText>
+            <ColumnTitleText onClick={() => handleSort("mismatch")}>
+              Reason for Mismatch {getSortArrow("mismatch")}
+            </ColumnTitleText>
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
           {filteredData.map((row, index) => (
             <Row key={index}>
-              <Column>{row.professor|| 'N/A'}</Column>
-              <Column>{row.name || 'N/A'}</Column>
-              <Column>{row.number || 'N/A'}</Column>
-              <Column>{row.section || 'N/A'}</Column>
+              <Column>{row.professor || "N/A"}</Column>
+              <Column>{row.name || "N/A"}</Column>
+              <Column>{row.number || "N/A"}</Column>
+              <Column>{row.section || "N/A"}</Column>
               <Column onClick={() => handleAssignCandidate(row)}>
                 {selectedRow === row ? (
-                  <div style={{
-                    backgroundColor: "#f0f0f0",
-                    border: "1px solid #ccc",
-                    borderRadius: "4px",
-                    padding: "5px",
-                    width: "150px",
-                    color: "#333",
-                    maxHeight: "150px",
-                    overflowY: "auto", 
-                    pointerEvents: "none", 
-                    userSelect: "none", 
-                  }}>
+                  <div
+                    style={{
+                      backgroundColor: "#f0f0f0",
+                      border: "1px solid #ccc",
+                      borderRadius: "4px",
+                      padding: "5px",
+                      width: "150px",
+                      color: "#333",
+                      maxHeight: "150px",
+                      overflowY: "auto",
+                      pointerEvents: "none",
+                      userSelect: "none",
+                    }}
+                  >
                     {filteredData
                       .filter(
                         (r) =>
@@ -308,11 +384,14 @@ const GraderAssignment = () => {
                           r.graders === row.graders
                       )
                       .map((filteredRow, index, array) => (
-                        <div 
-                          key={filteredRow.assigned} 
+                        <div
+                          key={filteredRow.assigned}
                           style={{
                             padding: "5px 0",
-                            borderBottom: index === array.length - 1 ? "none" : "1px solid #ccc" // Remove border on the last item
+                            borderBottom:
+                              index === array.length - 1
+                                ? "none"
+                                : "1px solid #ccc", // Remove border on the last item
                           }}
                         >
                           {filteredRow.assigned || "N/A"}
@@ -323,15 +402,17 @@ const GraderAssignment = () => {
                   <span>{row.assigned || "N/A"}</span>
                 )}
               </Column>
-              <Column>{row.recommended || 'N/A'}</Column>
-              <Column>{row.mismatch || 'N/A'}</Column>
+              <Column>{row.recommended || "N/A"}</Column>
+              <Column>{row.mismatch || "N/A"}</Column>
               <Column>
-                <ReassignButton onClick={() => handleReassign(row)}>Reassign</ReassignButton>
+                <ReassignButton onClick={() => handleReassign(row)}>
+                  Reassign
+                </ReassignButton>
                 <CourseManagementModal
                   open={isModalOpen}
                   onClose={handleCloseModal}
-                  courseData={selectedCourseData} 
-                  allCourses={filteredData} 
+                  courseData={selectedCourseData}
+                  allCourses={filteredData}
                 />
               </Column>
             </Row>
