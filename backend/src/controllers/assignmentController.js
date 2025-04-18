@@ -1,10 +1,10 @@
 import db from '../models/index.js';
-const { Assignment, Candidate, Course } = db;
+const { Assignment, Applicant, Course } = db;
 
 const getAllAssignments = async (req, res) => {
   try {
     const assignments = await Assignment.findAll({
-      include: [Candidate, Course]
+      include: [Applicant, Course]
     });
     res.json(assignments);
   } catch (err) {

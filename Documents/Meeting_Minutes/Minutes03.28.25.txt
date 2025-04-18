@@ -1,0 +1,65 @@
+03/28/2025
+Minutes: 50 min
+
+Feedback:
+1. Dashboard
+- Replace table previews with only "Start a New Assignment" and "View Previous Assignments" options.
+- Utilize remaining space to display useful statistics (e.g., number of courses still pending assignment).
+- Add a feature to view recently deleted assignments so users can manually reassign them if needed.
+2. Assignment Feature
+- The system attempts to match all courses with graders, but in cases where there aren’t enough candidates, provide a clear notification about unassigned courses.
+3. Candidate Management
+- Clarify the delete option:
+    * One action to remove the candidate from the database & candidate pool
+    * Another action to only unassign the candidate from a course
+    * Provide separate buttons for each function.
+- When adding a new candidate, currently, the professor’s name is required:
+    * Allow adding a candidate to the pool without an assigned course.
+    * If assigning a candidate to a course, validate the course and professor before confirming the change.
+4. General Functionality Improvements
+- Add filters and sorting for all views.
+- Extend reassign candidate functionality to all views, not just the Candidate Management page.
+5. Work on spliting PDF and matching algorithm
+6. Containerize all programs that run locally, including those that execute automatically (so users don’t need to manually run commands like npm start)
+
+Progress So Far:
+Madison Hokstad -  12 Hours
+Tasks completed
+    Continued finalizing the scoring of matching algorithm
+    Ran tests on small samples of handmade data
+Tasks for next week
+    Connect all processes to the SQL database: make sure all different aspects of matching/adding/removing line up
+    Reevaluate certain parts of the database structure to make it fit our needs more
+
+Do Kyung Lee -   10 Hours
+Tasks completed
+    Edited Figma UI based on last meeting
+    Completed Modals UI
+    Setup Axios config
+Tasks for next week:
+    API integration
+
+Alexandra Ontiveros -  10 Hours
+Tasks Completed:
+    Added Docker and Github to virtual machine
+    Confirmed functionality of docker compose on virtual machine
+Tasks for Next Week 
+    Learn about apache server and get our app visible through that
+
+Gaby Salazar Mejia -  10 Hours
+Tasks Completed
+    Add Candidate Functionality
+    Linked Login with Dashboard
+    Dashboard
+Tasks for Next Week
+    Set Up API Integration
+    Completed UI
+
+Anh Tran -  10 Hours
+Tasks completed:
+    Made a better version of the splitting functionality of merged PDFs
+    Integrate the PDF Parsing functionality with the splitting functionality also
+    Also, integrate in the CSV generator also to make a full process
+Tasks for next week:
+    Work on the CSV/Excel parsing for both the candidate’s data and the courses’ data
+    Integrate basic CRUD operations for the web app from the database.

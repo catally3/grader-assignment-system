@@ -20,6 +20,8 @@
   },
   "homepage": "https://github.com/catally3/grader-assignment-system#readme",
   "dependencies": {
+    "cors": "^2.8.5",
+    "munkres-js": "^1.2.2",
     "csv-parser": "^3.0.0",
     "csv-writer": "^1.6.0",
     "exceljs": "^4.4.0",

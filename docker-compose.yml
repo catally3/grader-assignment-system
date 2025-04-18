@@ -1,8 +1,6 @@
-version: "3.8"
-
 services:
   mysql:
-    image: mysql:8
+    image: mysql:9
     container_name: gas_mysql
     restart: unless-stopped
     env_file: ./.env
@@ -26,7 +24,7 @@ services:
     build: ./backend
     container_name: gas_backend
     restart: unless-stopped
-    env_file: ./.env
+    env_file: .env
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -39,14 +37,22 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - ./backend:/app
-      - ./backend/src/uploads:/app/uploads  # Mount the uploads directory
-    # Optionally, if you add a /health endpoint to your backend, uncomment below:
-    # healthcheck:
-    #   test: ["CMD", "curl", "-f", "http://localhost:3001/health"]
-    #   interval: 30s
-    #   timeout: 10s
-    #   retries: 5
+      - .:/backendapp
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: gas_frontend
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "3000:3000"
+    depends_on:
+      - mysql
+    #volumes:
+    # - '.:/frontendapp'
+    command: npm start
 
 volumes:
-  db_data:
+  db:
