@@ -24,7 +24,7 @@ services:
     build: ./backend
     container_name: gas_backend
     restart: unless-stopped
-    env_file: .env
+    env_file: ./.env
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
@@ -37,7 +37,8 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - .:/backendapp
+      - ./backend:/app
+      - ./backend/src/uploads:/app/uploads
 
   frontend:
     build:
