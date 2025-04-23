@@ -2,18 +2,18 @@
 import db from '../models/index.js';
 import { generateCSV } from '../utils/csvGenerator.js';
 import { generateExcel } from '../utils/excelGenerator.js';
-import transformCandidates from '../utils/transformCandidate.js';
+import transformApplicant from '../utils/transformApplicant.js';
 
-const { Candidate } = db;
+const { Applicant } = db;
 
 export const exportCSV = async (req, res) => {
   try {
-    const candidates = await Candidate.findAll();
-    const candidateData = candidates.map(c => c.toJSON());
-    // Transform the candidate data to remove heavy experience descriptions.
-    const lightweightCandidateData = transformCandidates.transformCandidatesForListing(candidateData);
-    const filePath = './exports/candidates.csv';
-    await generateCSV(lightweightCandidateData, filePath);
+    const applicants = await Applicant.findAll();
+    const applicantData = applicants.map(c => c.toJSON());
+    // Transform the applicant data to remove heavy experience descriptions.
+    const lightweightApplicantData = transformApplicant.transformApplicantsForListing(applicantData);
+    const filePath = './exports/applicants.csv';
+    await generateCSV(lightweightApplicantData, filePath);
     res.download(filePath);
   } catch (err) {
     res.status(500).json({ error: err.message });
@@ -22,11 +22,11 @@ export const exportCSV = async (req, res) => {
 
 export const exportExcel = async (req, res) => {
   try {
-    const candidates = await Candidate.findAll();
-    const candidateData = candidates.map(c => c.toJSON());
-    const lightweightCandidateData = transformCandidates.transformCandidatesForListing(candidateData);
-    const filePath = './exports/candidates.xlsx';
-    await generateExcel(lightweightCandidateData, filePath);
+    const applicants = await Applicant.findAll();
+    const applicantData = applicants.map(c => c.toJSON());
+    const lightweightApplicantData = transformApplicant.transformApplicantsForListing(applicantData);
+    const filePath = './exports/applicants.xlsx';
+    await generateExcel(lightweightApplicantData, filePath);
     res.download(filePath);
   } catch (err) {
     res.status(500).json({ error: err.message });

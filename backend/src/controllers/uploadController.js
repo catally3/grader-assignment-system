@@ -1,25 +1,30 @@
 import path from 'path';
+import { ValidationError } from 'sequelize';
 import pdfParser from '../utils/pdfParser.js';
 import excelParser from '../utils/excelParser.js';
 import csvParser from '../utils/csvParser.js';
 import db from '../models/index.js';
-const { Candidate, Course } = db;
+const { Applicant, Course } = db;
 
 /**
  * Processes an uploaded ZIP file containing individual resume PDFs.
  */
 const processResumeZip = async (req, res) => {
   try {
-    const zipFilePath = req.file.path; // Path to the uploaded ZIP file.
-    const candidatesData = await pdfParser.parseZipResumes(zipFilePath);
-    // Save all the parsed candidate data to the database.
-    const savedCandidates = await Candidate.bulkCreate(candidatesData);
-    res.json({
-      message: 'ZIP processed and candidates saved',
-      candidates: savedCandidates
-    });
+    const zipFilePath    = req.file.path;
+    const dataToInsert   = await pdfParser.parseZipResumes(zipFilePath);
+    const savedApplicants= await Applicant.bulkCreate(dataToInsert);
+    return res.json({ message: 'Saved!', applicants: savedApplicants });
   } catch (err) {
-    res.status(500).json({ error: err.message });
+    console.error('BulkCreate failed:', err);
+
+    if (err instanceof ValidationError) {
+      // this will list every column that failed validation
+      const details = err.errors.map(e => `[${e.path}] ${e.message}`);
+      return res.status(400).json({ error: 'Validation error', details });
+    }
+
+    return res.status(500).json({ error: err.message });
   }
 };
 
@@ -27,9 +32,9 @@ const processResumeZip = async (req, res) => {
 const processCV = async (req, res) => {
   try {
     const filePath = req.file.path;
-    const candidatesData = await pdfParser.parseResumePdf(filePath);
-    const savedCandidates = await Candidate.bulkCreate(candidatesData);
-    res.json({ message: 'CV processed and candidates saved', candidates: savedCandidates });
+    const applicantsData = await pdfParser.parseResumePdf(filePath);
+    const savedApplicants = await Applicant.bulkCreate(applicantsData);
+    res.json({ message: 'CV processed and applicants saved', applicants: savedApplicants });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }

@@ -2,7 +2,7 @@ import express from 'express';
 import cors from 'cors';
 import bodyParser from 'body-parser';
 
-import candidateRoutes from './src/routes/candidateRoutes.js';
+import applicantRoutes from './src/routes/applicantRoutes.js';
 import courseRoutes from './src/routes/courseRoutes.js';
 import assignmentRoutes from './src/routes/assignmentRoutes.js';
 import uploadRoutes from './src/routes/uploadRoutes.js';
@@ -19,7 +19,7 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 
 // API endpoints
-app.use('/api/candidates', candidateRoutes);
+app.use('/api/applicants', applicantRoutes);
 app.use('/api/courses', courseRoutes);
 app.use('/api/assignments', assignmentRoutes);
 app.use('/api/upload', uploadRoutes);

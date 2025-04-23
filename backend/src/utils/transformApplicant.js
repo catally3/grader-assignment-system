@@ -1,17 +1,17 @@
-// src/utils/transformCandidate.js
+// src/utils/transformApplicant.js
 
 /**
- * Returns a "lightweight" version of the candidate data by removing
+ * Returns a "lightweight" version of the applicant data by removing
  * the detailed job experience descriptions.
  *
- * @param {Object} candidate - The candidate object (as plain JSON)
- * @returns {Object} The candidate object without the "description" in each experience entry.
+ * @param {Object} applicant - The applicant object (as plain JSON)
+ * @returns {Object} The applicant object without the "description" in each experience entry.
  */
-function transformCandidateForListing(candidate) {
-  const transformedCandidate = { ...candidate };
+function transformApplicantForListing(applicant) {
+  const transformApplicant = { ...applicant };
 
-  if (Array.isArray(transformedCandidate.experience)) {
-    transformedCandidate.experience = transformedCandidate.experience.map(exp => {
+  if (Array.isArray(transformApplicant.experience)) {
+    transformApplicant.experience = transformApplicant.experience.map(exp => {
       // Return a copy of the experience entry without the "description" field.
       const { description, ...lightExp } = exp;
       return lightExp;
@@ -23,16 +23,16 @@ function transformCandidateForListing(candidate) {
   //   ? transformedCandidate.skills.join(', ')
   //   : transformedCandidate.skills;
   
-  return transformedCandidate;
+  return transformApplicant;
 }
 
 /**
- * Returns an array of lightweight candidate objects.
- * @param {Array<Object>} candidates - Array of candidate objects.
+ * Returns an array of lightweight applicant objects.
+ * @param {Array<Object>} applicants - Array of applicant objects.
  * @returns {Array<Object>} Transformed array.
  */
-function transformCandidatesForListing(candidates) {
-  return candidates.map(candidate => transformCandidateForListing(candidate));
+function transformApplicantsForListing(applicants) {
+  return applicants.map(applicant => transformApplicantForListing(applicant));
 }
 
-export default { transformCandidatesForListing }
+export default { transformApplicantsForListing }

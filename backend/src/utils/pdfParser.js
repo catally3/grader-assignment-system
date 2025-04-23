@@ -463,29 +463,41 @@ function clearDirectory(dir) {
   }
 }
 
+/**
+ * Turn generic parsed data into an Applicant record.
+ * Any field that you don’t set here will use the defaultValue
+ * defined in applicant.js.
+ */
 function mapToApplicant(rawData, details = {}, filePath) {
-  return {
+  const rec = {
+    // ALWAYS include these
     applicant_name:  rawData.name,
     applicant_email: rawData.email,
-
-    candidate_id:    details.applicantId  || null,
-    net_id:          null,
-    semester:        null,
-    school_year:     null,
-
-    university:      null,
-    school:          null,
-    graduation_date: null,
-    major:           null,
-
-    qualified:       null,
-
     gpa:             rawData.gpa,
     resume_path:     filePath,
 
+    // JSON fields
     skills:          rawData.skills,
     experience:      rawData.experience
   };
+
+  // only include candidate_id if we actually parsed one:
+  if (details.applicantId) {
+    rec.candidate_id = details.applicantId;
+  }
+  // DO NOT set rec.net_id or rec.semester here:
+  //   omitting them lets Sequelize use the defaultValue ("xxx000000", "Semester")
+
+  // If you have any of these from parsing, include them.
+  // Otherwise omit them to pick up defaults:
+  // rec.school_year     = rawData.schoolYear;
+  // rec.university      = rawData.university;
+  // rec.school          = rawData.school;
+  // rec.graduation_date = rawData.graduationDate;
+  // rec.major           = rawData.major;
+  // rec.qualified       = rawData.qualifiedFlag;
+
+  return rec;
 }
 
 /**
@@ -502,49 +514,31 @@ function mapToApplicant(rawData, details = {}, filePath) {
 async function parseZipResumes(zipFilePath) {
   try {
     const tempDir = './temp_resumes';
+    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
+    else clearDirectory(tempDir);
 
-    // 1) Ensure or clear the temp directory
-    if (!fs.existsSync(tempDir)) {
-      fs.mkdirSync(tempDir, { recursive: true });
-    } else {
-      clearDirectory(tempDir);
-    }
+    new AdmZip(zipFilePath).extractAllTo(tempDir, true);
 
-    // 2) Unzip all PDFs into tempDir
-    const zip = new AdmZip(zipFilePath);
-    zip.extractAllTo(tempDir, true);
-
-    // 3) Read every file and process
-    const files = fs.readdirSync(tempDir);
     const allApplicants = [];
-
-    for (const file of files) {
+    for (const file of fs.readdirSync(tempDir)) {
       if (path.extname(file).toLowerCase() !== '.pdf') continue;
-      const filePath = path.join(tempDir, file);
-
-      // 3a) File name details (FirstName, LastName, applicantId)
-      const details = extractCandidateDetailsFromFileName(file) || {};
-
-      // 3b) Parse the PDF into generic rawData
+      const filePath  = path.join(tempDir, file);
+      const details   = extractCandidateDetailsFromFileName(file) || {};
       const [rawData] = await parseResumePdf(filePath);
 
-      // 3c) Map into your Applicant model shape
+      // map—**net_id** & **semester** are NOT set here
       const applicant = mapToApplicant(rawData, details, filePath);
       allApplicants.push(applicant);
 
-      // 3d) (Optional) Rename file to First_Last_ID.pdf
+      // optional: rename file
       if (details.firstName && details.lastName && details.applicantId) {
-        const newFileName = `${details.firstName}_${details.lastName}_${details.applicantId}.pdf`;
-        const newFilePath = path.join(tempDir, newFileName);
-        if (!fs.existsSync(newFilePath)) {
-          fs.renameSync(filePath, newFilePath);
-        }
+        const newName = `${details.firstName}_${details.lastName}_${details.applicantId}.pdf`;
+        const newPath = path.join(tempDir, newName);
+        if (!fs.existsSync(newPath)) fs.renameSync(filePath, newPath);
       }
     }
 
-    // 4) Return array ready for Candidate.bulkCreate(...)
     return allApplicants;
-
   } catch (error) {
     console.error('Error parsing ZIP resumes:', error);
     throw error;

@@ -37,7 +37,8 @@ services:
       mysql:
         condition: service_healthy
     volumes:
-      - .:/backendapp
+      - ./backend:/app
+      - ./backend/src/uploads:/app/uploads
 
   frontend:
     build:

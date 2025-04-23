@@ -37,8 +37,8 @@ DROP TABLE IF EXISTS `applicants`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `applicants` (
-  `net_id` varchar(10) NOT NULL DEFAULT 'xxx000000',
-  `candidate_id` varchar(8) DEFAULT '0000000',
+  `utd_id` varchar(10) DEFAULT 'xxx000000',
+  `candidate_id` varchar(8) NOT NULL DEFAULT '0000000',
   `semester` varchar(255) NOT NULL DEFAULT 'Semester',
   `applicant_name` varchar(255) DEFAULT NULL,
   `applicant_email` varchar(25) DEFAULT 'xxx000000@utdallas.edu',
@@ -53,8 +53,8 @@ CREATE TABLE `applicants` (
   `resume_path` varchar(255) DEFAULT NULL,
   `skills` text DEFAULT NULL,
   `experience` text DEFAULT NULL,
-  PRIMARY KEY (`net_id`,`semester`),
-  UNIQUE KEY `candidate_id_UNIQUE` (`candidate_id`,`semester`)
+  PRIMARY KEY (`candidate_id`,`semester`),
+  UNIQUE KEY `net_id_UNIQUE` (`net_id`,`semester`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

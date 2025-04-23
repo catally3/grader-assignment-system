@@ -10,6 +10,7 @@ export default (sequelize, DataTypes) => {
     graduation_date: {type: DataTypes.STRING(10), defaultValue: "2026-05-01"},
     major: {type: DataTypes.STRING, defaultValue: "Computer Science"},
     qualified: {type: DataTypes.BOOLEAN},
+    continuing: {type: DataTypes.BOOLEAN},
     gpa: {type: DataTypes.FLOAT.UNSIGNED},
     applicant_email: { type: DataTypes.STRING(25), defaultValue: "xxx000000@utdallas.edu" },
     resume_path: { type: DataTypes.STRING },
