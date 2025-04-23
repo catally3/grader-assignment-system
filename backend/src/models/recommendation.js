@@ -4,7 +4,7 @@ export default (sequelize, DataTypes) => {
       semester: {type: DataTypes.STRING, allowNull: false, defaultValue: "Semester"},
       professor_id: { type: DataTypes.INTEGER.UNSIGNED},
       applicant_name: {type: DataTypes.STRING},
-      applicant_net_id: { type: DataTypes.STRING(10), defaultValue: "xxx000000"}
+      applicant_net_id: { type: DataTypes.STRING(12), defaultValue: "000000000"}
     });
     return Recommendation;
   };

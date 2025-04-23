@@ -1,8 +1,8 @@
 export default (sequelize, DataTypes) => {
   const Applicant = sequelize.define('applicant', {
     applicant_name: { type: DataTypes.STRING},
-    net_id: {type: DataTypes.STRING(10), allowNull: false, primaryKey: true, defaultValue: "xxx000000"},
-    candidate_id: {type: DataTypes.STRING(8), defaultValue: "0000000"},
+    student_id: {type: DataTypes.STRING(12), allowNull: false, primaryKey: true, defaultValue: "0000000000"},
+    document_id: {type: DataTypes.STRING(8), unique: true, allowNull: false, defaultValue: "0000000"},
     semester: {type: DataTypes.STRING, allowNull: false, primaryKey: true, defaultValue: "Semester"},
     school_year: {type: DataTypes.STRING(10), defaultValue: "Masters"},
     university: {type: DataTypes.STRING(35), defaultValue: "The University of Texas at Dallas"},
@@ -11,7 +11,7 @@ export default (sequelize, DataTypes) => {
     major: {type: DataTypes.STRING, defaultValue: "Computer Science"},
     qualified: {type: DataTypes.BOOLEAN},
     gpa: {type: DataTypes.FLOAT.UNSIGNED},
-    applicant_email: { type: DataTypes.STRING(25), defaultValue: "xxx000000@utdallas.edu" },
+    applicant_email: { type: DataTypes.STRING(50), defaultValue: "xxx000000@utdallas.edu" },
     resume_path: { type: DataTypes.STRING },
     skills: {
       type: DataTypes.TEXT,
