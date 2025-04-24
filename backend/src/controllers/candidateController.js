@@ -2,13 +2,13 @@
 import db from '../models/index.js';
 import transformCandidates from '../utils/transformCandidate.js';
 
-const Candidate = db.Candidate;
+const Candidate = db.Applicant;
 
 const getAllCandidates = async (req, res) => {
   try {
     const candidates = await Candidate.findAll();
     // Convert candidates to JSON and then transform them.
-    const candidateJSON = candidates.map(c => c.toJSON());
+    const candidateJSON = candidates.map((c) => c.toJSON());
     const lightweightCandidates = transformCandidates.transformCandidatesForListing(candidateJSON);
     res.json(lightweightCandidates);
   } catch (err) {
@@ -44,9 +44,10 @@ const createCandidate = async (req, res) => {
 const updateCandidate = async (req, res) => {
   try {
     // Update candidate by applicantId instead of PK.
-    const candidate = await Candidate.findOne({ where: { applicantId: req.params.id } });
-    if (!candidate)
-      return res.status(404).json({ error: 'Candidate not found' });
+    const candidate = await Candidate.findOne({
+      where: { applicantId: req.params.id }
+    });
+    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
     await candidate.update(req.body);
     res.json(candidate);
   } catch (err) {
@@ -57,9 +58,10 @@ const updateCandidate = async (req, res) => {
 const deleteCandidate = async (req, res) => {
   try {
     // Delete candidate by applicantId.
-    const candidate = await Candidate.findOne({ where: { applicantId: req.params.id } });
-    if (!candidate)
-      return res.status(404).json({ error: 'Candidate not found' });
+    const candidate = await Candidate.findOne({
+      where: { applicantId: req.params.id }
+    });
+    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
     await candidate.destroy();
     res.json({ message: 'Candidate deleted' });
   } catch (err) {
@@ -69,8 +71,8 @@ const deleteCandidate = async (req, res) => {
 
 export default {
   getAllCandidates,
-  getCandidateById,    // Uses applicantId
+  getCandidateById, // Uses applicantId
   createCandidate,
-  updateCandidate,     // Uses applicantId
-  deleteCandidate      // Uses applicantId
+  updateCandidate, // Uses applicantId
+  deleteCandidate // Uses applicantId
 };
