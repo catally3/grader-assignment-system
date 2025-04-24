@@ -1,4 +1,4 @@
-CREATE DATABASE  IF NOT EXISTS `grader_assignment` 
+CREATE DATABASE IF NOT EXISTS `grader_assignment`;
 USE `grader_assignment`;
 /*!40101 SET @OLD_CHARACTER_SET_CLIENT=@@CHARACTER_SET_CLIENT */;
 /*!40101 SET @OLD_CHARACTER_SET_RESULTS=@@CHARACTER_SET_RESULTS */;
@@ -37,11 +37,11 @@ DROP TABLE IF EXISTS `applicants`;
 /*!40101 SET @saved_cs_client     = @@character_set_client */;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `applicants` (
-  `utd_id` varchar(10) DEFAULT 'xxx000000',
-  `candidate_id` varchar(8) NOT NULL DEFAULT '0000000',
+  `student_id` varchar(12) NOT NULL DEFAULT '0000000000',
+  `document_id` varchar(8) DEFAULT '0000000',
   `semester` varchar(255) NOT NULL DEFAULT 'Semester',
   `applicant_name` varchar(255) DEFAULT NULL,
-  `applicant_email` varchar(25) DEFAULT 'xxx000000@utdallas.edu',
+  `applicant_email` varchar(50) DEFAULT 'xxx000000@utdallas.edu',
   `school_year` varchar(10) DEFAULT 'Masters',
   `university` varchar(35) DEFAULT 'The University of Texas at Dallas',
   `school` varchar(255) DEFAULT 'Erik Jonsson School of Engineering and Computer Science',
@@ -53,8 +53,8 @@ CREATE TABLE `applicants` (
   `resume_path` varchar(255) DEFAULT NULL,
   `skills` text DEFAULT NULL,
   `experience` text DEFAULT NULL,
-  PRIMARY KEY (`candidate_id`,`semester`),
-  UNIQUE KEY `net_id_UNIQUE` (`net_id`,`semester`)
+  PRIMARY KEY (`student_id`,`semester`),
+  UNIQUE KEY `document_id_UNIQUE` (`document_id`,`semester`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -123,16 +123,16 @@ DROP TABLE IF EXISTS `assignments`;
 /*!50503 SET character_set_client = utf8mb4 */;
 CREATE TABLE `assignments` (
   `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `applicant_net_id` varchar(10) DEFAULT NULL,
+  `applicant_student_id` varchar(12) DEFAULT NULL,
   `course_id` int unsigned DEFAULT NULL,
   `score` float DEFAULT NULL,
   `reasoning` text DEFAULT NULL,
   `status` varchar(255) DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `fk_prof_id_idx` (`course_id`),
-  KEY `fk_applicant_id_idx` (`applicant_net_id`),
-  CONSTRAINT `fk_applicant_id` FOREIGN KEY (`applicant_net_id`) REFERENCES `applicants` (`net_id`),
-  CONSTRAINT `fk_prof_id` FOREIGN KEY (`course_id`) REFERENCES `professor_courses` (`id`)
+  KEY `fk_applicant_id_idx` (`applicant_student_id`),
+  CONSTRAINT `fk_applicant_id` FOREIGN KEY (`applicant_student_id`) REFERENCES `applicants` (`student_id`),
+  CONSTRAINT `fk_prof_id` FOREIGN KEY (`course_id`) REFERENCES `courses` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -179,10 +179,12 @@ CREATE TABLE `recommendations` (
   `semester` varchar(255) NOT NULL DEFAULT 'Semester',
   `professor_id` int unsigned DEFAULT NULL,
   `applicant_name` varchar(255) DEFAULT NULL,
-  `applicant_net_id` varchar(10) DEFAULT 'xxx000000',
+  `applicant_student_id` varchar(12) DEFAULT '000000000',
   PRIMARY KEY (`id`),
   KEY `fk_prof_id_idx` (`professor_id`),
-  KEY `fk_student_id_idx` (`applicant_net_id`)
+  KEY `fk_applicant_id_idx` (`applicant_student_id`),
+  CONSTRAINT `fk_applicant_id` FOREIGN KEY (`applicant_student_id`) REFERENCES `applicants` (`student_id`),
+  CONSTRAINT `fk_prof_id` FOREIGN KEY (`professor_id`) REFERENCES `courses` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 

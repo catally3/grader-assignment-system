@@ -464,43 +464,6 @@ function clearDirectory(dir) {
 }
 
 /**
- * Turn generic parsed data into an Applicant record.
- * Any field that you don’t set here will use the defaultValue
- * defined in applicant.js.
- */
-function mapToApplicant(rawData, details = {}, filePath) {
-  const rec = {
-    // ALWAYS include these
-    applicant_name:  rawData.name,
-    applicant_email: rawData.email,
-    gpa:             rawData.gpa,
-    resume_path:     filePath,
-
-    // JSON fields
-    skills:          rawData.skills,
-    experience:      rawData.experience
-  };
-
-  // only include candidate_id if we actually parsed one:
-  if (details.applicantId) {
-    rec.candidate_id = details.applicantId;
-  }
-  // DO NOT set rec.net_id or rec.semester here:
-  //   omitting them lets Sequelize use the defaultValue ("xxx000000", "Semester")
-
-  // If you have any of these from parsing, include them.
-  // Otherwise omit them to pick up defaults:
-  // rec.school_year     = rawData.schoolYear;
-  // rec.university      = rawData.university;
-  // rec.school          = rawData.school;
-  // rec.graduation_date = rawData.graduationDate;
-  // rec.major           = rawData.major;
-  // rec.qualified       = rawData.qualifiedFlag;
-
-  return rec;
-}
-
-/**
  * NEW FUNCTION: Parses a ZIP file containing multiple individual resume PDFs.
  * - Clears the temporary folder first.
  * - Extracts the ZIP file to the temporary folder.
@@ -514,31 +477,43 @@ function mapToApplicant(rawData, details = {}, filePath) {
 async function parseZipResumes(zipFilePath) {
   try {
     const tempDir = './temp_resumes';
-    if (!fs.existsSync(tempDir)) fs.mkdirSync(tempDir, { recursive: true });
-    else clearDirectory(tempDir);
-
-    new AdmZip(zipFilePath).extractAllTo(tempDir, true);
-
-    const allApplicants = [];
-    for (const file of fs.readdirSync(tempDir)) {
-      if (path.extname(file).toLowerCase() !== '.pdf') continue;
-      const filePath  = path.join(tempDir, file);
-      const details   = extractCandidateDetailsFromFileName(file) || {};
-      const [rawData] = await parseResumePdf(filePath);
-
-      // map—**net_id** & **semester** are NOT set here
-      const applicant = mapToApplicant(rawData, details, filePath);
-      allApplicants.push(applicant);
-
-      // optional: rename file
-      if (details.firstName && details.lastName && details.applicantId) {
-        const newName = `${details.firstName}_${details.lastName}_${details.applicantId}.pdf`;
-        const newPath = path.join(tempDir, newName);
-        if (!fs.existsSync(newPath)) fs.renameSync(filePath, newPath);
+    // Ensure the temp directory exists
+    if (!fs.existsSync(tempDir)) {
+      fs.mkdirSync(tempDir, { recursive: true });
+    } else {
+      // Clean the temp directory before processing new files
+      clearDirectory(tempDir);
+    }
+    
+    const zip = new AdmZip(zipFilePath);
+    zip.extractAllTo(tempDir, true);
+    
+    const files = fs.readdirSync(tempDir);
+    const allCandidates = [];
+    for (const file of files) {
+      if (path.extname(file).toLowerCase() === '.pdf') {
+        const filePath = path.join(tempDir, file);
+        const candidateData = await parseResumePdf(filePath);
+        if (candidateData && candidateData.length > 0) {
+          // Extract candidate details from the file name.
+          const details = extractCandidateDetailsFromFileName(file);
+          if (details) {
+            // Overwrite the candidate's name and applicantId from the file name
+            candidateData[0].name = details.name;
+            candidateData[0].applicantId = details.applicantId;
+            // Rename file to a consistent format: FirstName_LastName_ApplicantID.pdf
+            const newFileName = `${details.firstName}_${details.lastName}_${details.applicantId}.pdf`;
+            const newFilePath = path.join(tempDir, newFileName);
+            // Rename if the target file doesn't already exist.
+            if (!fs.existsSync(newFilePath)) {
+              fs.renameSync(filePath, newFilePath);
+            }
+          }
+          allCandidates.push(...candidateData);
+        }
       }
     }
-
-    return allApplicants;
+    return allCandidates;
   } catch (error) {
     console.error('Error parsing ZIP resumes:', error);
     throw error;

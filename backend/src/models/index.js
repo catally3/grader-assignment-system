@@ -30,8 +30,8 @@ db.Assignment = assignment(sequelize, Sequelize);
 db.Recommendation = recommendation(sequelize, Sequelize);
 
 // Define associations
-db.Applicant.hasMany(db.Assignment, { foreignKey: 'net_id' });
-db.Assignment.belongsTo(db.Applicant, { foreignKey: 'net_id' });
+db.Applicant.hasMany(db.Assignment, { foreignKey: 'student_id' });
+db.Assignment.belongsTo(db.Applicant, { foreignKey: 'student_id' });
 db.Course.hasMany(db.Assignment, { foreignKey: 'course_id' });
 db.Assignment.belongsTo(db.Course, { foreignKey: 'course_id' });
 db.Course.hasMany(db.Recommendation, {foreignKey: 'professor_id'});

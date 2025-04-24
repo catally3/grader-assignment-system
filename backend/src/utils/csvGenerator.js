@@ -12,9 +12,11 @@ export const generateCSV = async (candidates, filePath) => {
   const csvWriter = createCsvWriter.createObjectCsvWriter({
     path: filePath,
     header: [
+      { id: 'applicantId', title: 'Applicant ID' },
       { id: 'name', title: 'Name' },
       { id: 'email', title: 'Email' },
       { id: 'phone', title: 'Phone' },
+      { id: 'resumePath', title: 'Resume Path' },
       { id: 'education', title: 'Education' },
       { id: 'gpa', title: 'GPA' },
       { id: 'skills', title: 'Skills' },
@@ -23,21 +25,28 @@ export const generateCSV = async (candidates, filePath) => {
   });
 
   // Format the candidate data for CSV
+  // (Adjust formatting as necessary – for example, converting arrays to comma-separated strings)
   const formattedCandidates = candidates.map(candidate => ({
-    ...candidate,
-    // Ensure phone is output as a text formula to prevent Excel from interpreting it as a calculation.
+    applicantId: candidate.applicantId || '',
+    name: candidate.name || '',
+    email: candidate.email || '',
+    // Ensure phone is output as a text formula to prevent Excel issues.
     phone: candidate.phone ? `="${candidate.phone}"` : "",
-    // Format skills as a comma-separated string.
-    skills: Array.isArray(candidate.skills) ? candidate.skills.join(', ') : candidate.skills,
-    // Format experience (if it's an array, join entries).
+    resumePath: candidate.resumePath || '',
+    education: candidate.education || '', // Use education if degree not set
+    gpa: candidate.gpa !== undefined ? candidate.gpa : '',
+    skills: Array.isArray(candidate.skills) ? candidate.skills.join(', ') : candidate.skills || '',
     experience: Array.isArray(candidate.experience)
       ? candidate.experience
-          .map(entry =>
-            `Company: ${entry.company} | Role: ${entry.role} | Duration: ${entry.duration} | Description: ${entry.description.join(' ')}`
-          )
+          .map(entry => {
+            const descriptionText = Array.isArray(entry.description)
+              ? entry.description.join(' ')
+              : entry.description || '';
+            return `Company: ${entry.company || ''} | Role: ${entry.role || ''} | Duration: ${entry.duration || ''} | Description: ${descriptionText}`;
+          })
           .join('\n')
-      : candidate.experience,
-  })); 
+      : candidate.experience || '',
+  }));
 
   await csvWriter.writeRecords(formattedCandidates);
   return filePath;

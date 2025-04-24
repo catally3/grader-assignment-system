@@ -1,19 +1,19 @@
 import db from '../models/index.js';
 import matchingAlgorithm from '../utils/matchingAlgorithm.js';
-const { Candidate, Course, Assignment, Sequelize } = db;
+const { Applicant, Course, Assignment, Sequelize } = db;
 
 const runMatching = async (req, res) => {
   try {
     // Retrieve all candidates and courses
-    const candidates = await Candidate.findAll();
+    const applicants = await Applicant.findAll();
     const courses = await Course.findAll();
     // Execute the matching algorithm (a simple heuristic example)
-    const results = await matchingAlgorithm.matchCandidatesToCourses(candidates, courses);
+    const results = await matchingAlgorithm.matchCandidatesToCourses(applicants, courses);
     // Save assignments into the database
     for (let result of results) {
       await Assignment.create({
-        candidateId: result.candidateId,
-        courseId: result.courseId,
+        applicant_student_id: result.candidateId,
+        course_id: result.courseId,
         score: result.score,
         reasoning: result.reasoning,
       });
@@ -27,7 +27,7 @@ const runMatching = async (req, res) => {
 const getMatchingResults = async (req, res) => {
   try {
     const assignments = await Assignment.findAll({
-      include: [Candidate, Course]
+      include: [Applicant, Course]
     });
     res.json(assignments);
   } catch (err) {
@@ -39,10 +39,10 @@ const reassign = async (req, res) => {
   try {
     // For simplicity, re-run matching for courses with no assignments.
     const allAssignments = await Assignment.findAll();
-    const assignedCandidateIds = allAssignments.map(a => a.candidateId);
-    const availableCandidates = await Candidate.findAll({
+    const assignedCandidateIds = allAssignments.map(a => a.applicant_student_id);
+    const availableCandidates = await Applicant.findAll({
       where: {
-        id: { [Sequelize.Op.notIn]: assignedCandidateIds }
+        student_id: { [Sequelize.Op.notIn]: assignedCandidateIds }
       }
     });
     const courses = await Course.findAll();
@@ -57,8 +57,8 @@ const reassign = async (req, res) => {
     const results = await matchingAlgorithm.matchCandidatesToCourses(availableCandidates, coursesToReassign);
     for (let result of results) {
       await Assignment.create({
-        candidateId: result.candidateId,
-        courseId: result.courseId,
+        applicant_student_id: result.candidateId,
+        course_id: result.courseId,
         score: result.score,
         reasoning: result.reasoning,
       });

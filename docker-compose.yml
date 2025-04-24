@@ -24,7 +24,7 @@ services:
     build: ./backend
     container_name: gas_backend
     restart: unless-stopped
-    env_file: .env
+    env_file: ./.env
     environment:
       - DB_HOST=${DB_HOST}
       - DB_PORT=${DB_PORT}
