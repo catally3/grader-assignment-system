@@ -1,115 +1,117 @@
-// src/controllers/courseController.js
+// src/controllers/applicantController.js
 
 import { Op } from 'sequelize';
 import db from '../models/index.js';
+import transformApplicant from '../utils/transformApplicant.js';
 
-const { Course, Recommendation } = db;
+const Applicant = db.Applicant;
 
-// List all courses, including their recommendations
-const getAllCourses = async (req, res) => {
+/**
+ * GET /applicants
+ * Returns a lightweight list of all applicants.
+ */
+const getAllApplicants = async (req, res) => {
   try {
-    const courses = await Course.findAll({
-      include: [{
-        model: Recommendation,
-        as: 'recommendations'
-      }]
+    const applicants = await Applicant.findAll();
+    const applicantJSON = applicants.map(a => a.toJSON());
+    const list = transformApplicant.transformApplicantsForListing(applicantJSON);
+    res.json(list);
+  } catch (err) {
+    res.status(500).json({ error: err.message });
+  }
+};
+
+/**
+ * GET /applicants/:id
+ * Lookup by student_id OR document_id.
+ */
+const getApplicantById = async (req, res) => {
+  try {
+    const id = req.params.id;
+    const applicant = await Applicant.findOne({
+      where: {
+        [Op.or]: [
+          { student_id:  id },
+          { document_id: id }
+        ]
+      }
     });
-    res.json(courses);
+    if (!applicant) {
+      return res.status(404).json({ error: 'Applicant not found' });
+    }
+    res.json(applicant);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Get a single course by numeric ID or by natural key (course#-section-semester),
-// and include its recommendations
-const getCourseById = async (req, res) => {
+/**
+ * POST /applicants
+ * Creates a new applicant record.
+ */
+const createApplicant = async (req, res) => {
   try {
-    const { id } = req.params;
-    let course;
-
-    if (/^\d+$/.test(id)) {
-      // Numeric PK lookup
-      course = await Course.findByPk(id, {
-        include: [{ model: Recommendation, as: 'recommendations' }]
-      });
-    } else {
-      // Natural key lookup: expect "COURSE#-SECTION-SEMESTER"
-      const [course_number, course_section, semester] = id.split('-');
-      course = await Course.findOne({
-        where: { course_number, course_section, semester },
-        include: [{ model: Recommendation, as: 'recommendations' }]
-      });
-    }
-
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-    res.json(course);
+    const newApp = await Applicant.create(req.body);
+    res.status(201).json(newApp);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Create a new course (recommendations aren’t created here)
-const createCourse = async (req, res) => {
+/**
+ * PUT /applicants/:id
+ * Updates an existing applicant, looked up by student_id or document_id.
+ */
+const updateApplicant = async (req, res) => {
   try {
-    const course = await Course.create(req.body);
-    res.status(201).json(course);
+    const id = req.params.id;
+    const applicant = await Applicant.findOne({
+      where: {
+        [Op.or]: [
+          { student_id:  id },
+          { document_id: id }
+        ]
+      }
+    });
+    if (!applicant) {
+      return res.status(404).json({ error: 'Applicant not found' });
+    }
+    await applicant.update(req.body);
+    res.json(applicant);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-// Update an existing course by numeric ID or natural key
-const updateCourse = async (req, res) => {
+/**
+ * DELETE /applicants/:id
+ * Removes an applicant by student_id or document_id.
+ */
+const deleteApplicant = async (req, res) => {
   try {
-    const { id } = req.params;
-    let course;
-
-    if (/^\d+$/.test(id)) {
-      course = await Course.findByPk(id);
-    } else {
-      const [course_number, course_section, semester] = id.split('-');
-      course = await Course.findOne({ where: { course_number, course_section, semester } });
+    const id = req.params.id;
+    const applicant = await Applicant.findOne({
+      where: {
+        [Op.or]: [
+          { student_id:  id },
+          { document_id: id }
+        ]
+      }
+    });
+    if (!applicant) {
+      return res.status(404).json({ error: 'Applicant not found' });
     }
-
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-    await course.update(req.body);
-    res.json(course);
-  } catch (err) {
-    res.status(500).json({ error: err.message });
-  }
-};
-
-// Delete a course by numeric ID or natural key
-const deleteCourse = async (req, res) => {
-  try {
-    const { id } = req.params;
-    let course;
-
-    if (/^\d+$/.test(id)) {
-      course = await Course.findByPk(id);
-    } else {
-      const [course_number, course_section, semester] = id.split('-');
-      course = await Course.findOne({ where: { course_number, course_section, semester } });
-    }
-
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
-    await course.destroy();
-    res.json({ message: 'Course deleted' });
+    await applicant.destroy();
+    res.json({ message: 'Applicant deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
 export default {
-  getAllCourses,
-  getCourseById,
-  createCourse,
-  updateCourse,
-  deleteCourse
+  getAllApplicants,
+  getApplicantById,
+  createApplicant,
+  updateApplicant,
+  deleteApplicant
 };
