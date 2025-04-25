@@ -4,13 +4,7 @@ import course from './course.js';
 import assignment from './assignment.js';
 import recommendation from './recommendation.js';
 
-const {
-  DB_NAME,
-  DB_USER,
-  DB_PASSWORD,
-  DB_HOST,
-  DB_PORT
-} = process.env;
+const { DB_NAME, DB_USER, DB_PASSWORD, DB_HOST, DB_PORT } = process.env;
 
 console.log(`Connecting to MySQL at ${DB_HOST}:${DB_PORT} as ${DB_USER} to database ${DB_NAME}`);
 
@@ -34,10 +28,12 @@ db.Applicant.hasMany(db.Assignment, { foreignKey: 'student_id' });
 db.Assignment.belongsTo(db.Applicant, { foreignKey: 'student_id' });
 db.Course.hasMany(db.Assignment, { foreignKey: 'course_id' });
 db.Assignment.belongsTo(db.Course, { foreignKey: 'course_id' });
-db.Course.hasMany(db.Recommendation, {foreignKey: 'professor_id'});
-db.Recommendation.belongsTo(db.Course, {foreignKey: 'professor_id'});
-db.Applicant.hasMany(db.Recommendation, {foreignKey: 'applicant_net_id'});
-db.Recommendation.belongsTo(db.Applicant, {foreignKey: 'applicant_net_id'});
+db.Course.hasMany(db.Recommendation, { foreignKey: 'professor_id' });
+db.Recommendation.belongsTo(db.Course, { foreignKey: 'professor_id' });
+db.Applicant.hasMany(db.Recommendation, { foreignKey: 'applicant_student_id' });
+db.Recommendation.belongsTo(db.Applicant, {
+  foreignKey: 'applicant_student_id'
+});
 
 /**
  * Wait for the database connection to succeed.
@@ -52,7 +48,7 @@ async function waitForDatabase(retries = 10, delay = 3000) {
     } catch (err) {
       console.log(`Database connection failed (attempt ${i + 1}): ${err.message}`);
       console.log(`Retrying in ${delay}ms...`);
-      await new Promise(res => setTimeout(res, delay));
+      await new Promise((res) => setTimeout(res, delay));
     }
   }
   throw new Error('Unable to connect to the database after several attempts.');

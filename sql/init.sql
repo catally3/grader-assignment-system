@@ -11,24 +11,6 @@ USE `grader_assignment`;
 /*!40101 SET @OLD_SQL_MODE=@@SQL_MODE, SQL_MODE='NO_AUTO_VALUE_ON_ZERO' */;
 /*!40111 SET @OLD_SQL_NOTES=@@SQL_NOTES, SQL_NOTES=0 */;
 
-/*-- Create Courses table
-CREATE TABLE courses (
-  id INT AUTO_INCREMENT PRIMARY KEY,
-  professorName VARCHAR(255) NOT NULL,
-  professorEmail VARCHAR(255),
-  courseNumber VARCHAR(50),
-  section VARCHAR(50),
-  courseName VARCHAR(255) NOT NULL,
-  recommendedStudentName VARCHAR(255),
-  recommendedStudentNetid VARCHAR(255),
-  numOfGraders INT,
-  keywords JSON,
-  createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updatedAt DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
-); */
-
--- **[Kay] Reorder applicant_skill down**
-
 --
 -- Table structure for table `applicants`
 --
@@ -53,8 +35,8 @@ CREATE TABLE `applicants` (
   `resume_path` varchar(255) DEFAULT NULL,
   `skills` text DEFAULT NULL,
   `experience` text DEFAULT NULL,
-  PRIMARY KEY (`student_id`,`semester`),
-  UNIQUE KEY `document_id_UNIQUE` (`document_id`,`semester`)
+  PRIMARY KEY (`student_id`),
+  UNIQUE KEY `document_id_UNIQUE` (`document_id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
@@ -64,7 +46,7 @@ LOCK TABLES `applicants` WRITE;
 UNLOCK TABLES;
 
 --
--- Table structure for table `professor_courses`
+-- Table structure for table `courses`
 --
 
 DROP TABLE IF EXISTS `courses`;
@@ -80,38 +62,14 @@ CREATE TABLE `courses` (
   `course_name` varchar(255) DEFAULT NULL,
   `number_of_graders` int DEFAULT NULL,
   `keywords` JSON DEFAULT NULL,
-  PRIMARY KEY (`id`,`semester`),
-  UNIQUE KEY `id_UNIQUE` (`id`,`semester`) /*!80000 INVISIBLE */
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `id_UNIQUE` (`id`) /*!80000 INVISIBLE */
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 LOCK TABLES `courses` WRITE;
-/*!40000 ALTER TABLE `professor_courses` DISABLE KEYS */;
-/*!40000 ALTER TABLE `professor_courses` ENABLE KEYS */;
-UNLOCK TABLES;
-
---
--- Table structure for table `applicant_skills`
---
-/*
-DROP TABLE IF EXISTS `applicant_skills`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `applicant_skills` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `applicant_net_id` char(10) NOT NULL,
-  `skill_type` varchar(50) NOT NULL DEFAULT 'Work Experience',
-  `skill` varchar(100) NOT NULL DEFAULT '2 Years Coding',
-  PRIMARY KEY (`id`),
-  KEY `fk_applicant_id_idx` (`applicant_net_id`),
-  CONSTRAINT `fk_applicant_net_id` FOREIGN KEY (`applicant_net_id`) REFERENCES `applicants` (`net_id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-LOCK TABLES `applicant_skills` WRITE;
-*/
-/*!40000 ALTER TABLE `applicant_skills` DISABLE KEYS */;
-/*!40000 ALTER TABLE `applicant_skills` ENABLE KEYS */;
+/*!40000 ALTER TABLE `courses` DISABLE KEYS */;
+/*!40000 ALTER TABLE `courses` ENABLE KEYS */;
 UNLOCK TABLES;
 
 --
@@ -142,30 +100,6 @@ LOCK TABLES `assignments` WRITE;
 /*!40000 ALTER TABLE `assignments` ENABLE KEYS */;
 UNLOCK TABLES;
 
---
--- Table structure for table `course_skills`
---
-/*
-DROP TABLE IF EXISTS `course_skills`;
-/*!40101 SET @saved_cs_client     = @@character_set_client */;
-/*!50503 SET character_set_client = utf8mb4 */;
-CREATE TABLE `course_skills` (
-  `id` int unsigned NOT NULL AUTO_INCREMENT,
-  `course_id` int unsigned NOT NULL,
-  `skill_type` varchar(50) NOT NULL DEFAULT 'Work Experience',
-  `skill` varchar(100) NOT NULL DEFAULT '2 Years',
-  PRIMARY KEY (`id`),
-  KEY `prof_course_fk_idx` (`course_id`),
-  CONSTRAINT `prof_course_fk` FOREIGN KEY (`course_id`) REFERENCES `professor_courses` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
-/*!40101 SET character_set_client = @saved_cs_client */;
-
-
-LOCK TABLES `course_skills` WRITE;
-/*!40000 ALTER TABLE `course_skills` DISABLE KEYS */;
-/*!40000 ALTER TABLE `course_skills` ENABLE KEYS */;
-UNLOCK TABLES;
-*/
 
 --
 -- Table structure for table `recommendations`
@@ -183,12 +117,12 @@ CREATE TABLE `recommendations` (
   PRIMARY KEY (`id`),
   KEY `fk_prof_id_idx` (`professor_id`),
   KEY `fk_applicant_id_idx` (`applicant_student_id`),
-  CONSTRAINT `fk_applicant_id` FOREIGN KEY (`applicant_student_id`) REFERENCES `applicants` (`student_id`),
-  CONSTRAINT `fk_prof_id` FOREIGN KEY (`professor_id`) REFERENCES `courses` (`id`)
+  CONSTRAINT `fk_applicant_id2` FOREIGN KEY (`applicant_student_id`) REFERENCES `applicants` (`student_id`),
+  CONSTRAINT `fk_prof_id2` FOREIGN KEY (`professor_id`) REFERENCES `courses` (`id`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
-LOCK TABLES `recommendations` WRITE;
+LOCK TABLES `recommendations` WRITE; 
 /*!40000 ALTER TABLE `recommendations` DISABLE KEYS */;
 /*!40000 ALTER TABLE `recommendations` ENABLE KEYS */;
 UNLOCK TABLES;
