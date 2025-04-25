@@ -1,76 +1,115 @@
-// src/controllers/candidateController.js
+// src/controllers/courseController.js
+
+import { Op } from 'sequelize';
 import db from '../models/index.js';
-import transformCandidates from '../utils/transformCandidate.js';
 
-const Candidate = db.Candidate;
+const { Course, Recommendation } = db;
 
-const getAllApplicants = async (req, res) => {
+// List all courses, including their recommendations
+const getAllCourses = async (req, res) => {
   try {
-    const candidates = await Candidate.findAll();
-    // Convert candidates to JSON and then transform them.
-    const candidateJSON = candidates.map(c => c.toJSON());
-    const lightweightCandidates = transformApplicant.transformCandidatesForListing(candidateJSON);
-    res.json(lightweightCandidates);
+    const courses = await Course.findAll({
+      include: [{
+        model: Recommendation,
+        as: 'recommendations'
+      }]
+    });
+    res.json(courses);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-/**
- * Retrieves a candidate by the applicantId provided in the URL parameter.
- * The applicantId is the one that gets extracted from the PDF filename.
- */
-const getCandidateById = async (req, res) => {
+// Get a single course by numeric ID or by natural key (course#-section-semester),
+// and include its recommendations
+const getCourseById = async (req, res) => {
   try {
-    // req.params.id is now interpreted as the applicantId.
-    const applicantId = req.params.id;
-    const candidate = await Candidate.findOne({ where: { applicantId } });
-    if (!candidate) return res.status(404).json({ error: 'Candidate not found' });
-    res.json(candidate);
+    const { id } = req.params;
+    let course;
+
+    if (/^\d+$/.test(id)) {
+      // Numeric PK lookup
+      course = await Course.findByPk(id, {
+        include: [{ model: Recommendation, as: 'recommendations' }]
+      });
+    } else {
+      // Natural key lookup: expect "COURSE#-SECTION-SEMESTER"
+      const [course_number, course_section, semester] = id.split('-');
+      course = await Course.findOne({
+        where: { course_number, course_section, semester },
+        include: [{ model: Recommendation, as: 'recommendations' }]
+      });
+    }
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    res.json(course);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const createApplicant = async (req, res) => {
+// Create a new course (recommendations aren’t created here)
+const createCourse = async (req, res) => {
   try {
-    const candidate = await Candidate.create(req.body);
-    res.status(201).json(candidate);
+    const course = await Course.create(req.body);
+    res.status(201).json(course);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const updateApplicant = async (req, res) => {
+// Update an existing course by numeric ID or natural key
+const updateCourse = async (req, res) => {
   try {
-    // Update candidate by applicantId instead of PK.
-    const candidate = await Candidate.findOne({ where: { applicantId: req.params.id } });
-    if (!candidate)
-      return res.status(404).json({ error: 'Candidate not found' });
-    await candidate.update(req.body);
-    res.json(candidate);
+    const { id } = req.params;
+    let course;
+
+    if (/^\d+$/.test(id)) {
+      course = await Course.findByPk(id);
+    } else {
+      const [course_number, course_section, semester] = id.split('-');
+      course = await Course.findOne({ where: { course_number, course_section, semester } });
+    }
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    await course.update(req.body);
+    res.json(course);
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
-const deleteApplicant = async (req, res) => {
+// Delete a course by numeric ID or natural key
+const deleteCourse = async (req, res) => {
   try {
-    // Delete candidate by applicantId.
-    const candidate = await Candidate.findOne({ where: { applicantId: req.params.id } });
-    if (!candidate)
-      return res.status(404).json({ error: 'Candidate not found' });
-    await candidate.destroy();
-    res.json({ message: 'Candidate deleted' });
+    const { id } = req.params;
+    let course;
+
+    if (/^\d+$/.test(id)) {
+      course = await Course.findByPk(id);
+    } else {
+      const [course_number, course_section, semester] = id.split('-');
+      course = await Course.findOne({ where: { course_number, course_section, semester } });
+    }
+
+    if (!course) {
+      return res.status(404).json({ error: 'Course not found' });
+    }
+    await course.destroy();
+    res.json({ message: 'Course deleted' });
   } catch (err) {
     res.status(500).json({ error: err.message });
   }
 };
 
 export default {
-  getAllCandidates,
-  getCandidateById,    // Uses applicantId
-  createCandidate,
-  updateCandidate,     // Uses applicantId
-  deleteCandidate      // Uses applicantId
+  getAllCourses,
+  getCourseById,
+  createCourse,
+  updateCourse,
+  deleteCourse
 };

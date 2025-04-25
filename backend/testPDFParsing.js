@@ -1,8 +1,6 @@
 import fs from 'fs';
 import path from 'path';
 import AdmZip from 'adm-zip';
-import path from 'path';
-import AdmZip from 'adm-zip';
 import pdfParse from 'pdf-parse';
 
 const DEBUG = true;
@@ -34,35 +32,6 @@ function enhanceText(text) {
   result = result.replace(/So[\s\x00]*ware/gi, "Software");
   result = result.replace(/Microso[\s\x00]*/gi, "Microsoft");
   return result.trim();
-}
-
-/* ================================
-   CANDIDATE DETAILS EXTRACTION FROM FILE NAME
-   (NEW FUNCTIONALITY)
-=============================================== */
-/**
- * Extract candidate details from file name assuming the pattern:
- * FirstName_LastName_ApplicantID.pdf
- * - If there are more than three parts, the first part is the first name,
- *   the last part is the applicant ID, and any middle parts comprise the last name.
- *
- * @param {string} fileName - The original file name.
- * @returns {object|null} - An object with firstName, lastName, applicantId, and combined name, or null if extraction fails.
- */
-function extractCandidateDetailsFromFileName(fileName) {
-  // Remove extension
-  const baseName = path.basename(fileName, path.extname(fileName));
-  // Split the file name by underscores
-  const parts = baseName.split('_');
-  if (parts.length >= 3) {
-    const firstName = parts[0];
-    const applicantId = parts[parts.length - 1];
-    // Filter out any part equal to "resume" (case-insensitive)
-    const lastNameParts = parts.slice(1, parts.length - 1).filter(part => part.toLowerCase() !== "resume");
-    const lastName = lastNameParts.join(' ');
-    return { firstName, lastName, applicantId, name: `${firstName} ${lastName}` };
-  }
-  return null;
 }
 
 /* ================================
@@ -189,21 +158,7 @@ function extractAdditionalSkillsFromDescription(descriptionLines) {
 // ================================
 //   DURATION & HEADER PARSING (GENERALIZED)
 // ================================
-// ================================
-//   DURATION & HEADER PARSING (GENERALIZED)
-// ================================
 function getDurationRegex() {
-  // • MM/YYYY or Month YYYY
-  const monthDate  =
-    '(?:\\d{2}\\/\\d{4}' +
-    '|(?:Jan(?:uary)?|Feb(?:ruary)?|Mar(?:ch)?|Apr(?:il)?|May|Jun(?:e)?|Jul(?:y)?' +
-    '|Aug(?:ust)?|Sep(?:tember)?|Oct(?:ober)?|Nov(?:ember)?|Dec(?:ember)?)\\s+\\d{4})';
-  // • Month‑range or MM/YYYY‑range (to Present or another date)
-  const monthRange = `${monthDate}\\s*[–-]\\s*(?:Present|${monthDate})`;
-  // • Simple YYYY–YYYY range
-  const yearRange  = '\\d{4}\\s*[–-]\\s*\\d{4}';
-  // build one regex that matches any of them
-  return new RegExp(`(?:${monthRange}|${yearRange})`, 'i');
   // • MM/YYYY or Month YYYY
   const monthDate  =
     '(?:\\d{2}\\/\\d{4}' +
@@ -222,7 +177,6 @@ function extractDuration(headerLine) {
   const match = headerLine.match(durationRegex);
   const result = match ? match[0].trim() : null;
   // logDebug("extractDuration:", headerLine, "->", result);
-  // logDebug("extractDuration:", headerLine, "->", result);
   return result;
 }
 
@@ -231,13 +185,6 @@ function splitHeaderLine(headerLine) {
   const match = headerLine.match(durationRegex);
   if (match) {
     const duration = match[0].trim();
-    // remove the matched text plus any leftover parens
-    let header = headerLine
-      .replace(durationRegex, '')
-      .replace(/\(\s*\)/g, '')    // empty ()
-      .replace(/[()]/g, '')       // stray parens
-      .trim();
-    return { header, duration };
     // remove the matched text plus any leftover parens
     let header = headerLine
       .replace(durationRegex, '')
@@ -259,18 +206,7 @@ function parseExperience(experienceText) {
     .map(l => l.trim().replace(/^[-•●]\s*/, ''))
     .filter(l => l);
 
-  // split out lines and strip bullets
-  const lines = experienceText
-    .split('\n')
-    .map(l => l.trim().replace(/^[-•●]\s*/, ''))
-    .filter(l => l);
-
   const experiences = [];
-  const jobTitleKeywords = [
-    "developer","engineer","tester","manager",
-    "analyst","programmer","consultant",
-    "support","designer"
-  ];
   const jobTitleKeywords = [
     "developer","engineer","tester","manager",
     "analyst","programmer","consultant",
@@ -278,31 +214,13 @@ function parseExperience(experienceText) {
   ];
   let i = 0;
 
-
   while (i < lines.length) {
     const line = lines[i];
     const { header, duration } = splitHeaderLine(line);
 
-    const { header, duration } = splitHeaderLine(line);
-
     if (duration) {
       // defaults
-      // defaults
       let company = header;
-      let role    = "";
-
-      // 1) “X at Y”
-      const atMatch = header.match(/(.+?)\s+at\s+(.+)/i);
-      if (atMatch) {
-        role    = atMatch[1].trim();
-        company = atMatch[2].trim();
-      }
-      // 2) “Company, …” above & header is just the role
-      else if (i > 0 && /,/.test(lines[i - 1]) && !/,/.test(header)) {
-        company = lines[i - 1].trim();
-        role    = header;
-      }
-      // 3) fallback: scan next lines for a title keyword
       let role    = "";
 
       // 1) “X at Y”
@@ -327,21 +245,10 @@ function parseExperience(experienceText) {
             jobTitleKeywords.some(k => nxt.toLowerCase().includes(k))
           ) {
             candidates.push(nxt);
-        const candidates = [];
-        for (let j = 1; j <= 5 && i + j < lines.length; j++) {
-          const nxt = lines[i + j];
-          if (splitHeaderLine(nxt).duration) break;
-          if (
-            nxt.length < 100 &&
-            jobTitleKeywords.some(k => nxt.toLowerCase().includes(k))
-          ) {
-            candidates.push(nxt);
           }
         }
         if (candidates.length) {
           role = candidates.reduce((a,b) => a.length <= b.length ? a : b);
-        if (candidates.length) {
-          role = candidates.reduce((a,b) => a.length <= b.length ? a : b);
         }
       }
 
@@ -358,26 +265,7 @@ function parseExperience(experienceText) {
       let desc = "";
       while (i < lines.length && !getDurationRegex().test(lines[i])) {
         desc += (desc ? " " : "") + lines[i++];
-
-      // advance past header + any role‑candidate lines
-      i += 1;
-      if (!role && i < lines.length && splitHeaderLine(lines[i]).duration === '') {
-        // no extra skip
-      } else {
-        // if we picked up candidates, skip them
-        i += (role ? 0 : 0);
       }
-
-      // collect description until next duration
-      let desc = "";
-      while (i < lines.length && !getDurationRegex().test(lines[i])) {
-        desc += (desc ? " " : "") + lines[i++];
-      }
-      // break into bullets
-      let description = [];
-      if (desc.trim()) {
-        description = desc
-          .split(/\.\s+(?=["']?\s*[A-Z])/)
       // break into bullets
       let description = [];
       if (desc.trim()) {
@@ -393,25 +281,12 @@ function parseExperience(experienceText) {
           description[0].toLowerCase().startsWith(role.toLowerCase())
         ) {
           description.shift();
-          .map(s => s.endsWith('.') ? s : s + '.')
-          .filter(Boolean);
-        // drop a bullet that is just the role
-        if (
-          role &&
-          description[0] &&
-          description[0].toLowerCase().startsWith(role.toLowerCase())
-        ) {
-          description.shift();
         }
       }
-
 
       experiences.push({
         company,
         role,
-        duration,
-        description,
-        matchedSkills: []
         duration,
         description,
         matchedSkills: []
@@ -420,7 +295,6 @@ function parseExperience(experienceText) {
       i++;
     }
   }
-
 
   return experiences;
 }
@@ -484,8 +358,6 @@ function extractResumeData(text) {
   
   // Even though we extract the candidate name from the resume text,
   // this field may be overwritten by the file name data below.
-  // Even though we extract the candidate name from the resume text,
-  // this field may be overwritten by the file name data below.
   resumeData.name = extractNameFromText(text);
   
   const sections = extractSections(text);
@@ -496,10 +368,6 @@ function extractResumeData(text) {
   
   resumeData.skills = sections["SKILLS"] ? parseSkills(sections["SKILLS"]) : [];
   
-  let expText = sections["EMPLOYMENT HISTORY"] || 
-                sections["EXPERIENCE"] ||
-                sections["WORK EXPERIENCE"] || 
-                sections["PROFESSIONAL EXPERIENCE"] || '';
   let expText = sections["EMPLOYMENT HISTORY"] || 
                 sections["EXPERIENCE"] ||
                 sections["WORK EXPERIENCE"] || 
@@ -577,10 +445,7 @@ async function parseResumePdf(filePath) {
     }
     const enhancedText = enhanceText(combinedText);
     // logDebug("Enhanced combined text:", enhancedText);
-    // logDebug("Enhanced combined text:", enhancedText);
     const resumeData = extractResumeData(enhancedText);
-    // console.log('Extracted Resume Data:', JSON.stringify(resumeData, null, 2));
-    return [resumeData];
     // console.log('Extracted Resume Data:', JSON.stringify(resumeData, null, 2));
     return [resumeData];
   } catch (error) {
