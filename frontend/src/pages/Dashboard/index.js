@@ -159,7 +159,6 @@ const Dashboard = () => {
           )}
         </TitleContainer>
       )}
-
       <InputModal
         open={isModalOpen}
         onClose={closeModal}
@@ -170,7 +169,6 @@ const Dashboard = () => {
         setCarryOver={setCarryOver}
         handleCreateSemester={handleCreateSemester}
       />
-
       {currentSemData && (
         <BoxContainer>
           {!isAssignments ? (
