@@ -1,5 +1,5 @@
 import db from '../models/index.js';
-import matchingAlgorithm from '../utils/matchingAlgorithm.js';
+import matchingAlgorithm from '../services/matchingAlgorithm.js';
 const { Applicant, Course, Assignment, Sequelize } = db;
 
 const runMatching = async (req, res) => {
