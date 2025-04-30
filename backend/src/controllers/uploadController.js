@@ -102,10 +102,43 @@ const processResumeZip = async (req, res) => {
 const processCV = async (req, res) => {
   try {
     const filePath = req.file.path;
-    const applicantsData = await pdfParser.parseResumePdf(filePath);
-    const savedApplicants = await Applicant.bulkCreate(applicantsData);
-    res.json({ message: 'CV processed and applicants saved', applicants: savedApplicants });
+    // 1) parse raw + map to your DB shape
+    const [raw] = await pdfParser.parseResumePdf(filePath);
+    const details = pdfParser.extractCandidateDetailsFromFileName(req.file.filename) || {};
+    const rec = pdfParser.mapToApplicant(raw, details, filePath);
+
+    // 2) choose lookup by student_id+semester or document_id
+    const where = rec.student_id
+      ? { student_id: rec.student_id, semester: rec.semester }
+      : { document_id: rec.document_id };
+
+    // 3) find existing
+    let app = await Applicant.findOne({ where });
+
+    if (app) {
+      // 4a) update only the resume‐derived bits
+      await app.update({
+        resume_path: rec.resume_path,
+        skills:      rec.skills,
+        experience:  rec.experience
+      });
+    } else {
+      // 4b) create brand‐new if no match
+      app = await Applicant.create(rec);
+    }
+
+    return res.json({
+      message: 'CV processed and applicant saved',
+      applicant: app
+    });
   } catch (err) {
+    console.error(err);
+    if (err instanceof ValidationError) {
+      return res.status(400).json({
+        error:   'Validation error',
+        details: err.errors.map(e => `[${e.path}] ${e.message}`)
+      });
+    }
     res.status(500).json({ error: err.message });
   }
 };
