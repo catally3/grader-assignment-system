@@ -547,4 +547,4 @@ async function parseZipResumes(zipFilePath) {
   }
 }
 
-export default { parseResumePdf, parseZipResumes };
+export default { parseResumePdf, parseZipResumes, extractCandidateDetailsFromFileName, mapToApplicant };
