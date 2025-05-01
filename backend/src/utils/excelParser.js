@@ -13,6 +13,8 @@ export const parseCandidateFile = async (filePath) => {
     defval: '',     // empty cells → ''
     range: 1        // skip Excel row 1, use row 2 as header
   });
+  
+  console.log('🔎 rawRows:', rawRows);
 
   return rawRows.map(row => {
     // 2) Pull out exactly the columns your SQL expects:
@@ -59,31 +61,46 @@ export const parseCourseFile = async (filePath) => {
   const sheetName = workbook.SheetNames[0];
   const ws        = workbook.Sheets[sheetName];
 
-  // skip any junk header row if needed
-  const rawRows = XLSX.utils.sheet_to_json(ws, { defval: '', range: 1 });
+  // Skip the first row if it’s junk, start parsing at row 2
+  const rawRows = XLSX.utils.sheet_to_json(ws, {
+    defval: '',    // empty cells → ''
+    range: 0       // skip the very first row
+  });
 
-  return rawRows.map(row => ({
-    // → Course fields
-    semester:             row['Semester']             || undefined,
-    professor_name:       row['Professor Name']       || '',
-    professor_email:      row['Professor Email']      || '',
-    course_number:        row['Course Number']        || '',
-    course_section:       row['Section']              || '',
-    course_name:          row['Course Name']          || '',
-    number_of_graders:    parseInt(row['Num of graders'], 10) || undefined,
-    keywords:             (() => {
-                            let k = row['Keywords'] || '';
-                            if (typeof k === 'string' && k.trim()) {
-                              try { return JSON.parse(k); }
-                              catch { /* fall back */ }
-                            }
-                            return k;
-                          })(),
+  console.log('🔎 rawRows:', rawRows);
 
-    // → Recommendation fields
-    recommended_student_name:  row['Recommended Student Name'] || '',
-    recommended_student_netid: row['Recommended Student Netid'] || ''
-  }));
+  return rawRows.map(row => {
+    // 2) Pull out exactly the columns your SQL expects:
+    // const semester                    = row['Semester']                     || undefined;
+    const professor_name              = row['Professor Name']               || '';
+    const professor_email             = row['Professor Email']              || '';
+    const course_number               = row['Course Number']                || '';
+    const course_section              = row['Section']                      || '';
+    const course_name                 = row['Course Name']                  || '';
+    const recommended_student_name    = row['Recommended Student Name']     || '';
+    const recommended_student_id      = row['Recommended Student ID']       || '';
+    const number_of_graders           = parseInt(row['Num of graders'], 10) || undefined;
+
+    // 3) Build the object to bulkCreate:
+    return {
+      professor_name:                 professor_name,
+      professor_email:                professor_email,
+      course_number:                  course_number,
+      course_section:                 course_section,
+      course_name:                    course_name,
+      recommended_student_name:       recommended_student_name,
+      recommended_student_id:         recommended_student_id,
+      number_of_graders,
+      keywords:                       (() => {
+        let kw = row['Keywords'] || '';
+        if (typeof kw === 'string' && kw.trim()) {
+          try { return JSON.parse(kw); }
+          catch { /* fall through */ }
+        }
+        return kw;
+      })()              
+    };
+  });
 };
 
 export default { parseCandidateFile, parseCourseFile };
