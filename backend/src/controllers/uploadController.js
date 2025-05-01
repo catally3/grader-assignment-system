@@ -179,17 +179,17 @@ const processCourseFile = async (req, res) => {
       const raw = await csvParser.parseCSVFile(filePath);
       rows = raw.map(r => ({
         semester:                  r.semester,
-        professor_name:            r.professorName,
-        professor_email:           r.professorEmail,
-        course_number:             r.courseNumber,
-        course_section:            r.section,
-        course_name:               r.courseName,
-        number_of_graders:         parseInt(r.numOfGraders, 10),
-        keywords:                  Array.isArray(r.criteria)
-                                    ? r.criteria
-                                    : JSON.parse(r.criteria || '[]'),
-        recommended_student_name:  r.recommendedStudentName,
-        recommended_student_netid: r.recommendedStudentNetid
+        professor_name:            r.professor_name,
+        professor_email:           r.professor_email,
+        course_number:             r.course_number,
+        course_section:            r.course_section,
+        course_name:               r.course_name,
+        number_of_graders:         parseInt(r.number_of_graders, 10),
+        keywords:                  Array.isArray(r.keywords)
+                                    ? r.keywords
+                                    : JSON.parse(r.keywords || '[]'),
+        recommended_student_name:  r.recommended_student_name,
+        recommended_student_netid: r.recommended_student_netid
       }));
     } else {
       rows = await excelParser.parseCourseFile(filePath);
