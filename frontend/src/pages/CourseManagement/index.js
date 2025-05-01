@@ -1,14 +1,39 @@
+// pages/Course Management
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
-import { useState } from "react"; // search state
+import React, { useState, useEffect } from "react";
+import FileUpload from "../../components/Common/FileUpload.jsx";
 import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
+import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
+import DropdownButton from "../../components/Common/DropdownButton.jsx";
+import AddCourseModal from "../../components/Modals/AddCourseModal.jsx";
+import { uploadMode } from "../../utils/type.js";
+import { deleteCourse, getCourses, createCourse } from "../../api/courses.js";
+import Pagination from "../../components/Common/Pagination.jsx";
 
-// Professor Management
+// Course Management
 const Title = styled.div`
   font-size: x-large;
   font-weight: bold;
+`;
+
+// Upload Course Files
+const FileTitle = styled.div`
+  font-size: medium;
+  font-weight: bold;
+  margin-top: 20px;
+  margin-bottom: 20px;
+  color: rgba(36, 35, 35, 0.88);
+`;
+
+const FileContainer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  width: 100%;
+  box-sizing: border-box;
+  margin-top: 20px;
 `;
 
 const BoxContainer = styled.div`
@@ -28,22 +53,18 @@ const Box = styled.div`
   color: #333; // text color
   flex-direction: column; // stacks children vertically
   padding: 14px; // internal spacing
+  flex: 1;
+  max-height: 80vh;
+  min-height: 600px;
 `;
 
 const HeaderContainer = styled.div`
   display: flex;
   align-items: center; // vertically
+  justify-content: space-between;
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
-  justify-content: space-between;
-  gap: 10px;
-`;
-
-const HeaderText = styled.div`
-  font-size: medium;
-  font-weight: normal;
-  jusitify-content: flex-end;
 `;
 
 const FilterContainer = styled.div`
@@ -67,10 +88,39 @@ const FilterInput = styled.input`
   width: 150px;
 `;
 
+const ButtonContainer = styled.button`
+  display: flex;
+  width: 130px;
+  height: 35px;
+  justify-content: center; // horizontal text
+  align-items: center; // vertical text
+  border-radius: 12px;
+  font-size: small;
+  gap: 10px;
+`;
+
+const DeleteButton = styled(ButtonContainer)`
+  color: rgb(255, 255, 255);
+  background-color: rgb(17, 16, 16);
+  display: flex;
+  width: 120px;
+  height: 35px;
+  box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
+  &:hover {
+    background-color: rgb(59, 57, 57);
+  }
+`;
+
 const SearchContainer = styled.div`
   display: flex;
   align-items: center;
-  gap: 10px;
+`;
+
+const HeaderText = styled.div`
+  font-size: medium;
+  font-weight: normal;
+  padding: 10px;
+  jusitify-content: flex-end;
 `;
 
 const SearchBox = styled.input`
@@ -121,22 +171,10 @@ const Column = styled.div`
   align-items: center;
 `;
 
-const ButtonContainer = styled.button`
-  display: flex;
-  width: 130px;
-  height: 35px;
-  justify-content: center; // horizontal text
-  align-items: center; // vertical text
-  border-radius: 12px;
-  font-size: small;
-  gap: 10px;
-`;
-
 const ReassignButton = styled(ButtonContainer)`
   color: rgb(255, 255, 255);
   background-color: rgb(17, 16, 16);
   display: flex;
-
   align-items: center;
   justify-content: center; // Ensures the button text is centered
   width: 100px;
@@ -147,54 +185,33 @@ const ReassignButton = styled(ButtonContainer)`
   }
 `;
 
-const GraderAssignment = () => {
-  const data = [
-    {
-      professor: "John Smith",
-      name: "CS",
-      number: "4348",
-      section: "504",
-      assigned: "Jenny Lee",
-      recommended: "Mary Salazar",
-      mismatch: "Not in candidate pool",
-    },
-    {
-      professor: "John Smith",
-      name: "CS",
-      number: "4348",
-      section: "504",
-      assigned: "Beatrice Smith",
-      recommended: "Mary Salazar",
-      mismatch: "Not in candidate pool",
-    },
-    {
-      professor: "Herlin Villareal",
-      name: "CS",
-      number: "3394",
-      section: "503",
-      assigned: "Gaby Alvarez",
-      recommended: "Manuel Smith",
-      mismatch: "Not in candidate pool",
-    },
-    {
-      professor: "Caroline Mendez",
-      name: null,
-      number: "1204",
-      section: "502",
-      assigned: "Anthony Martinez",
-      recommended: "Gustavo Jane",
-      mismatch: "Not in candidate pool",
-    },
-    {
-      professor: "Vanessa Ramirez",
-      name: "CS",
-      number: "1394",
-      section: null,
-      assigned: "Mary Jane",
-      recommended: "Luis Miguel",
-      mismatch: "Already assigned to another professor",
-    },
-  ];
+const TableWrapper = styled.div`
+  overflow-y: auto;
+  flex: 1;
+`;
+
+const CourseManagement = () => {
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getCourses();
+      setData(data);
+      console.log(data);
+    };
+
+    fetchData();
+  }, []);
+
+  // File upload
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const handleFilesChange = (tab, newFiles) => {
+    setUploadedFiles((prev) => ({
+      ...prev,
+      [tab]: newFiles,
+    }));
+    alert("course is added");
+  };
 
   /******* SEARCH FUNCTIONALITY  *******/
   const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
@@ -271,10 +288,34 @@ const GraderAssignment = () => {
         : true)
   );
 
-  // DISPLAY CANDIDATES DROPWDOWM
-  const [selectedRow, setSelectedRow] = useState(null);
-  const handleAssignCandidate = (row) => {
-    setSelectedRow(row);
+  /******* DELETION  FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
+  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
+  const [selectedIds, setSelectedIds] = useState([]); // selected stores the Id chosen to be deleted
+  // toggles deleteMode and clears any selected candidates between toggles
+  const toggleDeleteMode = () => {
+    setDeleteMode(!deleteMode);
+    setSelectedIds([]);
+  };
+  // adds/removes Id from selected when checkboxes are toggles
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
+  const handleDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await deleteCourse(id);
+      }
+      const updatedData = await getCourses(); // recent version of course list
+      setData(updatedData);
+      setDeleteMode(false);
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Error deleting courses:", error);
+      alert("Failed to delete courses");
+    }
   };
 
   /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
@@ -290,13 +331,149 @@ const GraderAssignment = () => {
     setIsModalOpen(false);
   };
 
+  // DISPLAY CANDIDATES DROPWDOWM
+  const [selectedRow, setSelectedRow] = useState(null);
+
+  const groupedData = filteredData.reduce((acc, row) => {
+    const courseKey = `${row?.course_number}-${row?.course_section}-${row?.professor_name}`;
+    if (!acc[courseKey]) {
+      acc[courseKey] = [];
+    }
+    acc[courseKey].push(row);
+    return acc;
+  }, {});
+
+  const renderGroupedRow = (group, key) => (
+    <Row key={key}>
+      {deleteMode && (
+        <Column>
+          <input
+            type="checkbox"
+            checked={selectedIds?.includes(group[0].id)}
+            onChange={() => handleCheckboxChange(group[0].id)}
+          />
+        </Column>
+      )}
+      <Column>{group[0]?.course_number || "N/A"}</Column>
+      <Column>{group[0]?.course_name || "N/A"}</Column>
+      <Column>{group[0]?.number_of_graders || "N/A"}</Column>
+      <Column>{group[0]?.professor_name || "N/A"}</Column>
+      <Column>
+        {/* Removed the onClick handler */}
+        <span>{group.map((row) => row.assigned || "N/A").join(", ")}</span>
+      </Column>
+      <Column>
+        <ReassignButton onClick={() => handleReassign(group)}>
+          Reassign
+        </ReassignButton>
+      </Column>
+    </Row>
+  );
+
+  const [showModal, setShowModal] = useState(false);
+  const [uploadType, setUploadType] = useState("");
+  const [newCourse, setNewCourse] = useState({
+    semester: "Spring 2025",
+    professor_name: "",
+    professor_email: "",
+    course_number: "",
+    course_section: "",
+    course_name: "",
+    number_of_graders: "",
+    keywords: [],
+  });
+
+  const handleAddCourse = async () => {
+    if (uploadType === uploadMode.SINGLE) {
+      const newCourseExists = data.some(
+        (v) =>
+          v.course_number === newCourse.course_number &&
+          v.course_number.includes(newCourse.course_number)
+      );
+
+      const professorExists = data.some(
+        (v) =>
+          v.professor_name === newCourse.professor_name &&
+          v.professor_name !== null
+      );
+
+      const courseExists = data.some(
+        (v) =>
+          v.course_number === newCourse.course_number &&
+          v.course_number !== null
+      );
+
+      if (!newCourse.course_name) {
+        alert("Name is required!");
+        return;
+      }
+
+      if (newCourseExists) {
+        alert("Course already has an assigned!");
+        return;
+      }
+
+      if (professorExists) {
+        alert("This professor already has an assigned grader!");
+        return;
+      }
+
+      if (courseExists) {
+        alert("This course already has an assigned!");
+        return;
+      }
+    }
+
+    try {
+      const addedCourse = await createCourse(newCourse);
+      const updatedData = await getCourses(); // new version
+      setData(updatedData);
+      setShowModal(false);
+      setNewCourse({
+        semester: "Spring 2025",
+        professor_name: "",
+        professor_email: "",
+        course_number: "",
+        course_section: "",
+        course_name: "",
+        number_of_graders: 1,
+        keywords: [],
+      });
+    } catch (error) {
+      console.error("Failed to add course:", error);
+      alert("Error adding course");
+    }
+  };
+
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  const groupedDataEntries = Object.entries(groupedData);
+  // handler pagenation
+  const paginatedData = groupedDataEntries.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
+
   return (
     <Layout>
-      <Title>Professor Management</Title>
+      <Title>Course Management</Title>
       <BoxContainer>
         <Box>
           <HeaderContainer>
             <SearchContainer>
+              <ButtonContainer>
+                <DeleteButton onClick={toggleDeleteMode}>
+                  {deleteMode ? "Cancel" : "Delete Course"}
+                </DeleteButton>
+                {deleteMode && (
+                  <DeleteButton onClick={handleDelete}>
+                    Confirm Delete
+                  </DeleteButton>
+                )}
+              </ButtonContainer>
               <HeaderText>Search:</HeaderText>
               <SearchBox
                 type="text"
@@ -305,6 +482,7 @@ const GraderAssignment = () => {
                 onChange={handleSearchChange}
               />
             </SearchContainer>
+
             <FilterContainer>
               <HeaderText>Filter:</HeaderText>
               <FilterDropdown
@@ -312,12 +490,11 @@ const GraderAssignment = () => {
                 value={selectedColumn}
               >
                 <option value="">Select Column</option>
-                <option value="professor">Professor</option>
-                <option value="name">Course Name</option>
-                <option value="section">Section</option>
+                <option value="course_number">Course Number</option>
+                <option value="course_name">Course Name</option>
+                <option value="number_of_graders">Number of Graders</option>
+                <option value="professor_name">Professor Name</option>
                 <option value="assigned">Assigned Candidate</option>
-                <option value="recommended">Recommended Candidate</option>
-                <option value="mismatch">Reason for Mismatch</option>
               </FilterDropdown>
               <FilterInput
                 type="text"
@@ -326,101 +503,99 @@ const GraderAssignment = () => {
                 placeholder="Enter filter value"
               />
               <ExcelExportButton data={data} filteredData={filteredData} />
+              <DropdownButton
+                label="+ Add Course"
+                options={[
+                  {
+                    label: "Add One by One",
+                    onClick: () => {
+                      setUploadType(uploadMode.SINGLE);
+                      setShowModal(true);
+                    },
+                  },
+                  {
+                    label: "Bulk File Upload",
+                    onClick: () => {
+                      setUploadType(uploadMode.BULK);
+                      setShowModal(true);
+                    },
+                  },
+                ]}
+                style={{
+                  color: "#ffffff",
+                  backgroundColor: "rgba(248, 126, 3, 1)",
+                  display: "flex",
+                  padding: "10px",
+                  height: "35px",
+                }}
+              />
             </FilterContainer>
           </HeaderContainer>
           <ColumnTitle>
-            <ColumnTitleText onClick={() => handleSort("professor")}>
-              Professor Name {getSortArrow("professor")}
+            {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}
+            <ColumnTitleText onClick={() => handleSort("course_number")}>
+              Course Number {getSortArrow("course_number")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("name")}>
-              Course Name {getSortArrow("name")}
+            <ColumnTitleText onClick={() => handleSort("course_name")}>
+              Course Name {getSortArrow("course_name")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("number")}>
-              Course Number {getSortArrow("number")}
+            <ColumnTitleText onClick={() => handleSort("number_of_graders")}>
+              Number of Graders {getSortArrow("number_of_graders")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("section")}>
-              Section {getSortArrow("section")}
+            <ColumnTitleText onClick={() => handleSort("professor_name")}>
+              Professor Name {getSortArrow("professor_name")}
             </ColumnTitleText>
             <ColumnTitleText onClick={() => handleSort("assigned")}>
               Assigned Candidate {getSortArrow("assigned")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("recommended")}>
-              Recommended Candidate {getSortArrow("recommended")}
-            </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("mismatch")}>
-              Reason for Mismatch {getSortArrow("mismatch")}
-            </ColumnTitleText>
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
-          {filteredData.map((row, index) => (
-            <Row key={index}>
-              <Column>{row.professor || "N/A"}</Column>
-              <Column>{row.name || "N/A"}</Column>
-              <Column>{row.number || "N/A"}</Column>
-              <Column>{row.section || "N/A"}</Column>
-              <Column onClick={() => handleAssignCandidate(row)}>
-                {selectedRow === row ? (
-                  <div
-                    style={{
-                      backgroundColor: "#f0f0f0",
-                      border: "1px solid #ccc",
-                      borderRadius: "4px",
-                      padding: "5px",
-                      width: "150px",
-                      color: "#333",
-                      maxHeight: "150px",
-                      overflowY: "auto",
-                      pointerEvents: "none",
-                      userSelect: "none",
-                    }}
-                  >
-                    {filteredData
-                      .filter(
-                        (r) =>
-                          r.number === row.number &&
-                          r.name === row.name &&
-                          r.section === row.section &&
-                          r.professor === row.professor &&
-                          r.graders === row.graders
-                      )
-                      .map((filteredRow, index, array) => (
-                        <div
-                          key={filteredRow.assigned}
-                          style={{
-                            padding: "5px 0",
-                            borderBottom:
-                              index === array.length - 1
-                                ? "none"
-                                : "1px solid #ccc", // Remove border on the last item
-                          }}
-                        >
-                          {filteredRow.assigned || "N/A"}
-                        </div>
-                      ))}
-                  </div>
-                ) : (
-                  <span>{row.assigned || "N/A"}</span>
-                )}
-              </Column>
-              <Column>{row.recommended || "N/A"}</Column>
-              <Column>{row.mismatch || "N/A"}</Column>
-              <Column>
-                <ReassignButton onClick={() => handleReassign(row)}>
-                  Reassign
-                </ReassignButton>
-                <CourseManagementModal
-                  open={isModalOpen}
-                  onClose={handleCloseModal}
-                  courseData={selectedCourseData}
-                  allCourses={filteredData}
-                />
-              </Column>
-            </Row>
-          ))}
+          <TableWrapper>
+            {/* Render grouped data */}
+            {Object.entries(groupedData).map(([key, group]) =>
+              renderGroupedRow(group, key)
+            )}
+          </TableWrapper>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </Box>
       </BoxContainer>
+      <AddCourseModal
+        open={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setNewCourse({
+            semester: "",
+            professor_name: "",
+            professor_email: "r",
+            course_number: "",
+            course_section: "",
+            course_name: "",
+            number_of_graders: 1,
+            keywords: [],
+          });
+          setUploadType("");
+        }}
+        handleSubmit={handleAddCourse}
+        title={
+          uploadType === uploadMode.SINGLE
+            ? "Add Course"
+            : "Add Courses (Bulk File Upload)"
+        }
+        inputValue={newCourse}
+        setInputValue={setNewCourse}
+        uploadType={uploadType}
+      />
+      <CourseManagementModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        courseData={selectedCourseData}
+        allCourses={filteredData}
+      />
     </Layout>
   );
 };
-
-export default GraderAssignment;
+export default CourseManagement;

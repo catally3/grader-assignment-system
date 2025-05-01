@@ -229,7 +229,7 @@ const UnassignedCoursesTable = ({ courses, navigate }) => (
       <HeaderText>Note</HeaderText>
     </HeaderCenter>
     {courses.map((row, index) => (
-      <Row key={index} onClick={() => navigate("/applicant-management")}>
+      <Row key={index} onClick={() => navigate("/course-management")}>
         <Column>{row.courseNumber}</Column>
         <Column>{row.courseName}</Column>
         <Column>{row.requiredGraders}</Column>

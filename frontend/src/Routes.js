@@ -3,9 +3,9 @@ import { Routes, Route, Navigate } from "react-router-dom";
 import Login from "./pages/Login";
 import GuestRoute from "./components/Guard/GuestRoute";
 import Dashboard from "./pages/Dashboard";
-import GraderAssignment from "./pages/GraderAssignment";
-import ApplicantsManagement from "./pages/ApplicantsManagement";
+import CandidateManagement from "./pages/CandidateManagement";
 import CourseManagement from "./pages/CourseManagement";
+import ProfessorManagement from "./pages/ProfessorManagement";
 import Setting from "./pages/Setting";
 import NotFound from "./pages/NotFound";
 
@@ -42,21 +42,21 @@ const routesConfig = [
     guard: ProtectedRoute,
   },
   {
-    label: "grader-assignment",
-    path: "/grader-assignment",
-    element: GraderAssignment,
-    guard: ProtectedRoute,
-  },
-  {
-    label: "applicant-management",
-    path: "/applicant-management",
-    element: ApplicantsManagement,
+    label: "candidate-management",
+    path: "/candidate-management",
+    element: CandidateManagement,
     guard: ProtectedRoute,
   },
   {
     label: "course-management",
     path: "/course-management",
     element: CourseManagement,
+    guard: ProtectedRoute,
+  },
+  {
+    label: "professor-management",
+    path: "/professor-management",
+    element: ProfessorManagement,
     guard: ProtectedRoute,
   },
   {

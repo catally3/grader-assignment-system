@@ -59,20 +59,20 @@ const Sidebar = () => {
     {
       icon: gradIcon,
       text: "Candidate Management",
-      isActive: pathname === "/grader-assignment" ? true : false,
-      navigate: "/grader-assignment",
+      isActive: pathname === "/candidate-management" ? true : false,
+      navigate: "/candidate-management",
     },
     {
       icon: listIcon,
       text: "Course Mangement",
-      isActive: pathname === "/applicant-management" ? true : false,
-      navigate: "/applicant-management",
+      isActive: pathname === "/course-management" ? true : false,
+      navigate: "/course-management",
     },
     {
       icon: peopleIcon,
       text: "Professor Management",
-      isActive: pathname === "/course-management" ? true : false,
-      navigate: "/course-management",
+      isActive: pathname === "/professor-management" ? true : false,
+      navigate: "/professor-management",
     },
   ];
 

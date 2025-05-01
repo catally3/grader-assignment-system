@@ -65,7 +65,7 @@ const FileUploadModal = ({
       if (courseFile && candidateFile && resumeFile) {
         await uploadCourseList(courseFile);
         await uploadCandidateList(candidateFile);
-        await uploadResumeZip(resumeFile, semester);
+        await uploadResumeZip(resumeFile);
       } else {
         alert("Please upload all files");
         return;

@@ -1,10 +1,9 @@
 // api/upload.js
 import axios from "./axiosInstance";
 
-export const uploadResume = async (file, semester) => {
+export const uploadResume = async (file) => {
   const formData = new FormData();
   formData.append("resumeFile", file);
-  formData.append("semester", semester);
 
   const response = await axios.post("/upload/cv", formData, {
     headers: {
@@ -15,10 +14,9 @@ export const uploadResume = async (file, semester) => {
   return response.data;
 };
 
-export const uploadResumeZip = async (zipFile, semester) => {
+export const uploadResumeZip = async (zipFile) => {
   const formData = new FormData();
   formData.append("resumeZip", zipFile);
-  formData.append("semester", semester);
 
   const response = await axios.post("/upload/resumes", formData, {
     headers: {

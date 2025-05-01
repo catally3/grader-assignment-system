@@ -16,12 +16,10 @@ const ContentWrap = styled.div`
   height: 100vh;
   padding: 0 66px 100px 66px;
   background-color: ${(props) => props.theme.colors.background};
-  /* overflow: scroll; Remove */
-  display: flex;
-  flex-direction: column;
+  overflow: scroll;
 `;
 
-const Layout = ({ children }) => {
+const DashboardLayout = ({ children }) => {
   return (
     <Container>
       <Sidebar />
@@ -33,4 +31,4 @@ const Layout = ({ children }) => {
   );
 };
 
-export default Layout;
+export default DashboardLayout;

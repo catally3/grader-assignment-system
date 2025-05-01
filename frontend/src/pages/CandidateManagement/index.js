@@ -17,6 +17,7 @@ import {
 } from "../../api/applicants.js";
 import { deleteAssignment } from "../../api/assignments.js";
 import { uploadResume, uploadResumeZip } from "../../api/upload.js";
+import Pagination from "../../components/Common/Pagination.jsx";
 
 // frontend/Applicants Management
 const Title = styled.div`
@@ -41,6 +42,9 @@ const Box = styled.div`
   color: #333; // text color
   flex-direction: column; // stacks children vertically
   padding: 14px; // internal spacing
+  flex: 1;
+  max-height: 80vh;
+  min-height: 600px;
 `;
 
 const HeaderContainer = styled.div`
@@ -301,6 +305,11 @@ const ArrowIcon = styled.img`
   margin-left: 6px;
 `;
 
+const TableWrapper = styled.div`
+  overflow-y: auto;
+  flex: 1;
+`;
+
 const initCandidate = {
   student_id: "",
   applicant_name: "",
@@ -311,7 +320,7 @@ const initCandidate = {
   document_id: "",
 };
 
-const GraderAssignment = () => {
+const CandidateManagement = () => {
   // data
   const [data, setData] = useState([]);
   const [newCandidate, setNewCandidate] = useState(initCandidate);
@@ -444,10 +453,7 @@ const GraderAssignment = () => {
 
     if (uploadType === uploadType.BULK) {
       try {
-        const result = await uploadResumeZip(
-          newCandidate.file?.[0],
-          selectedSemester
-        );
+        const result = await uploadResumeZip(newCandidate.file?.[0]);
         console.log(result);
       } catch (error) {
         console.error("Failed to add candidate:", error);
@@ -510,6 +516,17 @@ const GraderAssignment = () => {
       alert("Failed to delete courses");
     }
   };
+
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+  const itemsPerPage = 10;
+  const totalPages = Math.ceil(filteredData.length / itemsPerPage);
+
+  // handler pagenation
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * itemsPerPage,
+    currentPage * itemsPerPage
+  );
 
   useEffect(() => {
     const fetchData = async () => {
@@ -629,47 +646,54 @@ const GraderAssignment = () => {
             </ColumnTitleText>
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
-          {filteredData.map((row, index) => (
-            <Row key={index}>
-              {deleteMode && (
-                <Column>
-                  <input
-                    type="checkbox"
-                    checked={selectedIds.includes(row?.student_id)}
-                    onChange={() => handleCheckboxChange(row?.student_id)}
-                  />
-                </Column>
-              )}
-              <Column>{row.student_id || "N/A"}</Column>
-              <Column
-                onClick={() => {
-                  setSelectedApplicantInfo(row);
-                  setApplicantInfoModalOpen(true);
-                }}
-              >
-                {row.applicant_name || "N/A"}
-              </Column>
-              <Column>
-                {row.course_number ? (
-                  <TooltipContainer>
-                    {row.course_number}
-                    <Tooltip className="tooltip">
-                      {row.course_name ?? "N/A"} {row.course_number}.
-                      {row.course_section ?? "N/A"}
-                    </Tooltip>
-                  </TooltipContainer>
-                ) : (
-                  "N/A"
+          <TableWrapper>
+            {paginatedData.map((row, index) => (
+              <Row key={index}>
+                {deleteMode && (
+                  <Column>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds.includes(row?.student_id)}
+                      onChange={() => handleCheckboxChange(row?.student_id)}
+                    />
+                  </Column>
                 )}
-              </Column>
-              <Column>{row.professor_name || "N/A"}</Column>
-              <Column>
-                <ReassignButton onClick={() => handleReassign(row)}>
-                  Reassign
-                </ReassignButton>
-              </Column>
-            </Row>
-          ))}
+                <Column>{row.student_id || "N/A"}</Column>
+                <Column
+                  onClick={() => {
+                    setSelectedApplicantInfo(row);
+                    setApplicantInfoModalOpen(true);
+                  }}
+                >
+                  {row.applicant_name || "N/A"}
+                </Column>
+                <Column>
+                  {row.course_number ? (
+                    <TooltipContainer>
+                      {row.course_number}
+                      <Tooltip className="tooltip">
+                        {row.course_name ?? "N/A"} {row.course_number}.
+                        {row.course_section ?? "N/A"}
+                      </Tooltip>
+                    </TooltipContainer>
+                  ) : (
+                    "N/A"
+                  )}
+                </Column>
+                <Column>{row.professor_name || "N/A"}</Column>
+                <Column>
+                  <ReassignButton onClick={() => handleReassign(row)}>
+                    Reassign
+                  </ReassignButton>
+                </Column>
+              </Row>
+            ))}
+          </TableWrapper>
+          <Pagination
+            currentPage={currentPage}
+            totalPages={totalPages}
+            onPageChange={(page) => setCurrentPage(page)}
+          />
         </Box>
       </BoxContainer>
       <AddCandidateModal
@@ -713,4 +737,4 @@ const GraderAssignment = () => {
   );
 };
 
-export default GraderAssignment;
+export default CandidateManagement;
