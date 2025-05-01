@@ -11,7 +11,8 @@ const getAllCourses = async (req, res) => {
     const courses = await Course.findAll({
       include: [{
         model: Recommendation,
-        as: 'recommendations'
+        // since you didn’t set an alias, Sequelize will add a `.Recommendations` array
+        attributes: ['applicant_name','applicant_net_id']
       }]
     });
     res.json(courses);
@@ -25,25 +26,23 @@ const getAllCourses = async (req, res) => {
 const getCourseById = async (req, res) => {
   try {
     const { id } = req.params;
-    let course;
-
+    let where;
     if (/^\d+$/.test(id)) {
-      // Numeric PK lookup
-      course = await Course.findByPk(id, {
-        include: [{ model: Recommendation, as: 'recommendations' }]
-      });
+      where = { id };
     } else {
-      // Natural key lookup: expect "COURSE#-SECTION-SEMESTER"
       const [course_number, course_section, semester] = id.split('-');
-      course = await Course.findOne({
-        where: { course_number, course_section, semester },
-        include: [{ model: Recommendation, as: 'recommendations' }]
-      });
+      where = { course_number, course_section, semester };
     }
 
-    if (!course) {
-      return res.status(404).json({ error: 'Course not found' });
-    }
+    const course = await Course.findOne({
+      where,
+      include: [{
+        model: Recommendation,
+        attributes: ['applicant_name','applicant_net_id']
+      }]
+    });
+
+    if (!course) return res.status(404).json({ error: 'Course not found' });
     res.json(course);
   } catch (err) {
     res.status(500).json({ error: err.message });
