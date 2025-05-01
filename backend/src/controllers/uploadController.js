@@ -1,3 +1,5 @@
+// controllers/uploadController.js
+
 import path from 'path';
 import { ValidationError } from 'sequelize';
 import pdfParser from '../utils/pdfParser.js';
@@ -16,11 +18,9 @@ const processResumeZip = async (req, res) => {
 
     for (const rec of dataToInsert) {
       const {
-        // rec should have these from mapToApplicant:
         student_id,
         document_id,
         semester,
-
         applicant_name: newName,
         applicant_email: newEmail,
         gpa: newGpa,
@@ -29,53 +29,33 @@ const processResumeZip = async (req, res) => {
         experience: newExp
       } = rec;
 
-      // BUILD A WHERE CLAUSE THAT FALLS BACK:
-      const where = {};
-      if (student_id) {
-        where.student_id = student_id;
-        where.semester   = semester;
-      } else {
-        where.document_id = document_id;
-      }
+      const where = student_id
+        ? { student_id, semester }
+        : { document_id };
 
-      // 1) Look up existing row by student_id+semester OR document_id
       let app = await Applicant.findOne({ where });
 
       if (app) {
-        // 2) Only fill the holes in the existing record
         const updates = {};
+        if ((!app.applicant_name?.trim()) && newName) updates.applicant_name = newName;
+        if ((!app.applicant_email?.trim()) && newEmail) updates.applicant_email = newEmail;
+        if ((app.gpa == null) && newGpa != null) updates.gpa = newGpa;
+        if ((!app.resume_path?.trim()) && newPath) updates.resume_path = newPath;
 
-        // Excel-loaded fields: only set if missing in DB
-        if ((!app.applicant_name || !app.applicant_name.trim()) && newName) {
-          updates.applicant_name = newName;
-        }
-        if ((!app.applicant_email || !app.applicant_email.trim()) && newEmail) {
-          updates.applicant_email = newEmail;
-        }
-        if ((app.gpa == null) && newGpa != null) {
-          updates.gpa = newGpa;
-        }
-        if ((!app.resume_path || !app.resume_path.trim()) && newPath) {
-          updates.resume_path = newPath;
-        }
-
-        // Always merge arrays (union)
         const mergedSkills = Array.from(new Set([...(app.skills||[]), ...newSkills]));
         const mergedExp    = Array.from(new Set([...(app.experience||[]), ...newExp]));
 
-        if (mergedSkills.length && JSON.stringify(mergedSkills) !== JSON.stringify(app.skills)) {
+        if (mergedSkills.length && JSON.stringify(mergedSkills)!==JSON.stringify(app.skills)) {
           updates.skills = mergedSkills;
         }
-        if (mergedExp.length && JSON.stringify(mergedExp) !== JSON.stringify(app.experience)) {
+        if (mergedExp.length && JSON.stringify(mergedExp)!==JSON.stringify(app.experience)) {
           updates.experience = mergedExp;
         }
 
-        // 3) Apply updates if there's anything new
         if (Object.keys(updates).length) {
           await app.update(updates);
         }
       } else {
-        // 4) No matching Excel row, create a brand-new record
         app = await Applicant.create(rec);
       }
 
@@ -90,7 +70,7 @@ const processResumeZip = async (req, res) => {
     console.error('Error in processResumeZip:', err);
     if (err instanceof ValidationError) {
       return res.status(400).json({
-        error: 'Validation error',
+        error:   'Validation error',
         details: err.errors.map(e => `[${e.path}] ${e.message}`)
       });
     }
@@ -98,32 +78,29 @@ const processResumeZip = async (req, res) => {
   }
 };
 
-// Keep your existing processCV and processCourseFile functions here.
+/**
+ * Processes a single PDF resume.
+ */
 const processCV = async (req, res) => {
   try {
     const filePath = req.file.path;
-    // 1) parse raw + map to your DB shape
-    const [raw] = await pdfParser.parseResumePdf(filePath);
-    const details = pdfParser.extractCandidateDetailsFromFileName(req.file.filename) || {};
-    const rec = pdfParser.mapToApplicant(raw, details, filePath);
+    const [raw]    = await pdfParser.parseResumePdf(filePath);
+    const details  = pdfParser.extractCandidateDetailsFromFileName(req.file.filename) || {};
+    const rec      = pdfParser.mapToApplicant(raw, details, filePath);
 
-    // 2) choose lookup by student_id+semester or document_id
     const where = rec.student_id
       ? { student_id: rec.student_id, semester: rec.semester }
       : { document_id: rec.document_id };
 
-    // 3) find existing
     let app = await Applicant.findOne({ where });
 
     if (app) {
-      // 4a) update only the resume‐derived bits
       await app.update({
         resume_path: rec.resume_path,
         skills:      rec.skills,
         experience:  rec.experience
       });
     } else {
-      // 4b) create brand‐new if no match
       app = await Applicant.create(rec);
     }
 
@@ -132,31 +109,48 @@ const processCV = async (req, res) => {
       applicant: app
     });
   } catch (err) {
-    console.error(err);
+    console.error('Error in processCV:', err);
     if (err instanceof ValidationError) {
       return res.status(400).json({
         error:   'Validation error',
         details: err.errors.map(e => `[${e.path}] ${e.message}`)
       });
     }
-    res.status(500).json({ error: err.message });
+    return res.status(500).json({ error: err.message });
   }
 };
 
-// —————————— STEP 1: import + process your candidate Excel ——————————
+/**
+ * Processes an uploaded Excel file of candidates.
+ */
 const processCandidateFile = async (req, res) => {
   try {
     const filePath = req.file.path;
     const ext      = path.extname(filePath).toLowerCase();
-    if (!['.xlsx','.xls'].includes(ext)) {
+    if (!['.xlsx', '.xls'].includes(ext)) {
       return res.status(400).json({ error: 'Expected .xlsx or .xls file' });
     }
 
-    // parse and insert candidates
-    const candidatesData  = await excelParser.parseCandidateFile(filePath);
-    const savedCandidates = await Applicant.bulkCreate(candidatesData);
+    const candidatesData = await excelParser.parseCandidateFile(filePath);
+    const savedCandidates = await Applicant.bulkCreate(candidatesData, {
+      // On duplicate (student_id, semester), update only the Excel‐derived fields:
+      updateOnDuplicate: [
+        'applicant_name',
+        'applicant_email',
+        'school_year',
+        'university',
+        'school',
+        'graduation_date',
+        'major',
+        'qualified',
+        'continuing',
+        'gpa'
+      ],
+      returning: true
+    });
+
     return res.json({
-      message: 'Candidate list processed and saved',
+      message: 'Candidate list processed and upserted',
       applicants: savedCandidates
     });
   } catch (err) {
@@ -171,51 +165,48 @@ const processCandidateFile = async (req, res) => {
   }
 };
 
+/**
+ * Processes an uploaded course/professor Excel or CSV file.
+ */
 const processCourseFile = async (req, res) => {
   try {
     const filePath = req.file.path;
     const ext      = path.extname(filePath).toLowerCase();
 
-    // 1) Parse the raw rows from CSV or Excel
+    // 1) Parse the sheet (or CSV) into one array of row-objects
     let rows = [];
     if (ext === '.csv') {
       const raw = await csvParser.parseCSVFile(filePath);
       rows = raw.map(r => ({
-        semester:             r.semester,
-        professor_name:       r.professorName,
-        professor_email:      r.professorEmail,
-        course_number:        r.courseNumber,
-        course_section:       r.section,
-        course_name:          r.courseName,
-        number_of_graders:    parseInt(r.numOfGraders, 10),
-        keywords:             Array.isArray(r.criteria)
-                                ? r.criteria
-                                : JSON.parse(r.criteria || '[]'),
-        recommended_student_name: r.recommendedStudentName,
+        semester:                  r.semester,
+        professor_name:            r.professorName,
+        professor_email:           r.professorEmail,
+        course_number:             r.courseNumber,
+        course_section:            r.section,
+        course_name:               r.courseName,
+        number_of_graders:         parseInt(r.numOfGraders, 10),
+        keywords:                  Array.isArray(r.criteria)
+                                    ? r.criteria
+                                    : JSON.parse(r.criteria || '[]'),
+        recommended_student_name:  r.recommendedStudentName,
         recommended_student_netid: r.recommendedStudentNetid
       }));
     } else {
       rows = await excelParser.parseCourseFile(filePath);
     }
 
-    // 2) Upsert Course rows (unique on course_number, course_section, semester)
-    const courseMap = new Map();
-    for (const r of rows) {
-      const key = `${r.course_number}||${r.course_section}||${r.semester || 'Semester'}`;
-      if (!courseMap.has(key)) {
-        courseMap.set(key, {
-          semester:          r.semester,
-          professor_name:    r.professor_name,
-          professor_email:   r.professor_email,
-          course_number:     r.course_number,
-          course_section:    r.course_section,
-          course_name:       r.course_name,
-          number_of_graders: r.number_of_graders,
-          keywords:          r.keywords
-        });
-      }
-    }
-    const courseData = Array.from(courseMap.values());
+    // 2) Build and upsert Courses (ignore the recommendation fields here)
+    const courseData = rows.map(r => ({
+      semester:          r.semester,
+      professor_name:    r.professor_name,
+      professor_email:   r.professor_email,
+      course_number:     r.course_number,
+      course_section:    r.course_section,
+      course_name:       r.course_name,
+      number_of_graders: r.number_of_graders,
+      keywords:          r.keywords
+    }));
+
     const savedCourses = await Course.bulkCreate(courseData, {
       updateOnDuplicate: [
         'professor_name',
@@ -227,7 +218,7 @@ const processCourseFile = async (req, res) => {
       returning: true
     });
 
-    // 3) Build a lookup from our natural key to the new PK
+    // 3) Map each course’s natural key → its new PK
     const idMap = {};
     for (const c of savedCourses) {
       const key = `${c.course_number}||${c.course_section}||${c.semester}`;
@@ -235,15 +226,20 @@ const processCourseFile = async (req, res) => {
     }
 
     // 4) Assemble and upsert Recommendations
-    const recs = rows.map(r => ({
-      semester:           r.semester,
-      professor_id:       idMap[`${r.course_number}||${r.course_section}||${r.semester || 'Semester'}`],
-      applicant_name:     r.recommended_student_name,
-      applicant_net_id:   r.recommended_student_netid
-    }));
+    const recData = rows
+      .filter(r => r.recommended_student_name && r.recommended_student_netid)
+      .map(r => {
+        const key = `${r.course_number}||${r.course_section}||${r.semester}`;
+        return {
+          semester:         r.semester,
+          professor_id:     idMap[key],
+          applicant_name:   r.recommended_student_name,
+          applicant_net_id: r.recommended_student_netid
+        };
+      });
 
-    const savedRecs = await Recommendation.bulkCreate(recs, {
-      updateOnDuplicate: ['applicant_name', 'applicant_net_id'],
+    const savedRecs = await Recommendation.bulkCreate(recData, {
+      updateOnDuplicate: ['applicant_name','applicant_net_id'],
       returning: true
     });
 
@@ -252,6 +248,7 @@ const processCourseFile = async (req, res) => {
       courses: savedCourses,
       recommendations: savedRecs
     });
+
   } catch (err) {
     console.error('Error in processCourseFile:', err);
     if (err instanceof ValidationError) {
@@ -264,4 +261,9 @@ const processCourseFile = async (req, res) => {
   }
 };
 
-export default { processCV, processCandidateFile, processCourseFile, processResumeZip };
+export default {
+  processCV,
+  processCandidateFile,
+  processCourseFile,
+  processResumeZip
+};
