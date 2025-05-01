@@ -8,12 +8,9 @@ function MatchingResults({ matchCount, skills }) {
       <SummaryLabel>Matching Summary</SummaryLabel>
       <SkillsContainer>
         <MatchCount>{matchCount} Matches</MatchCount>
-        {/* {skills.map((skill, index) => (
-          <Pill key={index} text={skill.text} />
-        ))} */}
-        <Pill text={skills.skill} />
-        <Pill text={skills.major} />
-        <Pill text={skills.experience} />
+        {skills.map((skill, index) => (
+          <Pill key={index} text={skill} />
+        ))}
       </SkillsContainer>
     </Container>
   );

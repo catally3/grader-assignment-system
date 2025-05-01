@@ -2,6 +2,9 @@ import { saveAs } from "file-saver";
 import * as XLSX from "xlsx";
 import React from "react";
 import styled from "@emotion/styled";
+
+import downicon from "../assets/icons/icon_download.svg";
+
 import DropdownButton from "./Common/DropdownButton";
 
 /**
@@ -37,7 +40,7 @@ export const ExcelExportButton = ({ data, filteredData }) => {
   };
 
   return (
-    <DropdownButton
+    <StyledDropdownButton
       label="Export"
       options={[
         {
@@ -58,6 +61,7 @@ export const ExcelExportButton = ({ data, filteredData }) => {
           onClick: () => exportToExcel(filteredData, "Filtered_Data"),
         },
       ]}
+      icon={downicon}
     />
   );
 };
@@ -75,5 +79,21 @@ const Button = styled.button`
 
   &:hover {
     background-color: #d96d02;
+  }
+`;
+
+const StyledDropdownButton = styled(DropdownButton)`
+  color: #333;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid #ccc;
+  padding: 6px 12px;
+  border-radius: 10px;
+  margin-bottom: 4px;
+  background-color: #f9f9f9;
+
+  &:hover {
+    background-color: rgb(229, 229, 229);
   }
 `;

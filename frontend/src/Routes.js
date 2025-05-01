@@ -7,11 +7,12 @@ import GraderAssignment from "./pages/GraderAssignment";
 import ApplicantsManagement from "./pages/ApplicantsManagement";
 import CourseManagement from "./pages/CourseManagement";
 import Setting from "./pages/Setting";
+import NotFound from "./pages/NotFound";
 
 // Define ProtectedRoute
 const ProtectedRoute = ({ children }) => {
   const isLoggedIn = true; // Check if user is logged in
-  
+
   if (!isLoggedIn) {
     return <Navigate to="/login" replace />; // Redirect to login if not logged in
   }
@@ -21,44 +22,48 @@ const ProtectedRoute = ({ children }) => {
 
 const routesConfig = [
   {
+    path: "*",
+    element: NotFound,
+  },
+  {
     path: "/",
     element: () => <Navigate replace to="/login" />,
   },
   {
     label: "login",
     path: "/login",
-    element: Login, 
-    guard: GuestRoute, 
+    element: Login,
+    guard: GuestRoute,
   },
   {
     label: "dashboard",
     path: "/dashboard",
-    element: Dashboard, 
-    guard: ProtectedRoute, 
+    element: Dashboard,
+    guard: ProtectedRoute,
   },
   {
     label: "grader-assignment",
     path: "/grader-assignment",
-    element: GraderAssignment, 
-    guard: ProtectedRoute, 
+    element: GraderAssignment,
+    guard: ProtectedRoute,
   },
   {
     label: "applicant-management",
     path: "/applicant-management",
-    element: ApplicantsManagement, 
-    guard: ProtectedRoute, 
+    element: ApplicantsManagement,
+    guard: ProtectedRoute,
   },
   {
     label: "course-management",
     path: "/course-management",
-    element: CourseManagement, 
-    guard: ProtectedRoute, 
+    element: CourseManagement,
+    guard: ProtectedRoute,
   },
   {
     label: "setting",
     path: "/setting",
-    element: Setting, 
-    guard: ProtectedRoute, 
+    element: Setting,
+    guard: ProtectedRoute,
   },
 ];
 

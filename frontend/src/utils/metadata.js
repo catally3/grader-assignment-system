@@ -7,7 +7,7 @@ export const candidatesColumns = [
 
 export const assignGraderColumns = [
   "Reassign",
-  "Name (NetId)",
+  "Name(Student Id)",
   "Major",
   "Document",
   "Assigned Date",

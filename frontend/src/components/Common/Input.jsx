@@ -20,7 +20,7 @@ const StyledInput = styled.input`
   }
 `;
 
-function Input({ placeholder, inputValue, onChange }) {
+function Input({ placeholder, inputValue, onChange, maxLength }) {
   const onChangeValue = (e) => {
     onChange && onChange(e.target.value);
   };
@@ -32,6 +32,7 @@ function Input({ placeholder, inputValue, onChange }) {
         placeholder={placeholder}
         value={inputValue}
         onChange={onChange}
+        maxLength={maxLength}
       />
     </InputContainer>
   );

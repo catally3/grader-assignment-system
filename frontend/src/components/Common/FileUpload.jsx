@@ -8,6 +8,7 @@ const FileUpload = ({
   uploadedFiles,
   onClose,
   singleUpload,
+  fileType,
 }) => {
   const [isDragging, setIsDragging] = useState(false);
   const fileInputRef = useRef(null);
@@ -51,21 +52,26 @@ const FileUpload = ({
         continue;
       }
       const fileExtension = file.name.split(".").pop().toLowerCase();
-      if (fileExtension !== "xlsx") {
-        alert(`${file.name} is not an xlsx file`);
+      if (!["xlsx", "pdf", "zip"].includes(fileExtension)) {
+        alert(`${file.name} is not an accepted file type (xlsx, pdf, or zip)`);
         continue;
       }
-      const isDuplicate = uploadedFiles[activeTab]?.some(
-        (f) => f.name === file.name
-      );
-      if (isDuplicate) {
-        alert(`${file.name} is already added in ${activeTab}`);
-        continue;
+      if (!singleUpload) {
+        const isDuplicate = uploadedFiles[activeTab]?.some(
+          (f) => f.name === file.name
+        );
+        if (isDuplicate) {
+          alert(`${file.name} is already added in ${activeTab}`);
+          continue;
+        }
       }
       validFiles.push(file);
     }
+
     if (validFiles.length > 0) {
-      const updatedFiles = [...(uploadedFiles[activeTab] || []), ...validFiles];
+      const updatedFiles = singleUpload
+        ? [validFiles[0]]
+        : [...(uploadedFiles[activeTab] || []), ...validFiles];
       onFilesChange(activeTab, updatedFiles);
     }
   };
@@ -74,31 +80,53 @@ const FileUpload = ({
     fileInputRef.current.click();
   };
 
+  console.log("onFilesChange", onFilesChange);
+
   return (
     <div>
       {singleUpload ? (
-        <UploadContainer
-          onDragOver={handleDragOver}
-          onDragLeave={handleDragLeave}
-          onDrop={handleDrop}
-          onClick={handleClick}
-          isDragging={isDragging}
-        >
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileInputChange}
-            accept=".xlsx"
-            multiple
-            style={{ display: "none" }}
-          />
-          <DocumentIcon src={DocIcon} />
-          <UploadText>
-            <UploadLink>Upload a file</UploadLink>
-            <UploadInstruction>or drag and drop</UploadInstruction>
-          </UploadText>
-          <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
-        </UploadContainer>
+        <>
+          <UploadContainer
+            onDragOver={handleDragOver}
+            onDragLeave={handleDragLeave}
+            onDrop={handleDrop}
+            onClick={handleClick}
+            isDragging={isDragging}
+          >
+            <input
+              type="file"
+              ref={fileInputRef}
+              onChange={handleFileInputChange}
+              accept={fileType}
+              multiple={!singleUpload}
+              style={{ display: "none" }}
+            />
+            <DocumentIcon src={DocIcon} />
+            <UploadText>
+              <UploadLink>Upload a file</UploadLink>
+              <UploadInstruction>or drag and drop</UploadInstruction>
+            </UploadText>
+            <FileTypeInfo>{fileType} up to 5MB</FileTypeInfo>
+          </UploadContainer>
+          <FileList>
+            {(uploadedFiles[activeTab] || []).map((file, idx) => (
+              <ProgressFileItem key={idx}>
+                <ProgressBarContainer>
+                  <ProgressBar style={{ width: "100%" }} />
+                </ProgressBarContainer>
+                <FileName>{file.name}</FileName>
+                <RemoveButton
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleRemoveFile(activeTab, file.name);
+                  }}
+                >
+                  ×
+                </RemoveButton>
+              </ProgressFileItem>
+            ))}
+          </FileList>
+        </>
       ) : (
         <>
           <UploadContainer
@@ -112,7 +140,7 @@ const FileUpload = ({
               type="file"
               ref={fileInputRef}
               onChange={handleFileInputChange}
-              accept=".xlsx"
+              accept=".xlsx,.pdf,.zip"
               multiple
               style={{ display: "none" }}
             />
@@ -121,7 +149,7 @@ const FileUpload = ({
               <UploadLink>Upload a file</UploadLink>
               <UploadInstruction>or drag and drop</UploadInstruction>
             </UploadText>
-            <FileTypeInfo>xlsx, up to 5MB</FileTypeInfo>
+            <FileTypeInfo>xlsx, pdf, zip up to 5MB</FileTypeInfo>
           </UploadContainer>
 
           <FileList>

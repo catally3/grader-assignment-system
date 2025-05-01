@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
 import Modal, { ModalContainer } from "../Common/Modal";
 import ModalHeader from "../Common/ModalHeader";
@@ -8,7 +8,10 @@ import Input from "../../components/Common/Input";
 import SelectBox from "../../components/Common/SelectBox";
 
 import ArrowIcon from "../../assets/icons/icon_arrow.svg";
-import { courseOptions } from "../../utils/metadata";
+import FileUpload from "../Common/FileUpload";
+
+import { fileType, uploadMode } from "../../utils/type";
+import { getCourses } from "../../api/courses";
 
 const AddCandidateModal = ({
   open,
@@ -17,97 +20,153 @@ const AddCandidateModal = ({
   title,
   inputValue,
   setInputValue,
+  uploadType,
 }) => {
   const [addCourseMode, setAddCourseMode] = useState(false);
+  const [courseOptions, setCourseOptions] = useState([]);
 
-  const handleAssign = () => {
-    console.log("Add new Candidate");
-    // Implementation for assign action would go here
+  // File upload
+  const handleFilesChange = (tab, newFiles) => {
+    setInputValue((prev) => ({
+      ...prev,
+      file: newFiles,
+    }));
   };
 
+  // Modal
   const onCloseAddCandidate = () => {
     onClose();
     setAddCourseMode(false);
   };
 
+  // Load courses on open
+  useEffect(() => {
+    const fetchCourses = async () => {
+      try {
+        const data = await getCourses();
+        const formatted = data.map((course) => ({
+          id: course.id,
+          name: `${course.course_name} (${course.course_number} - ${course.course_section})`,
+          course_name: course.course_name,
+          course_number: course.course_number,
+          course_section: course.course_section,
+          professor_name: course.professor_name,
+        }));
+
+        setCourseOptions(formatted);
+      } catch (err) {
+        console.error("Failed to load courses:", err);
+      }
+    };
+
+    fetchCourses();
+  }, []);
+
   return (
-    <Modal
-      open={open}
-      onClose={() => {
-        onCloseAddCandidate;
-      }}
-    >
+    <Modal open={open} onClose={onCloseAddCandidate}>
       <ModalContainer>
         <ModalContent>
           <ModalHeader
-            title={title ? title : "Upload files"}
+            title={title ?? "Upload files"}
             onClose={onCloseAddCandidate}
           />
           <InputWrapper>
-            <SingleTabItem style={{ marginBottom: "16px" }}>
-              Student Name
-            </SingleTabItem>
-            <Input
-              placeholder={"Student Name"}
-              inputValue={inputValue?.name}
-              onChange={(e) =>
-                setInputValue({ ...inputValue, name: e.target.value })
-              }
-            />
-            <SingleTabItem
-              style={{
-                marginTop: "10px",
-              }}
-              onClick={() => setAddCourseMode(!addCourseMode)}
-            >
-              Add Course & Professor <Icon src={ArrowIcon} />
-            </SingleTabItem>
-            {addCourseMode && (
-              <AddCourseWrap>
-                <SingleTabItem style={{ marginBottom: "16px" }}>
-                  Course Name
-                </SingleTabItem>
-                <SelectBox
-                  placeholder="Select Course"
-                  width={"100%"}
-                  value={inputValue.courseName}
-                  onChange={(val) =>
-                    setInputValue((prev) => ({
-                      ...prev,
-                      number: val.id,
-                      courseName: val.name,
-                    }))
-                  }
-                  options={courseOptions}
-                />
-                <SingleTabItem style={{ marginBottom: "16px" }}>
-                  Professor Name
-                </SingleTabItem>
+            {uploadType === uploadMode.SINGLE && (
+              <>
+                <SingleTabItem>Student ID</SingleTabItem>
                 <Input
-                  placeholder={"Professor Name"}
-                  inputValue={inputValue?.professor}
+                  placeholder={"Student ID (ex.0000000000)"}
+                  inputValue={inputValue?.student_id}
+                  maxLength={10}
+                  onChange={(e) => {
+                    const numeric = e.target.value.replace(/\D/g, ""); // only numeric
+                    setInputValue({ ...inputValue, student_id: numeric });
+                  }}
+                />
+                <SingleTabItem>Student Name</SingleTabItem>
+                <Input
+                  placeholder={"Student Name"}
+                  inputValue={inputValue?.applicant_name}
                   onChange={(e) =>
                     setInputValue({
                       ...inputValue,
-                      professor: e.target.value,
+                      applicant_name: e.target.value,
                     })
                   }
                 />
-              </AddCourseWrap>
+              </>
+            )}
+            <SingleTabItem>
+              {uploadType === uploadMode.SINGLE
+                ? "Resume Upload"
+                : "Candidates File Upload"}
+            </SingleTabItem>
+            <FileUpload
+              activeTab={"applicants"}
+              uploadedFiles={inputValue?.document_id}
+              onFilesChange={handleFilesChange}
+              singleUpload={true}
+              fileType={
+                uploadType === uploadMode.SINGLE ? fileType.PDF : fileType.ZIP
+              }
+            />
+            {/* Course Section Toggle */}
+            {uploadType === uploadMode.SINGLE && (
+              <>
+                <SingleTabItem
+                  style={{ marginTop: "10px" }}
+                  onClick={() => setAddCourseMode(!addCourseMode)}
+                >
+                  Add Course & Professor <Icon src={ArrowIcon} />
+                </SingleTabItem>
+
+                {addCourseMode && (
+                  <AddCourseWrap>
+                    <SingleTabItem>Course Name</SingleTabItem>
+                    <SelectBox
+                      placeholder="Select Course"
+                      width="100%"
+                      value={inputValue.selectedCourse ?? null}
+                      onChange={(val) =>
+                        setInputValue((prev) => ({
+                          ...prev,
+                          selectedCourse: val,
+                          course_name: val.course_name,
+                          course_number: val.course_number,
+                          course_section: val.course_section,
+                          professor_name: val.professor_name,
+                        }))
+                      }
+                      options={courseOptions}
+                    />
+                    <SingleTabItem>Professor Name</SingleTabItem>
+                    <Input
+                      placeholder={"Professor Name"}
+                      inputValue={inputValue?.professor_name}
+                      onChange={(e) =>
+                        setInputValue({
+                          ...inputValue,
+                          professor_name: e.target.value,
+                        })
+                      }
+                    />
+                  </AddCourseWrap>
+                )}
+              </>
             )}
           </InputWrapper>
         </ModalContent>
         <ButtonContainer>
           <Button
-            backgroundColor={"white"}
-            TextColor={"rgba(248, 126, 3, 1)"}
-            Text={"Cancel"}
+            backgroundColor="white"
+            TextColor="rgba(248, 126, 3, 1)"
+            Text="Cancel"
             onClick={onClose}
           />
           <Button
-            backgroundColor={"rgba(248, 126, 3, 1)"}
-            TextColor={"white"}
-            Text={"Add"}
+            backgroundColor="rgba(248, 126, 3, 1)"
+            TextColor="white"
+            Text="Add"
             onClick={handleSubmit}
           />
         </ButtonContainer>
@@ -123,17 +182,8 @@ const ModalContent = styled.div`
   min-width: 420px;
 `;
 
-const TabContainer = styled.nav`
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  position: relative;
-  border-width: 1px;
-`;
-
-const TabList = styled.div`
-  display: flex;
-  position: relative;
+const InputWrapper = styled.div`
+  max-width: 100%;
 `;
 
 const SingleTabItem = styled.button`
@@ -141,32 +191,11 @@ const SingleTabItem = styled.button`
   width: 100%;
   color: #f87e03;
   width: 180px;
-
-  padding-top: 10px;
-
+  padding-top: 16px;
+  padding-bottom: 8px;
   font-size: Small;
-  font-weight: 700;
+  font-weight: 500;
   text-align: center;
-`;
-
-const TabItem = styled.button`
-  border-bottom: ${(props) =>
-    props.isActive ? "1px solid #f87e03" : "1px solid #ffffff"};
-  color: ${(props) => (props.isActive ? "#f87e03" : "#6f727a")};
-  font-size: Small;
-  font-weight: 700;
-
-  width: 180px;
-  padding: 10px 16px;
-
-  text-align: center;
-  cursor: pointer;
-  ${(props) =>
-    props.isActive &&
-    `
-    border-width: 2px;
-    border-color: #f87e03;
-  `}
 `;
 
 const ButtonContainer = styled.footer`
@@ -178,19 +207,13 @@ const ButtonContainer = styled.footer`
   background-color: rgb(249, 247, 247);
   width: calc(100% + 80px);
   margin: 20px 0 -30px -40px;
-
   border-bottom-left-radius: 20px;
   border-bottom-right-radius: 20px;
-`;
-
-const InputWrapper = styled.div`
-  max-width: 100%;
 `;
 
 const Icon = styled.img`
   width: 16px;
   height: 16px;
-
   margin-left: 8px;
 `;
 

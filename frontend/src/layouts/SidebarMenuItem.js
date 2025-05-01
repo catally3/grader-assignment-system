@@ -12,7 +12,7 @@ const MenuItem = styled.button`
   text-align: left;
   margin-top: ${(props) => (props.isFirst ? "0" : "28px")};
 
-  &:first-child {
+  &:first-of-type {
     margin-top: 0;
   }
 `;

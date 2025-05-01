@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import { useSemester } from "../../context/SemesterContext"; //NEW
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import InputModal from "../../components/Modals/InputModal.jsx";
 import FileUploadModal from "../../components/Modals/FileUploadModal.jsx";
 import DoughnutChart from "../../components/Common/DonutChart.js";
+import SelectBox from "../../components/Common/SelectBox.jsx";
 
 const Dashboard = () => {
   const [inputValue, setInputValue] = useState("");
@@ -43,17 +45,28 @@ const Dashboard = () => {
       professorName: "Dr. Michael",
       note: "Urgent - no grader assigned",
     },
+    {
+      courseNumber: "87654",
+      courseName: "Algorithms",
+      requiredGraders: 3,
+      assignedGraders: 0,
+      professorName: "Dr. Michael",
+      note: "Urgent - no grader assigned",
+    },
+    {
+      courseNumber: "87654",
+      courseName: "Algorithms",
+      requiredGraders: 3,
+      assignedGraders: 0,
+      professorName: "Dr. Michael",
+      note: "Urgent - no grader assigned",
+    },
   ];
-
-  useEffect(() => {
-    if (!currentSemData) setIsModalOpen(true);
-  }, [currentSemData]);
 
   // new semester start modal
   const openModal = () => {
     // if new semester start, clear before data
     localStorage.removeItem("assignments");
-    localStorage.removeItem("semester");
     setIsModalOpen(true);
   };
   const closeModal = () => setIsModalOpen(false);
@@ -87,58 +100,15 @@ const Dashboard = () => {
     setIsModalOpen(false);
   };
 
-  const renderSemesterSelection = () => (
-    <div style={{ marginLeft: "15px" }}>
-      <select
-        value={selectedSemester || ""}
-        onChange={(e) => setSelectedSemester(e.target.value)}
-        style={{
-          padding: "10px",
-          borderRadius: "8px",
-          fontSize: "14px",
-          border: "1px solid #ccc",
-        }}
-      >
-        <option disabled value="">
-          Select Semester
-        </option>
-        {semesters.map((sem) => (
-          <option key={sem.name} value={sem.name}>
-            {sem.name}
-          </option>
-        ))}
-      </select>
-    </div>
-  );
+  const handleAssignClick = () => {
+    if (currentSemData) {
+      alert("Assignments are created");
+      localStorage.setItem("assignments", currentSemData);
+      navigate(0);
+    }
+  };
 
-  const renderStatsBoxes = () => (
-    <BoxContainer style={{ gap: "45px" }}>
-      <LeftWrap>
-        <div style={{ display: "flex", gap: "45px" }}>
-          <StatBox label="Total Candidates" value="40" />
-          <StatBox label="Total Courses" value="50" />
-          <StatBox label="Total Unassigned Courses" value="10" />
-        </div>
-        <TitleContainer style={{ marginTop: "10px" }}>
-          <Title>Unassigned Course</Title>
-        </TitleContainer>
-        <UnassignedCoursesTable
-          courses={unmatchedCourses}
-          navigate={navigate}
-        />
-      </LeftWrap>
-      {/* chart */}
-      <RightWrap>
-        <TopBox>
-          <TitleContainer style={{ marginBottom: 40, marginTop: 0 }}>
-            <Title>Assignments Overview</Title>
-          </TitleContainer>
-          <DoughnutChart />
-        </TopBox>
-      </RightWrap>
-    </BoxContainer>
-  );
-
+  // main dashboard
   return (
     <Layout>
       <WelcomeTextBox>
@@ -146,18 +116,82 @@ const Dashboard = () => {
         <HiringManagerText>Hiring Manager</HiringManagerText>
       </WelcomeTextBox>
       <SubTitle>Here is the overview of the grader assignments.</SubTitle>
-
-      {currentSemData && (
-        <TitleContainer>
-          <Title>{currentSemData}</Title>
-          {isAssignments && renderSemesterSelection()}
-          <Button onClick={openModal}>New Semester</Button>
-          {!isAssignments && (
-            <Button onClick={() => setOpenUploadModal(true)}>
+      <TitleContainer>
+        {currentSemData && (
+          <Title style={{ marginRight: 20 }}>{currentSemData}</Title>
+        )}
+        {isAssignments && (
+          <div style={{ marginRight: "20px" }}>
+            <SelectBox
+              placeholder="Select Term"
+              width={"180px"}
+              value={selectedSemester ?? null}
+              onChange={(val) => setSelectedSemester(val)}
+              options={[
+                { id: 1, name: "Spring2025" },
+                { id: 2, name: "Fall2024" },
+                { id: 3, name: "Spring2024" },
+              ]}
+            />
+          </div>
+        )}
+        <Button onClick={openModal}>New Semester</Button>
+        {!isAssignments && (
+          <>
+            <Button
+              onClick={() => setOpenUploadModal(true)}
+              disabled={!currentSemData}
+            >
               + Upload Files
             </Button>
+            {/* <Button onClick={() => {}}>Reset</Button> */}
+            <Button
+              onClick={handleAssignClick}
+              backgroundColor={"#000000"}
+              disabled={!currentSemData}
+            >
+              Assign
+            </Button>
+          </>
+        )}
+      </TitleContainer>
+
+      {currentSemData && (
+        <BoxContainer>
+          {!isAssignments ? (
+            <NoticeBox>
+              <HeaderText style={{ marginTop: 40 }}>
+                Please upload files to start the grader assignment
+              </HeaderText>
+            </NoticeBox>
+          ) : (
+            <BoxContainer style={{ gap: "32px" }}>
+              <LeftWrap>
+                <div style={{ display: "flex", gap: "32px" }}>
+                  <StatBox label="Total Candidates" value="40" />
+                  <StatBox label="Total Courses" value="50" />
+                  <StatBox label="Total Unassigned Courses" value="10" />
+                </div>
+                <TitleContainer style={{ marginTop: "10px" }}>
+                  <Title>Unassigned Course</Title>
+                </TitleContainer>
+                <UnassignedCoursesTable
+                  courses={unmatchedCourses}
+                  navigate={navigate}
+                />
+              </LeftWrap>
+              {/* chart */}
+              <RightWrap>
+                <TopBox>
+                  <TitleContainer style={{ marginBottom: 40, marginTop: 0 }}>
+                    <Title>Assignments Overview</Title>
+                  </TitleContainer>
+                  <DoughnutChart />
+                </TopBox>
+              </RightWrap>
+            </BoxContainer>
           )}
-        </TitleContainer>
+        </BoxContainer>
       )}
       <InputModal
         open={isModalOpen}
@@ -169,20 +203,6 @@ const Dashboard = () => {
         setCarryOver={setCarryOver}
         handleCreateSemester={handleCreateSemester}
       />
-      {currentSemData && (
-        <BoxContainer>
-          {!isAssignments ? (
-            <NoticeBox>
-              <HeaderText>
-                Please upload files to start the grader assignment
-              </HeaderText>
-            </NoticeBox>
-          ) : (
-            renderStatsBoxes()
-          )}
-        </BoxContainer>
-      )}
-
       <FileUploadModal
         open={openUploadModal}
         onClose={() => setOpenUploadModal(false)}
@@ -223,21 +243,24 @@ const UnassignedCoursesTable = ({ courses, navigate }) => (
 
 export default Dashboard;
 
-// Styled components below (unchanged)
 const WelcomeTextBox = styled.div`
   font-size: x-large;
   display: flex;
   align-items: center;
   margin-bottom: 10px;
 `;
+
 const WelcomeText = styled.span`
   color: rgb(0, 0, 0);
   margin-right: 8px;
+  font-weight: bold;
 `;
+
 const HiringManagerText = styled.span`
   color: rgb(253, 135, 0);
   font-weight: bold;
 `;
+
 const SubTitle = styled.div`
   font-size: medium;
   font-weight: normal;
@@ -245,9 +268,10 @@ const SubTitle = styled.div`
   margin-top: 15px;
   margin-bottom: 15px;
 `;
+
 const BoxContainer = styled.div`
   display: flex;
-  gap: 45px;
+  gap: 42;
   justify-content: flex-start;
   align-items: stretch;
   flex-wrap: wrap;
@@ -256,6 +280,7 @@ const BoxContainer = styled.div`
   margin-top: 15px;
   flex: 1;
 `;
+
 const TopBox = styled.div`
   flex: 1;
   background-color: white;
@@ -268,30 +293,35 @@ const TopBox = styled.div`
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   color: #333;
 `;
+
 const BoxHeader = styled.div`
   font-size: medium;
   font-weight: bold;
 `;
+
 const BoxSubText = styled.div`
   font-size: medium;
   font-weight: normal;
   color: #666;
   margin-top: 20px;
 `;
+
 const TitleContainer = styled.div`
   display: flex;
   align-items: center;
   margin-top: 40px;
+  align-items: center;
 `;
+
 const Title = styled.div`
   font-size: x-large;
   display: flex;
   align-items: center;
   font-weight: bold;
 `;
+
 const Button = styled.button`
   color: rgb(255, 255, 255);
-  background-color: rgb(253, 135, 0);
   width: 120px;
   height: 35px;
   display: flex;
@@ -301,9 +331,24 @@ const Button = styled.button`
   border-radius: 12px;
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   font-size: small;
-  margin-left: 20px;
+
+  background-color: ${(props) =>
+    props.backgroundColor || props.theme.colors.primary};
+
   &:hover {
-    background-color: rgb(218, 118, 5);
+    background-color: ${(props) =>
+      props.backgroundColor ? "rgba(72, 72, 72, 0.93)" : "rgb(203, 99, 2)"};
+  }
+
+  &:disabled {
+    background-color: #ddd;
+    color: #999;
+    cursor: not-allowed;
+    box-shadow: none;
+  }
+
+  &:not(first-of-type) {
+    margin-right: 20px;
   }
 `;
 const CenterBox = styled.div`
@@ -318,21 +363,25 @@ const CenterBox = styled.div`
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
   color: #333;
 `;
+
 const HeaderCenter = styled.div`
   display: flex;
-  justify-content: space-between;
+  flex: 1;
   align-items: center;
   padding: 10px 0;
   background-color: rgb(224, 221, 221);
 `;
+
 const HeaderText = styled.div`
+  min-width: 130px;
   flex: 1;
   text-align: center;
   padding: 0 10px;
   color: #333;
-  font-size: medium;
+  font-size: small;
   font-weight: normal;
 `;
+
 const Row = styled.div`
   display: flex;
   justify-content: space-between;

@@ -11,22 +11,23 @@ import MatchingResults from "../MatchingResults";
 import DocumentViewer from "../DocumentViewer";
 import ActionButtons from "../ActionButtons";
 import CloseIcon from "../../assets/icons/icon_close.svg";
-import DownIcon from "../../assets/icons/icon_download.svg";
+import SlideOutModal from "../Common/SlideOutModal";
 
 const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
   const pdfUrl = "/resume_example.pdf";
   const wordToHighlight = "Javascript";
+
+  let skillsCount = assignmentInfo?.skills?.length;
 
   useEffect(() => {
     document.body.style = `overflow: hidden`;
     return () => (document.body.style = `overflow: auto`);
   }, []);
 
-
-
+  console.log("assignmentInfo", assignmentInfo);
 
   return (
-    <Modal open={open} onClose={onClose}>
+    <SlideOutModal open={open} onClose={onClose}>
       <ModalContainer>
         <ModalHeader
           title="Grader Assignment Detail"
@@ -37,75 +38,88 @@ const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
           <ApplicationInfoSection>
             <InfoSection.Field
               label="Application ID"
-              value={assignmentInfo?.id}
+              value={assignmentInfo?.student_id || "N/A"}
             />
             <InfoSection.Field
               label="Application Date"
-              value={assignmentInfo?.date}
+              value={assignmentInfo?.createdAt || "N/A"}
             />
             <InfoSection.Field
               label="Status"
-              value={assignmentInfo?.status}
+              value={assignmentInfo?.status || "N/A"}
               isStatus
             />
           </ApplicationInfoSection>
           <PositionDetailsSection>
             <InfoSection.Field
               label="Applied To Name"
-              value={assignmentInfo?.position}
+              value={assignmentInfo?.position || "N/A"}
             />
             <InfoSection.Field
               label="Matched Course"
-              value={`${assignmentInfo?.course} - ${assignmentInfo?.courseName}`}
+              value={
+                `${assignmentInfo?.course_number} - ${assignmentInfo?.course_name}` ||
+                "N/A"
+              }
               value1="CS4545.004-Machine Learning course"
             />
           </PositionDetailsSection>
           <PersonalInfoSection>
             <InfoSection.Field
-              label="First Name"
-              value={assignmentInfo?.firstName}
+              label="Name"
+              value={assignmentInfo?.applicant_name || "N/A"}
             />
-            <InfoSection.Field
+            {/* <InfoSection.Field
               label="Last Name"
               value={assignmentInfo?.lastName}
-            />
+            /> */}
           </PersonalInfoSection>
           <StudentInfoSection>
-            <InfoSection.Field label="Student ID" value="jdl20011" />
+            <InfoSection.Field
+              label="Student ID"
+              value={assignmentInfo?.student_id || "N/A"}
+            />
             <InfoSection.Field
               label="Student Email"
-              value={assignmentInfo?.email}
+              value={assignmentInfo?.applicant_email || "N/A"}
             />
           </StudentInfoSection>
           <SchoolInfoSection>
             <InfoSection.Field
               label="School Year"
-              value={assignmentInfo?.year}
+              value={assignmentInfo?.school_year || "N/A"}
             />
             <InfoSection.Field
               label="Graduation Date"
-              value={assignmentInfo?.graduationDate}
+              value={assignmentInfo?.graduation_date || "N/A"}
             />
           </SchoolInfoSection>
           <SchoolMajorSection>
-            <InfoSection.Field label="School" value={assignmentInfo?.school} />
-            <InfoSection.Field label="Major" value={assignmentInfo?.major} />
+            <InfoSection.Field
+              label="School"
+              value={assignmentInfo?.school || "N/A"}
+            />
+            <InfoSection.Field
+              label="Major"
+              value={assignmentInfo?.major || "N/A"}
+            />
           </SchoolMajorSection>
           <MatchingResults
-            matchCount={assignmentInfo?.matchCount}
-            skills={assignmentInfo?.matchingKeyword}
+            matchCount={skillsCount ? skillsCount : 0}
+            skills={assignmentInfo?.skills ? assignmentInfo?.skills : []}
           />
           <DocumentViewer
-            documentIcon={DownIcon}
             pdfUrl={pdfUrl}
-            wordToHighlight={wordToHighlight}
-            matchingKeyword={assignmentInfo?.matchingKeyword}
-            fileName={`resume-${assignmentInfo?.name}(${assignmentInfo?.netId})`}
+            wordToHighlight={assignmentInfo?.skills || null}
+            matchingKeyword={assignmentInfo?.experiences || null}
+            fileName={
+              `resume-${assignmentInfo?.applicant_name}(${assignmentInfo?.student_id})` ||
+              "N/A"
+            }
           />
-          <ActionButtons primaryAction={"Assign"} secondaryAction={"Delete"} />
         </ModalContent>
       </ModalContainer>
-    </Modal>
+    </SlideOutModal>
   );
 };
 
@@ -121,7 +135,7 @@ const ModalContent = styled.div`
   margin-top: 40px;
   font-size: small;
 
-  max-height: 70vh;
+  /* max-height: 70vh; */
 
   overflow-y: hidden;
   overflow: scroll;

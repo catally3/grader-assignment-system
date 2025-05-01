@@ -3,8 +3,7 @@ import styled from "@emotion/styled";
 
 const HeaderRow = styled.header`
   background-color: ${(props) => props.theme.colors.secondary};
-  display: grid;
-  grid-template-columns: 1fr 2fr 1fr 1fr 1fr;
+  display: flex;
   min-height: 40px;
   width: 100%;
   align-items: center;
@@ -14,7 +13,12 @@ const HeaderRow = styled.header`
   text-align: center;
 `;
 
-const Column = styled.div``;
+const Column = styled.div`
+  display: flex;
+  justify-content: center;
+  flex: 1;
+  text-align: center;
+`;
 
 const TableHeader = ({ columns }) => {
   return (

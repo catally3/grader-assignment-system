@@ -26,9 +26,9 @@ const SelectBox = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleSelect = (id, name, e) => {
-    e.stopPropagation(); // prevent bubbling
-    onChange({ id: id, name: name });
+  const handleSelect = (option, e) => {
+    e.stopPropagation();
+    onChange(option);
     setIsOpened(false);
   };
 
@@ -40,17 +40,17 @@ const SelectBox = ({
       ref={ref}
       onClick={() => setIsOpened((prev) => !prev)}
     >
-      <Value isPlaceholder={value === null}>
-        {value === null ? placeholder : value}
+      <Value isPlaceholder={!value || !value.name}>
+        {!value || !value.name ? placeholder : value.name}
       </Value>
       <Icon src={ArrowIcon} isOpened={isOpened} />
       {isOpened && (
         <Dropdown style={{ ...absoluteStyle }}>
           {mergedOptions.map((option) => (
             <Option
-              key={option.id === null ? "placeholder" : option.id}
-              active={value === option.id}
-              onClick={(e) => handleSelect(option.id, option.name, e)}
+              key={option.id ?? "placeholder"}
+              active={value?.id === option.id}
+              onClick={(e) => handleSelect(option, e)}
               isPlaceholder={option.id === null}
             >
               {option.name}
@@ -62,6 +62,7 @@ const SelectBox = ({
   );
 };
 
+// Styled Components
 const Container = styled.div`
   color: #333;
   display: flex;
@@ -70,10 +71,10 @@ const Container = styled.div`
   border: 1px solid #e0e2e7;
   padding: 10px 12px;
   border-radius: 10px;
-  margin-bottom: 4px;
   cursor: pointer;
   position: relative;
   user-select: none;
+  background-color: #ffffff;
 `;
 
 const Icon = styled.img`
@@ -83,8 +84,7 @@ const Icon = styled.img`
   ${({ isOpened }) =>
     isOpened &&
     css`
-      /* transform: rotate(180deg);
-      transition: transform 0.2s ease; */
+      transform: rotate(180deg);
     `}
 `;
 
@@ -116,8 +116,11 @@ const Option = styled.div`
   font-size: medium;
   cursor: pointer;
   color: ${({ active }) => (active ? "rgba(248, 126, 3, 1)" : "#000")};
-  color: ${({ isPlaceholder }) => (isPlaceholder ? "#999" : "#000")};
-
+  ${({ isPlaceholder }) =>
+    isPlaceholder &&
+    css`
+      color: #999;
+    `}
   &:hover {
     background-color: #f4f4f4;
   }

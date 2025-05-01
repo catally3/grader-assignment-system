@@ -3,6 +3,7 @@ import styled from "@emotion/styled";
 import Input from "../../components/Common/Input";
 import Button from "../../components/Common/Button";
 import Modal, { ModalContainer } from "../../components/Common/Modal";
+import ModalHeader from "../Common/ModalHeader";
 
 function InputModal({
   open,
@@ -17,8 +18,9 @@ function InputModal({
   return (
     <Modal open={open} onClose={onClose}>
       <ModalContainer>
+        <ModalHeader title={""} onClose={onClose} />
         <ContentSection>
-          <ModalHeader>{title}</ModalHeader>
+          <ModalTitleText>{title}</ModalTitleText>
           <Description>Create a new semester for grader assignment</Description>
           <InputWrapper>
             <Input
@@ -52,7 +54,7 @@ function InputModal({
   );
 }
 
-const ModalHeader = styled.h3`
+const ModalTitleText = styled.h3`
   width: 100%;
   text-align: center;
 `;
@@ -66,6 +68,7 @@ const ContentSection = styled.section`
 `;
 
 const Description = styled.p`
+  font-size: small;
   align-self: stretch;
   text-align: center;
   margin-top: 16px;
@@ -87,4 +90,3 @@ const CheckboxWrapper = styled.div`
 `;
 
 export default InputModal;
-

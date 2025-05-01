@@ -1,16 +1,24 @@
 import styled from "@emotion/styled";
-import Layout from "../../layouts/Layout.js";
 import { useState, useEffect } from "react"; // delete, add, search states
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
-import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
+import Layout from "../../layouts/Layout.js";
 import DropdownButton from "../../components/Common/DropdownButton.jsx";
 import SelectBox from "../../components/Common/SelectBox.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
-import AddCandidateModal from "../../components/Modals/AddCandidateModal.jsx";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
-import { getCandidates } from "../../api/candidates.js";
+import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import AddCandidateModal from "../../components/Modals/AddCandidateModal.jsx";
+import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
+import { uploadMode } from "../../utils/type.js";
 
-// Candidate Management
+import {
+  getApplicants,
+  createApplicants,
+  deleteApplicant,
+} from "../../api/applicants.js";
+import { deleteAssignment } from "../../api/assignments.js";
+import { uploadResume, uploadResumeZip } from "../../api/upload.js";
+
+// frontend/Applicants Management
 const Title = styled.div`
   font-size: x-large;
   font-weight: bold;
@@ -293,85 +301,48 @@ const ArrowIcon = styled.img`
   margin-left: 6px;
 `;
 
+const initCandidate = {
+  student_id: "",
+  applicant_name: "",
+  course_name: "",
+  course_number: "",
+  course_section: "",
+  professor_name: "",
+  document_id: "",
+};
+
 const GraderAssignment = () => {
-  const [candidates, setCandidates] = useState([]);
+  // data
+  const [data, setData] = useState([]);
+  const [newCandidate, setNewCandidate] = useState(initCandidate);
+  const [selectedSemester, setSelectedSemester] = useState(null);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      const data = await getCandidates();
-      // setCandidates(data);
-      console.log(data);
-    };
-
-    fetchData();
-  }, []);
-
-  const [data, setData] = useState([
-    {
-      candidateID: "12341",
-      name: "Anthony Smith (jxs190043)",
-      number: "4302",
-      class: "CS",
-      section: "509",
-      professor: "Herlin Villareal",
-      updated: true,
-    },
-    {
-      candidateID: null,
-      name: "Gaby Doe (jxd190043)",
-      number: "4301",
-      class: "CS",
-      section: "502",
-      professor: "Vanessa Ramirez",
-      updated: false,
-    },
-    {
-      candidateID: "12345",
-      name: "May Lee (jxs190042)",
-      number: "4306",
-      class: "CS",
-      section: "502",
-      professor: null,
-      updated: true,
-    },
-    {
-      candidateID: "12343",
-      name: "John Alvarez (jxd190042)",
-      number: "4303",
-      class: "CS",
-      section: "504",
-      professor: "Caroline Mendez",
-      updated: true,
-    },
-    {
-      candidateID: "12349",
-      name: null,
-      number: null,
-      class: "CS",
-      section: "501",
-      professor: "Jane Smith",
-      updated: false,
-    },
-    {
-      candidateID: "12345",
-      name: "Beatrice Salazar (gxs190043)",
-      number: null,
-      class: "CS",
-      section: "501",
-      professor: "Mary Salazar",
-      updated: false,
-    },
-  ]);
-
-  /******* SEARCH FUNCTIONALITY  *******/
+  // table top sorting and searching state
+  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
+  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
   const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
+
+  // delete state
+  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
+  const [selectedIds, setSelectedIds] = useState([]); // selected stores the candidateIDs chosen to be deleted
+
+  // reassign course state
+  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
+
+  // modal state
+  const [reassignModalOpen, setReassignModalOpen] = useState(false); // reassign modal
+  const [applicantInfoModalOpen, setApplicantInfoModalOpen] = useState(false); // applicantInfoModal
+  const [showModal, setShowModal] = useState(false);
+
+  const [selectedApplicantInfo, setSelectedApplicantInfo] = useState({});
+  const [uploadType, setUploadType] = useState("");
+
   // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
-  /******* SORTING FUNCTIONALITY  *******/
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
   // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
@@ -384,6 +355,7 @@ const GraderAssignment = () => {
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
+
   // return the current sort arrow based on current sorting direction, and display default
   const getSortArrow = (key) => {
     if (sortConfig.key !== key) {
@@ -402,6 +374,7 @@ const GraderAssignment = () => {
     }
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
+
   // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
@@ -413,17 +386,16 @@ const GraderAssignment = () => {
       })
     : data;
 
-  /******* FILTER FUNCTIONALITY  *******/
-  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
-  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
   // update selectedColumn when user selects a column
   const handleColumnChange = (event) => {
     setSelectedColumn(event.target.value);
   };
+
   // update filterValue based on user input
   const handleFilterValueChange = (event) => {
     setFilterValue(event.target.value.toLowerCase());
   };
+
   // output based on SORTING and FILTER functionality
   const filteredData = sortedData.filter(
     (row) =>
@@ -438,81 +410,25 @@ const GraderAssignment = () => {
         : true)
   );
 
-  /******* DELETION  FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
-  const [selected, setSelected] = useState([]); // selected stores the candidateIDs chosen to be deleted
   // toggles deleteMode and clears any selected candidates between toggles
   const toggleDeleteMode = () => {
     setDeleteMode(!deleteMode);
-    setSelected([]);
-  };
-  // adds/removes candidateIDs from selected when checkboxes are toggles
-  const handleCheckboxChange = (candidateID) => {
-    setSelected((prev) =>
-      prev.includes(candidateID)
-        ? prev.filter((item) => item !== candidateID)
-        : [...prev, candidateID]
-    );
-  };
-  // user confirmed deletion, DELETE!
-  const handleDelete = () => {
-    setData((prevData) =>
-      prevData.filter((row) => !selected.includes(row.candidateID))
-    );
-    setDeleteMode(false);
-    setSelected([]);
+    setSelectedIds([]);
   };
 
-  /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
-  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
+  // adds/removes candidateIDs from selected when checkboxes are toggles
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
+    );
+  };
+
   // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
     setSelectedCourseData(course);
-    setIsModalOpen(true);
-  };
-  // close the reassignment model for the selected course
-  const handleCloseModal = () => {
-    setIsModalOpen(false);
+    setReassignModalOpen(true);
   };
 
-  /******** ADD CANDIDATE FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [modalOpen, setModalOpen] = useState(false);
-  const [assignmentModalOpen, setAssignmentModalOpen] = useState(false);
-  const [assignmentInfo, setAssignmentInfo] = useState({
-    id: "9944825",
-    firstName: "John",
-    lastName: "Smith",
-    name: "Jhon Smith",
-    netId: "jsl20001",
-    course: "CS4545.004",
-    courseName: "CS project",
-    position: "Computer Science Grader-Graduation",
-    matchCount: 3,
-    matchingKeyword: {
-      skill: "python",
-      major: "Computer Science",
-      experience: "2 years",
-    },
-    status: "Assigned",
-    date: "2024-11-07",
-    graduationDate: "2026-05-17",
-    major: "Computer Science",
-    school: "The University of Texas at Dallas",
-    year: "masters",
-  });
-  const [selectedSemester, setSelectedSemester] = useState(null);
-  // ADD CANDIDATE FUNCTIONALITY
-  // states used to add candidate
-  const [showModal, setShowModal] = useState(false);
-  const [newCandidate, setNewCandidate] = useState({
-    candidateID: "",
-    name: "",
-    number: "",
-    courseName: "",
-    section: "",
-    professor: "",
-  });
   // update newCandidate when inputting
   const handleInputChange = (event) => {
     setNewCandidate((prev) => ({
@@ -520,78 +436,90 @@ const GraderAssignment = () => {
       [event.target.name]: event.target.value,
     }));
   };
-  // when add button is clicked,
-  const handleAddCandidate = () => {
-    const newStudentExists = data.some(
-      (v) => v.name === newCandidate.name && v.name.includes(newCandidate.name)
-    );
 
-    const professorExists = data.some(
-      (v) => v.professor === newCandidate.professor && v.professor !== null
-    );
+  // Handle API
+  // create new candidate
+  const handleAddCandidate = async () => {
+    console.log(newCandidate);
 
-    const courseExists = data.some(
-      (v) => v.number === newCandidate.number && v.number !== null
-    );
-
-    if (!newCandidate.name) {
-      alert("Name is required!");
-      return;
+    if (uploadType === uploadType.BULK) {
+      try {
+        const result = await uploadResumeZip(
+          newCandidate.file?.[0],
+          selectedSemester
+        );
+        console.log(result);
+      } catch (error) {
+        console.error("Failed to add candidate:", error);
+        alert("Error adding candidate");
+      }
+    } else {
+      try {
+        const result = await uploadResume(
+          newCandidate.file?.[0],
+          selectedSemester
+        );
+        console.log(result);
+      } catch (error) {
+        console.error("Failed to add candidate:", error);
+        alert("Error adding candidate");
+      }
     }
+    setData(updatedData);
+    setShowModal(false);
 
-    if (newStudentExists) {
-      alert("Candidate already has an assigned!");
-      return;
+    // try {
+    //   const addedApplicants = await createApplicants(newCandidate);
+    //   const updatedData = await getApplicants(); // new version
+    //   setData(updatedData);
+    //   setShowModal(false);
+    // } catch (error) {
+    //   console.error("Failed to add candidate:", error);
+    //   alert("Error adding candidate");
+    // }
+  };
+
+  // delete Applicant in DB
+  const handleDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await deleteApplicant(id);
+      }
+      const updatedData = await getApplicants(); // recent version of course list
+      setData(updatedData);
+      setDeleteMode(false);
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Error deleting courses:", error);
+      alert("Failed to delete courses");
     }
+  };
 
-    if (professorExists) {
-      alert("This professor already has an assigned grader!");
-      return;
+  //cancel Assignment
+  const handleCancelAssignment = async () => {
+    try {
+      for (const id of selectedIds) {
+        await deleteAssignment(id);
+      }
+      const updatedData = await getApplicants(); // recent version of course list
+      setData(updatedData);
+      setDeleteMode(false);
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Error deleting courses:", error);
+      alert("Failed to delete courses");
     }
+  };
 
-    if (courseExists) {
-      alert("This course already has an assigned!");
-      return;
-    }
-
-    const newCandidateInfo = {
-      candidateID: "TEST",
-      name: newCandidate?.name,
-      number: newCandidate?.professor ? "4548" : null,
-      courseName: newCandidate?.professor ? "CS Project" : null,
-      section: newCandidate?.professor ? "002" : null,
-      professor: newCandidate?.professor ? newCandidate?.professor : null,
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getApplicants();
+      setData(data);
+      console.log(data);
     };
 
-    setData((prevData) => [...prevData, newCandidateInfo]); // adds new candidates correctly to form
-    setShowModal(false);
-    setNewCandidate({
-      candidateID: "",
-      name: "",
-      courseName: "",
-      number: "",
-      section: "",
-      professor: "",
-    });
-  };
-
-  //Cancel Assignment button
-  const handleCancelAssignment = () => {
-    setData((prevData) =>
-      prevData.map((item) =>
-        selected.includes(item.candidateID)
-          ? {
-              ...item,
-              number: null,
-              name: null,
-              section: null,
-            }
-          : item
-      )
-    );
-    setDeleteMode(false);
-    setSelected([]);
-  };
+    fetchData();
+  }, []);
 
   return (
     <Layout>
@@ -601,12 +529,8 @@ const GraderAssignment = () => {
           <HeaderContainer>
             <ButtonContainer>
               <DeleteButton deleteMode={deleteMode} onClick={toggleDeleteMode}>
-                {" "}
-                {/*when button is clicked, toggle between modes*/}
-                {deleteMode ? "Cancel" : "Delete"}{" "}
-                {/*if deleteMode, then Cancel, else Delete Candidate*/}
+                {deleteMode ? "Cancel" : "Delete Candidate"}
               </DeleteButton>
-              {/*if deleteMode, then display Confirm, and when clicked Deleted*/}
               {deleteMode && (
                 <DeleteButtonWrap>
                   <DeleteButton onClick={handleDelete}>
@@ -630,7 +554,6 @@ const GraderAssignment = () => {
                 ]}
               />
             </ButtonContainer>
-            {/* SelectBox(move to previous candidates) */}
             <ButtonContainer></ButtonContainer>
             <RightConatiner>
               <FilterContainer>
@@ -640,10 +563,10 @@ const GraderAssignment = () => {
                   value={selectedColumn}
                 >
                   <option value="">Select Column</option>
-                  <option value="candidateID">Candidate ID</option>
-                  <option value="name">Candidate Name</option>
-                  <option value="number">Candidate Number</option>
-                  <option value="professor">Professor Name</option>
+                  <option value="student_id">Candidate ID</option>
+                  <option value="applicant_name">Candidate Name</option>
+                  <option value="course_number">Candidate Number</option>
+                  <option value="professor_name">Professor Name</option>
                 </FilterDropdown>
                 <FilterInput
                   type="text"
@@ -657,73 +580,93 @@ const GraderAssignment = () => {
                 <SearchBox
                   type="text"
                   placeholder="Search..."
-                  value={searchTerm} // bind input to searchTerm
-                  onChange={handleSearchChange} // state updated everytime user inputs
+                  value={searchTerm}
+                  onChange={handleSearchChange}
                 />
               </SearchContainer>
-              {/* Excel Download Button */}
               <ExcelExportButton data={data} filteredData={filteredData} />
-              <AddButton onClick={() => setShowModal(true)}>
-                + Add Candidate
-              </AddButton>
+              <DropdownButton
+                label="+ Add Candidate"
+                options={[
+                  {
+                    label: "Add One by One",
+                    onClick: () => {
+                      setUploadType(uploadMode.SINGLE);
+                      setShowModal(true);
+                    },
+                  },
+                  {
+                    label: "Bulk File Upload",
+                    onClick: () => {
+                      setUploadType(uploadMode.BULK);
+                      setShowModal(true);
+                    },
+                  },
+                ]}
+                style={{
+                  color: "#ffffff",
+                  backgroundColor: "rgba(248, 126, 3, 1)",
+                  display: "flex",
+                  padding: "10px",
+                  height: "35px",
+                }}
+              />
             </RightConatiner>
           </HeaderContainer>
           <ColumnTitle>
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}{" "}
-            {/*if deleteMode, then display column for Select*/}
-            <ColumnTitleText onClick={() => handleSort("candidateID")}>
-              Candidate ID {getSortArrow("candidateID")}
+            <ColumnTitleText onClick={() => handleSort("student_id")}>
+              Candidate ID {getSortArrow("student_id")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("name")}>
-              Candidate Name {getSortArrow("name")}
+            <ColumnTitleText onClick={() => handleSort("applicant_name")}>
+              Candidate Name {getSortArrow("applicant_name")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("number")}>
-              Candidate Number {getSortArrow("number")}
+            <ColumnTitleText onClick={() => handleSort("course_number")}>
+              Course Number {getSortArrow("course_number")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("professor")}>
-              Professor Name {getSortArrow("professor")}
+            <ColumnTitleText onClick={() => handleSort("professor_name")}>
+              Professor Name {getSortArrow("professor_name")}
             </ColumnTitleText>
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
-          {/*displays rows of table by iterating through data array*/}
           {filteredData.map((row, index) => (
             <Row key={index}>
               {deleteMode && (
                 <Column>
                   <input
                     type="checkbox"
-                    checked={selected.includes(row.candidateID)}
-                    onChange={() => handleCheckboxChange(row.candidateID)}
+                    checked={selectedIds.includes(row?.student_id)}
+                    onChange={() => handleCheckboxChange(row?.student_id)}
                   />
                 </Column>
               )}
-              <Column>{row.candidateID || "N/A"}</Column>
-              <Column onClick={() => setAssignmentModalOpen(true)}>
-                {row.name || "N/A"}
+              <Column>{row.student_id || "N/A"}</Column>
+              <Column
+                onClick={() => {
+                  setSelectedApplicantInfo(row);
+                  setApplicantInfoModalOpen(true);
+                }}
+              >
+                {row.applicant_name || "N/A"}
               </Column>
               <Column>
-                {row.number ? (
+                {row.course_number ? (
                   <TooltipContainer>
-                    {row.number}
+                    {row.course_number}
                     <Tooltip className="tooltip">
-                      {row.class ?? "N/A"} {row.number}.{row.section ?? "N/A"}
+                      {row.course_name ?? "N/A"} {row.course_number}.
+                      {row.course_section ?? "N/A"}
                     </Tooltip>
                   </TooltipContainer>
                 ) : (
                   "N/A"
                 )}
               </Column>
-              <Column>{row.professor || "N/A"}</Column>
+              <Column>{row.professor_name || "N/A"}</Column>
               <Column>
                 <ReassignButton onClick={() => handleReassign(row)}>
                   Reassign
                 </ReassignButton>
-                <CourseManagementModal
-                  open={isModalOpen}
-                  onClose={handleCloseModal}
-                  courseData={selectedCourseData}
-                  allCourses={filteredData}
-                />
               </Column>
             </Row>
           ))}
@@ -734,24 +677,37 @@ const GraderAssignment = () => {
         onClose={() => {
           setShowModal(false);
           setNewCandidate({
-            candidateID: "",
-            name: "",
-            courseName: "",
-            number: "",
-            section: "",
-            professor: "",
+            student_id: "",
+            applicant_name: "",
+            course_name: "",
+            course_number: "",
+            course_section: "",
+            professor_name: "",
+            file: "",
           });
+          setUploadType("");
         }}
         handleSubmit={handleAddCandidate}
-        title={"Add Candidate"}
+        title={
+          uploadType === uploadMode.SINGLE
+            ? "Add Candidate"
+            : "Add Candidates(Bulk File Upload)"
+        }
         inputValue={newCandidate}
         setInputValue={setNewCandidate}
+        uploadType={uploadType}
       />
       <AssignmentDetailModal
-        open={assignmentModalOpen}
-        onClose={() => setAssignmentModalOpen(false)}
+        open={applicantInfoModalOpen}
+        onClose={() => setApplicantInfoModalOpen(false)}
         title={"Grader Assignment Detail"}
-        assignmentInfo={assignmentInfo}
+        assignmentInfo={selectedApplicantInfo}
+      />
+      <CourseManagementModal
+        open={reassignModalOpen}
+        onClose={() => setReassignModalOpen(false)}
+        courseData={selectedCourseData}
+        allCourses={filteredData}
       />
     </Layout>
   );

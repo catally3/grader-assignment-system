@@ -29,26 +29,36 @@ const processResumeZip = async (req, res) => {
         experience: newExp
       } = rec;
 
-      const where = student_id
-        ? { student_id, semester }
-        : { document_id };
+      const where = student_id ? { student_id, semester } : { document_id };
 
       let app = await Applicant.findOne({ where });
 
       if (app) {
         const updates = {};
-        if ((!app.applicant_name?.trim()) && newName) updates.applicant_name = newName;
-        if ((!app.applicant_email?.trim()) && newEmail) updates.applicant_email = newEmail;
-        if ((app.gpa == null) && newGpa != null) updates.gpa = newGpa;
-        if ((!app.resume_path?.trim()) && newPath) updates.resume_path = newPath;
+        if (!app.applicant_name?.trim() && newName)
+          updates.applicant_name = newName;
+        if (!app.applicant_email?.trim() && newEmail)
+          updates.applicant_email = newEmail;
+        if (app.gpa == null && newGpa != null) updates.gpa = newGpa;
+        if (!app.resume_path?.trim() && newPath) updates.resume_path = newPath;
 
-        const mergedSkills = Array.from(new Set([...(app.skills||[]), ...newSkills]));
-        const mergedExp    = Array.from(new Set([...(app.experience||[]), ...newExp]));
+        const mergedSkills = Array.from(
+          new Set([...(app.skills || []), ...newSkills])
+        );
+        const mergedExp = Array.from(
+          new Set([...(app.experience || []), ...newExp])
+        );
 
-        if (mergedSkills.length && JSON.stringify(mergedSkills)!==JSON.stringify(app.skills)) {
+        if (
+          mergedSkills.length &&
+          JSON.stringify(mergedSkills) !== JSON.stringify(app.skills)
+        ) {
           updates.skills = mergedSkills;
         }
-        if (mergedExp.length && JSON.stringify(mergedExp)!==JSON.stringify(app.experience)) {
+        if (
+          mergedExp.length &&
+          JSON.stringify(mergedExp) !== JSON.stringify(app.experience)
+        ) {
           updates.experience = mergedExp;
         }
 
@@ -70,8 +80,8 @@ const processResumeZip = async (req, res) => {
     console.error('Error in processResumeZip:', err);
     if (err instanceof ValidationError) {
       return res.status(400).json({
-        error:   'Validation error',
-        details: err.errors.map(e => `[${e.path}] ${e.message}`)
+        error: 'Validation error',
+        details: err.errors.map((e) => `[${e.path}] ${e.message}`)
       });
     }
     return res.status(500).json({ error: err.message });
@@ -84,9 +94,10 @@ const processResumeZip = async (req, res) => {
 const processCV = async (req, res) => {
   try {
     const filePath = req.file.path;
-    const [raw]    = await pdfParser.parseResumePdf(filePath);
-    const details  = pdfParser.extractCandidateDetailsFromFileName(req.file.filename) || {};
-    const rec      = pdfParser.mapToApplicant(raw, details, filePath);
+    const [raw] = await pdfParser.parseResumePdf(filePath);
+    const details =
+      pdfParser.extractCandidateDetailsFromFileName(req.file.filename) || {};
+    const rec = pdfParser.mapToApplicant(raw, details, filePath);
 
     const where = rec.student_id
       ? { student_id: rec.student_id, semester: rec.semester }
@@ -97,8 +108,8 @@ const processCV = async (req, res) => {
     if (app) {
       await app.update({
         resume_path: rec.resume_path,
-        skills:      rec.skills,
-        experience:  rec.experience
+        skills: rec.skills,
+        experience: rec.experience
       });
     } else {
       app = await Applicant.create(rec);
@@ -112,8 +123,8 @@ const processCV = async (req, res) => {
     console.error('Error in processCV:', err);
     if (err instanceof ValidationError) {
       return res.status(400).json({
-        error:   'Validation error',
-        details: err.errors.map(e => `[${e.path}] ${e.message}`)
+        error: 'Validation error',
+        details: err.errors.map((e) => `[${e.path}] ${e.message}`)
       });
     }
     return res.status(500).json({ error: err.message });
@@ -126,7 +137,7 @@ const processCV = async (req, res) => {
 const processCandidateFile = async (req, res) => {
   try {
     const filePath = req.file.path;
-    const ext      = path.extname(filePath).toLowerCase();
+    const ext = path.extname(filePath).toLowerCase();
     if (!['.xlsx', '.xls'].includes(ext)) {
       return res.status(400).json({ error: 'Expected .xlsx or .xls file' });
     }
@@ -157,8 +168,8 @@ const processCandidateFile = async (req, res) => {
     console.error('Error in processCandidateFile:', err);
     if (err instanceof ValidationError) {
       return res.status(400).json({
-        error:   'Validation error',
-        details: err.errors.map(e => `[${e.path}] ${e.message}`)
+        error: 'Validation error',
+        details: err.errors.map((e) => `[${e.path}] ${e.message}`)
       });
     }
     return res.status(500).json({ error: err.message });
@@ -171,24 +182,24 @@ const processCandidateFile = async (req, res) => {
 const processCourseFile = async (req, res) => {
   try {
     const filePath = req.file.path;
-    const ext      = path.extname(filePath).toLowerCase();
+    const ext = path.extname(filePath).toLowerCase();
 
     // 1) Parse the sheet (or CSV) into one array of row-objects
     let rows = [];
     if (ext === '.csv') {
       const raw = await csvParser.parseCSVFile(filePath);
-      rows = raw.map(r => ({
-        semester:                  r.semester,
-        professor_name:            r.professor_name,
-        professor_email:           r.professor_email,
-        course_number:             r.course_number,
-        course_section:            r.course_section,
-        course_name:               r.course_name,
-        number_of_graders:         parseInt(r.number_of_graders, 10),
-        keywords:                  Array.isArray(r.keywords)
-                                    ? r.keywords
-                                    : JSON.parse(r.keywords || '[]'),
-        recommended_student_name:  r.recommended_student_name,
+      rows = raw.map((r) => ({
+        semester: r.semester,
+        professor_name: r.professor_name,
+        professor_email: r.professor_email,
+        course_number: r.course_number,
+        course_section: r.course_section,
+        course_name: r.course_name,
+        number_of_graders: parseInt(r.number_of_graders, 10),
+        keywords: Array.isArray(r.keywords)
+          ? r.keywords
+          : JSON.parse(r.keywords || '[]'),
+        recommended_student_name: r.recommended_student_name,
         recommended_student_netid: r.recommended_student_netid
       }));
     } else {
@@ -196,15 +207,15 @@ const processCourseFile = async (req, res) => {
     }
 
     // 2) Build and upsert Courses (ignore the recommendation fields here)
-    const courseData = rows.map(r => ({
-      semester:          r.semester,
-      professor_name:    r.professor_name,
-      professor_email:   r.professor_email,
-      course_number:     r.course_number,
-      course_section:    r.course_section,
-      course_name:       r.course_name,
+    const courseData = rows.map((r) => ({
+      semester: r.semester,
+      professor_name: r.professor_name,
+      professor_email: r.professor_email,
+      course_number: r.course_number,
+      course_section: r.course_section,
+      course_name: r.course_name,
       number_of_graders: r.number_of_graders,
-      keywords:          r.keywords
+      keywords: r.keywords
     }));
 
     const savedCourses = await Course.bulkCreate(courseData, {
@@ -227,19 +238,19 @@ const processCourseFile = async (req, res) => {
 
     // 4) Assemble and upsert Recommendations
     const recData = rows
-      .filter(r => r.recommended_student_name && r.recommended_student_netid)
-      .map(r => {
+      .filter((r) => r.recommended_student_name && r.recommended_student_netid)
+      .map((r) => {
         const key = `${r.course_number}||${r.course_section}||${r.semester}`;
         return {
-          semester:         r.semester,
-          professor_id:     idMap[key],
-          applicant_name:   r.recommended_student_name,
+          semester: r.semester,
+          professor_id: idMap[key],
+          applicant_name: r.recommended_student_name,
           applicant_net_id: r.recommended_student_netid
         };
       });
 
     const savedRecs = await Recommendation.bulkCreate(recData, {
-      updateOnDuplicate: ['applicant_name','applicant_net_id'],
+      updateOnDuplicate: ['applicant_name', 'applicant_net_id'],
       returning: true
     });
 
@@ -248,13 +259,12 @@ const processCourseFile = async (req, res) => {
       courses: savedCourses,
       recommendations: savedRecs
     });
-
   } catch (err) {
     console.error('Error in processCourseFile:', err);
     if (err instanceof ValidationError) {
       return res.status(400).json({
-        error:   'Validation error',
-        details: err.errors.map(e => `[${e.path}] ${e.message}`)
+        error: 'Validation error',
+        details: err.errors.map((e) => `[${e.path}] ${e.message}`)
       });
     }
     return res.status(500).json({ error: err.message });

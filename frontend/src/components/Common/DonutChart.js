@@ -18,8 +18,9 @@ const data = {
     {
       label: "Courses",
       data: [40, 10],
-      backgroundColor: ["#82ca9d", "#f87e03"],
+      backgroundColor: ["#f87e03", "#f0f0f0"],
       borderWidth: 1,
+      borderRadius: "20px",
     },
   ],
 };

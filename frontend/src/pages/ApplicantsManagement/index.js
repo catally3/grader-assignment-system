@@ -1,11 +1,16 @@
+// pages/Course Management
 import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import FileUpload from "../../components/Common/FileUpload.jsx";
 import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
 import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
+import DropdownButton from "../../components/Common/DropdownButton.jsx";
+import AddCourseModal from "../../components/Modals/AddCourseModal.jsx";
+import { uploadMode } from "../../utils/type.js";
+import { deleteCourse, getCourses, createCourse } from "../../api/courses.js";
 
 // Course Management
 const Title = styled.div`
@@ -40,7 +45,7 @@ const BoxContainer = styled.div`
 
 const Box = styled.div`
   display: flex;
-  width: 1300px;
+  width: 100%;
   background-color: white;
   border-radius: 12px; // round corners
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
@@ -177,64 +182,27 @@ const ReassignButton = styled(ButtonContainer)`
 `;
 
 const GraderAssignment = () => {
-  const [data, setData] = useState([
-    {
-      number: null,
-      name: "CS",
-      graders: "1",
-      section: "501",
-      professor: "Beatrice Smith",
-      assigned: "Anthony Hernandez",
-    },
-    {
-      number: "1200",
-      name: "CS",
-      graders: "2",
-      section: "503",
-      professor: "Herlin Villareal",
-      assigned: "Caroline Mendez",
-    },
-    {
-      number: "1200",
-      name: "CS",
-      graders: "2",
-      section: "503",
-      professor: "Herlin Villareal",
-      assigned: "Mary Smith",
-    },
-    {
-      number: "4884",
-      name: null,
-      graders: "1",
-      section: "503",
-      professor: "Gabriela Smith",
-      assigned: null,
-    },
-    {
-      number: "4841",
-      name: "CS",
-      graders: null,
-      section: "504",
-      professor: "Jose Alvarez",
-      assigned: "Mary Jane",
-    },
-    {
-      number: "4848",
-      name: "CS",
-      graders: "2",
-      section: "501",
-      professor: "Beatrice Smith",
-      assigned: "Anthony Martinez",
-    },
-    {
-      number: "4848",
-      name: "CS",
-      graders: "2",
-      section: "501",
-      professor: "Beatrice Smith",
-      assigned: "Jose Jose",
-    },
-  ]);
+  const [data, setData] = useState([]);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      const data = await getCourses();
+      setData(data);
+      console.log(data);
+    };
+
+    fetchData();
+  }, []);
+
+  // File upload
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const handleFilesChange = (tab, newFiles) => {
+    setUploadedFiles((prev) => ({
+      ...prev,
+      [tab]: newFiles,
+    }));
+    alert("course is added");
+  };
 
   /******* SEARCH FUNCTIONALITY  *******/
   const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
@@ -313,27 +281,32 @@ const GraderAssignment = () => {
 
   /******* DELETION  FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
   const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
-  const [selected, setSelected] = useState([]); // selected stores the candidateIDs chosen to be deleted
+  const [selectedIds, setSelectedIds] = useState([]); // selected stores the Id chosen to be deleted
   // toggles deleteMode and clears any selected candidates between toggles
   const toggleDeleteMode = () => {
     setDeleteMode(!deleteMode);
-    setSelected([]);
+    setSelectedIds([]);
   };
-  // adds/removes candidateIDs from selected when checkboxes are toggles
-  const handleCheckboxChange = (candidateID) => {
-    setSelected((prev) =>
-      prev.includes(candidateID)
-        ? prev.filter((item) => item !== candidateID)
-        : [...prev, candidateID]
+  // adds/removes Id from selected when checkboxes are toggles
+  const handleCheckboxChange = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((item) => item !== id) : [...prev, id]
     );
   };
-  // user confirmed deletion, DELETE!
-  const handleDelete = () => {
-    setData((prevData) =>
-      prevData.filter((row) => !selected.includes(row.candidateID))
-    );
-    setDeleteMode(false);
-    setSelected([]);
+
+  const handleDelete = async () => {
+    try {
+      for (const id of selectedIds) {
+        await deleteCourse(id);
+      }
+      const updatedData = await getCourses(); // recent version of course list
+      setData(updatedData);
+      setDeleteMode(false);
+      setSelectedIds([]);
+    } catch (error) {
+      console.error("Error deleting courses:", error);
+      alert("Failed to delete courses");
+    }
   };
 
   /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
@@ -351,8 +324,9 @@ const GraderAssignment = () => {
 
   // DISPLAY CANDIDATES DROPWDOWM
   const [selectedRow, setSelectedRow] = useState(null);
+
   const groupedData = filteredData.reduce((acc, row) => {
-    const courseKey = `${row.number}-${row.section}-${row.professor}`;
+    const courseKey = `${row.course_number}-${row.course_section}-${row.professor_name}`;
     if (!acc[courseKey]) {
       acc[courseKey] = [];
     }
@@ -366,15 +340,15 @@ const GraderAssignment = () => {
         <Column>
           <input
             type="checkbox"
-            checked={selected.includes(key)}
-            onChange={() => handleCheckboxChange(group[0])}
+            checked={selectedIds.includes(group[0].id)}
+            onChange={() => handleCheckboxChange(group[0].id)}
           />
         </Column>
       )}
-      <Column>{group[0].number || "N/A"}</Column>
-      <Column>{group[0].name || "N/A"}</Column>
-      <Column>{group[0].graders || "N/A"}</Column>
-      <Column>{group[0].professor || "N/A"}</Column>
+      <Column>{group[0].course_number || "N/A"}</Column>
+      <Column>{group[0].course_name || "N/A"}</Column>
+      <Column>{group[0].number_of_graders || "N/A"}</Column>
+      <Column>{group[0].professor_name || "N/A"}</Column>
       <Column>
         {/* Removed the onClick handler */}
         <span>{group.map((row) => row.assigned || "N/A").join(", ")}</span>
@@ -383,27 +357,102 @@ const GraderAssignment = () => {
         <ReassignButton onClick={() => handleReassign(group)}>
           Reassign
         </ReassignButton>
-        <CourseManagementModal
-          open={isModalOpen}
-          onClose={handleCloseModal}
-          courseData={selectedCourseData}
-          allCourses={filteredData}
-        />
       </Column>
     </Row>
   );
 
+  const [showModal, setShowModal] = useState(false);
+  const [uploadType, setUploadType] = useState("");
+  const [newCourse, setNewCourse] = useState({
+    semester: "Spring 2025",
+    professor_name: "",
+    professor_email: "",
+    course_number: "",
+    course_section: "",
+    course_name: "",
+    number_of_graders: "",
+    keywords: [],
+  });
+
+  const handleAddCourse = async () => {
+    if (uploadType === uploadMode.SINGLE) {
+      const newCourseExists = data.some(
+        (v) =>
+          v.course_number === newCourse.course_number &&
+          v.course_number.includes(newCourse.course_number)
+      );
+
+      const professorExists = data.some(
+        (v) =>
+          v.professor_name === newCourse.professor_name &&
+          v.professor_name !== null
+      );
+
+      const courseExists = data.some(
+        (v) =>
+          v.course_number === newCourse.course_number &&
+          v.course_number !== null
+      );
+
+      if (!newCourse.course_name) {
+        alert("Name is required!");
+        return;
+      }
+
+      if (newCourseExists) {
+        alert("Course already has an assigned!");
+        return;
+      }
+
+      if (professorExists) {
+        alert("This professor already has an assigned grader!");
+        return;
+      }
+
+      if (courseExists) {
+        alert("This course already has an assigned!");
+        return;
+      }
+    }
+
+    try {
+      const addedCourse = await createCourse(newCourse);
+      const updatedData = await getCourses(); // new version
+      setData(updatedData);
+      setShowModal(false);
+      setNewCourse({
+        semester: "Spring 2025",
+        professor_name: "",
+        professor_email: "",
+        course_number: "",
+        course_section: "",
+        course_name: "",
+        number_of_graders: 1,
+        keywords: [],
+      });
+    } catch (error) {
+      console.error("Failed to add course:", error);
+      alert("Error adding course");
+    }
+  };
+
   return (
     <Layout>
       <Title>Course Management</Title>
-      <FileTitle>Upload Course Files</FileTitle>
-      <FileContainer>
-        <FileUpload singleUpload={true} />
-      </FileContainer>
       <BoxContainer>
         <Box>
           <HeaderContainer>
             <SearchContainer>
+              <ButtonContainer>
+                <DeleteButton onClick={toggleDeleteMode}>
+                  {deleteMode ? "Cancel" : "Delete Course"}
+                </DeleteButton>
+                {deleteMode && (
+                  <DeleteButton onClick={handleDelete}>
+                    Confirm Delete
+                  </DeleteButton>
+                )}
+              </ButtonContainer>
               <HeaderText>Search:</HeaderText>
               <SearchBox
                 type="text"
@@ -412,16 +461,7 @@ const GraderAssignment = () => {
                 onChange={handleSearchChange}
               />
             </SearchContainer>
-            <ButtonContainer>
-              <DeleteButton onClick={toggleDeleteMode}>
-                {deleteMode ? "Cancel" : "Delete Course"}
-              </DeleteButton>
-              {deleteMode && (
-                <DeleteButton onClick={handleDelete}>
-                  Confirm Delete
-                </DeleteButton>
-              )}
-            </ButtonContainer>
+
             <FilterContainer>
               <HeaderText>Filter:</HeaderText>
               <FilterDropdown
@@ -429,10 +469,10 @@ const GraderAssignment = () => {
                 value={selectedColumn}
               >
                 <option value="">Select Column</option>
-                <option value="number">Course Number</option>
-                <option value="name">Course Name</option>
-                <option value="graders">Number of Graders</option>
-                <option value="professor">Professor Name</option>
+                <option value="course_number">Course Number</option>
+                <option value="course_name">Course Name</option>
+                <option value="number_of_graders">Number of Graders</option>
+                <option value="professor_name">Professor Name</option>
                 <option value="assigned">Assigned Candidate</option>
               </FilterDropdown>
               <FilterInput
@@ -442,21 +482,47 @@ const GraderAssignment = () => {
                 placeholder="Enter filter value"
               />
               <ExcelExportButton data={data} filteredData={filteredData} />
+              <DropdownButton
+                label="+ Add Course"
+                options={[
+                  {
+                    label: "Add One by One",
+                    onClick: () => {
+                      setUploadType(uploadMode.SINGLE);
+                      setShowModal(true);
+                    },
+                  },
+                  {
+                    label: "Bulk File Upload",
+                    onClick: () => {
+                      setUploadType(uploadMode.BULK);
+                      setShowModal(true);
+                    },
+                  },
+                ]}
+                style={{
+                  color: "#ffffff",
+                  backgroundColor: "rgba(248, 126, 3, 1)",
+                  display: "flex",
+                  padding: "10px",
+                  height: "35px",
+                }}
+              />
             </FilterContainer>
           </HeaderContainer>
           <ColumnTitle>
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}
-            <ColumnTitleText onClick={() => handleSort("number")}>
-              Course Number {getSortArrow("number")}
+            <ColumnTitleText onClick={() => handleSort("course_number")}>
+              Course Number {getSortArrow("course_number")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("name")}>
-              Course Name {getSortArrow("name")}
+            <ColumnTitleText onClick={() => handleSort("course_name")}>
+              Course Name {getSortArrow("course_name")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("graders")}>
-              Number of Graders {getSortArrow("graders")}
+            <ColumnTitleText onClick={() => handleSort("number_of_graders")}>
+              Number of Graders {getSortArrow("number_of_graders")}
             </ColumnTitleText>
-            <ColumnTitleText onClick={() => handleSort("professor")}>
-              Professor Name {getSortArrow("professor")}
+            <ColumnTitleText onClick={() => handleSort("professor_name")}>
+              Professor Name {getSortArrow("professor_name")}
             </ColumnTitleText>
             <ColumnTitleText onClick={() => handleSort("assigned")}>
               Assigned Candidate {getSortArrow("assigned")}
@@ -470,6 +536,38 @@ const GraderAssignment = () => {
           )}
         </Box>
       </BoxContainer>
+      <AddCourseModal
+        open={showModal}
+        onClose={() => {
+          setShowModal(false);
+          setNewCourse({
+            semester: "",
+            professor_name: "",
+            professor_email: "r",
+            course_number: "",
+            course_section: "",
+            course_name: "",
+            number_of_graders: 1,
+            keywords: [],
+          });
+          setUploadType("");
+        }}
+        handleSubmit={handleAddCourse}
+        title={
+          uploadType === uploadMode.SINGLE
+            ? "Add Course"
+            : "Add Courses (Bulk File Upload)"
+        }
+        inputValue={newCourse}
+        setInputValue={setNewCourse}
+        uploadType={uploadType}
+      />
+      <CourseManagementModal
+        open={isModalOpen}
+        onClose={handleCloseModal}
+        courseData={selectedCourseData}
+        allCourses={filteredData}
+      />
     </Layout>
   );
 };

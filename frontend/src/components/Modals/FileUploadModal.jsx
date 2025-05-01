@@ -9,6 +9,12 @@ import Input from "../../components/Common/Input";
 import SelectBox from "../../components/Common/SelectBox";
 
 import ArrowIcon from "../../assets/icons/icon_arrow.svg";
+import {
+  uploadResume,
+  uploadResumeZip,
+  uploadCandidateList,
+  uploadCourseList,
+} from "../../api/upload.js";
 
 const tabs = ["Course List", "Candidate List", "Resume"];
 
@@ -19,6 +25,8 @@ const FileUploadModal = ({
   inputValue,
   setInputValue,
 }) => {
+  const currentSemData = localStorage.getItem("semester");
+
   const [activeTab, setActiveTab] = useState("Course List");
   const [uploadedFiles, setUploadedFiles] = useState({
     "Course List": [],
@@ -45,10 +53,30 @@ const FileUploadModal = ({
 
   const handleAddCourseMode = () => {};
 
-  const handleSubmit = () => {
-    alert("assignments are created");
-    localStorage.setItem("assignments", true);
-    onClose();
+  const handleSubmit = async () => {
+    console.log("uploadedFiles", uploadedFiles);
+    try {
+      const courseFile = uploadedFiles["Course List"][0];
+      const candidateFile = uploadedFiles["Candidate List"][0];
+      const resumeFile = uploadedFiles["Resume"][0];
+
+      const semester = currentSemData || "Spring 2025"; // optional if you have one
+
+      if (courseFile && candidateFile && resumeFile) {
+        await uploadCourseList(courseFile);
+        await uploadCandidateList(candidateFile);
+        await uploadResumeZip(resumeFile, semester);
+      } else {
+        alert("Please upload all files");
+        return;
+      }
+
+      alert("Initial setup complete 🎉");
+      onCloseFileUpload();
+    } catch (error) {
+      console.error("File upload failed:", error);
+      alert("Upload failed. Check your files and try again.");
+    }
   };
 
   return (

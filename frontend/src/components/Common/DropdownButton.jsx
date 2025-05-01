@@ -2,9 +2,9 @@ import React, { useState, useRef, useEffect } from "react";
 import styled from "@emotion/styled";
 
 import arrowIcon from "../../assets/icons/icon_arrow.svg";
-import downicon from "../../assets/icons/icon_download.svg";
+import whiteArrowIcon from "../../assets/icons/icon_arrow_white.svg";
 
-const DropdownButton = ({ label, options = [] }) => {
+const DropdownButton = ({ label, options = [], icon, style }) => {
   const [open, setOpen] = useState(false);
   const ref = useRef();
 
@@ -21,10 +21,12 @@ const DropdownButton = ({ label, options = [] }) => {
 
   return (
     <DropdownWrapper ref={ref}>
-      <ExcelButton onClick={() => setOpen((prev) => !prev)}>
-        <DocumentIcon src={downicon} alt="icon" />
+      <ExcelButton style={style} onClick={() => setOpen((prev) => !prev)}>
+        {icon ? <DocumentIcon src={icon} alt="icon" /> : null}
         {label}
-        {arrowIcon && <ArrowIcon src={arrowIcon} alt="arrow" />}
+        {arrowIcon && (
+          <ArrowIcon src={icon ? arrowIcon : whiteArrowIcon} alt="arrow" />
+        )}
       </ExcelButton>
       {open && (
         <DropdownMenu>
@@ -94,7 +96,7 @@ const DropdownMenu = styled.div`
 
 const DropdownItem = styled.div`
   padding: 10px 12px;
-  font-size: 14px;
+  font-size: small;
   cursor: pointer;
   &:hover {
     background-color: #f7f7f7;

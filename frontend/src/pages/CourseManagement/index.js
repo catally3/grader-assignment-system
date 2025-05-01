@@ -21,7 +21,7 @@ const BoxContainer = styled.div`
 
 const Box = styled.div`
   display: flex;
-  width: 1300px;
+  width: 100%;
   background-color: white;
   border-radius: 12px; // round corners
   box-shadow: 2px 4px 10px rgba(0, 0, 0, 0.1);
