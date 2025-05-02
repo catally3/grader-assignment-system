@@ -4,7 +4,7 @@ const { Applicant, Course, Assignment, Sequelize } = db;
 
 const runMatching = async (req, res) => {
   try {
-    const results = await matchingAlgorithm.matchCandidatesToCourses();
+    const results = await matchCandidatesToCourses();
     // Save assignments into the database
     for (let result of results) {
       await Assignment.create({
