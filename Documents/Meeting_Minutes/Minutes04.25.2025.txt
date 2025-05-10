@@ -1,0 +1,48 @@
+04/25/25
+Minutes: 46 min
+
+Progress So Far:
+Madison Hokstad -  10 Hours
+  Tasks completed
+    Connected backend operations related to matching and updating assignments to the database
+    Ran the whole website together in docker, but not everything is reflected in the frontend yet
+  Tasks for next week
+    Debugging and edge case handling
+    Prepare for presentation
+
+Do Kyung Lee -  10Hours
+  Tasks completed
+    Updated frontend UI based on feedback
+    Course management API Integration 
+  Tasks for next week:
+    Continue API integration
+
+Alexandra Ontiveros - 12 Hours
+  Tasks Completed:
+    Updated MySQL and Sequelize to match updates to input data formatting
+    Solved problems with docker compose on virtual machine
+  Tasks for Next Week 
+    Work on integration
+    Work on demo presentation
+
+Gaby Salazar Mejia -  10 Hours
+  Tasks Completed
+    Updated Frontend UI based on feedback
+    API Integration
+  Tasks for Next Week
+    Continue working on integration 
+    Work on Demo Presentation
+
+Anh Tran -  10  Hours
+  Tasks completed:
+    Polished the parsing of resumes, excel files for the candidates and courses.
+    Fixing the API calls for everything based on both student ID and document ID.
+    Fixing the mapping from the backend extraction to the database fields.
+  Tasks for next week:
+    Just finalizing and fixing all the bugs and faults for the APIs.
+
+  Feedback:
+    Change the login button to not say UTD login
+    Add the zip file functionality for resumes
+    Potentially add floating headers in the course management tab so it's easier to navigate
+    Overall just work on integrating everything

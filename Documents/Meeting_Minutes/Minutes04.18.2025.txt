@@ -1,0 +1,46 @@
+4/18/25
+Minutes: 55 min
+
+Progress So Far:
+Madison Hokstad -  10 hours
+  Tasks completed
+  Continuing to try to integrate backend with frontend
+      Adjusting based on more SQL structure changes
+  Tasks for next week
+    More integration of backend and frontend
+    Work on the reasons for matching
+
+Do Kyung Lee -  10 Hours
+  Tasks completed
+    Set up API integration 
+    Fixed changes based on last meeting
+  Tasks for next week:
+    Continue API integration
+
+Alexandra Ontiveros - 6
+  Tasks Completed:
+    Updated SQL and sequelize code in backend for compatibility
+  Tasks for Next Week 
+    Continue integration and check compatibility with server
+    Start on final report
+
+Gaby Salazar Mejia -   10 Hours
+  Tasks Completed
+    Fixed changes based on last meeting
+  Tasks for Next Week
+    Continue API integration
+
+Anh Tran -   8 Hours
+  Tasks completed:
+    Tested and fix the parsing for the 300 resumes in the sample zip file
+  Tasks for next week:
+    Continue trying the integration 
+
+Feedback:
+  Make login based on local password instead of trying to connect to SSO (low priority: post demo goal)
+  Move assign button outside of the popup
+  Allow creation of future semesters, just don't allow the same semester to be made multiple times
+  In singular course additions: remove the upload file option, default to manual input fields
+  Check whether "student id" refers to net id or school id
+  Think about edge cases: candidates without resume, large datasets etc
+  

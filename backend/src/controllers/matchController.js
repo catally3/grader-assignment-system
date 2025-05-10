@@ -52,10 +52,7 @@ const reassign = async (req, res) => {
         coursesToReassign.push(course);
       }
     }
-    const results = await matchingAlgorithm.matchCandidatesToCourses(
-      availableCandidates,
-      coursesToReassign
-    );
+    const results = await matchCandidatesToCourses(availableCandidates, coursesToReassign);
     for (let result of results) {
       await Assignment.create({
         applicant_student_id: result.candidateId,
