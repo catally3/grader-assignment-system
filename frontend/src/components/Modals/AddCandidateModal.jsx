@@ -102,8 +102,10 @@ const AddCandidateModal = ({
                 : "Candidates File Upload"}
             </SingleTabItem>
             <FileUpload
-              activeTab={"applicants"}
-              uploadedFiles={inputValue?.document_id}
+              activeTab={
+                uploadType === uploadMode.SINGLE ? "Resume" : "ResumeZip"
+              }
+              uploadedFiles={inputValue?.file}
               onFilesChange={handleFilesChange}
               singleUpload={true}
               fileType={

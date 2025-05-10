@@ -1,8 +1,12 @@
 const Pagination = ({ currentPage, totalPages, onPageChange }) => {
   const maxVisible = 5;
+
+  // Ensure at least 1 page is shown even if totalPages is 0
+  const safeTotalPages = Math.max(1, totalPages);
+
   const currentGroup = Math.floor((currentPage - 1) / maxVisible);
   const startPage = currentGroup * maxVisible + 1;
-  const endPage = Math.min(startPage + maxVisible - 1, totalPages);
+  const endPage = Math.min(startPage + maxVisible - 1, safeTotalPages);
 
   const pageNumbers = Array.from(
     { length: endPage - startPage + 1 },
@@ -42,7 +46,7 @@ const Pagination = ({ currentPage, totalPages, onPageChange }) => {
       ))}
       <button
         onClick={() => onPageChange(currentPage + 1)}
-        disabled={currentPage === totalPages}
+        disabled={currentPage === safeTotalPages}
       >
         &gt;
       </button>

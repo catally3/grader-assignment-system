@@ -1,37 +1,79 @@
 import styled from "@emotion/styled";
+import { useState, useEffect } from "react";
 import Layout from "../../layouts/Layout.js";
-import { useState } from "react"; // search state
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import ReassignmentModal from "../../components/Modals/ReassignmentModal.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
 import Pagination from "../../components/Common/Pagination.jsx";
+import SelectBox from "../../components/Common/SelectBox.jsx";
+
+const professorNames = [
+  "Peter Shah",
+  "Tina West",
+  "Leo Torres",
+  "Emily Chen",
+  "Michael Patel",
+  "Sophia Ramirez",
+  "James O'Connor",
+  "Aisha Nassar",
+  "Daniel Kim",
+  "Olivia Sanders",
+  "Rajesh Mehta",
+  "Grace Nakamura",
+  "Benjamin Park",
+  "Fatima Zahra",
+  "Eric Hoffman",
+  "Laura Bennett",
+  "Alejandro Cruz",
+  "Hannah Goldberg",
+  "Yuki Tanaka",
+  "John Wu",
+];
+
+const departments = ["CS"];
+const mismatchOptions = [
+  "Not in candidate pool",
+  "Already assigned to another professor",
+  "Ineligible due to GPA",
+  null,
+];
+
+function getRandomItem(array) {
+  return array[Math.floor(Math.random() * array.length)];
+}
+
+const professorData = Array.from({ length: 20 }, (_, i) => ({
+  professor: `Dr. ${professorNames[i]}`,
+  name: getRandomItem(departments),
+  number: `${1000 + Math.floor(Math.random() * 5000)}`, // 1000~5999
+  section: `00${Math.floor(Math.random() * 10)}`, // 000~009
+  assigned: Math.random() < 0.2 ? null : `Student_${i + 1}`, // 20% chance to be unassigned
+  recommended: Math.random() < 0.2 ? null : `Candidate_${i + 1}`,
+  mismatch: getRandomItem(mismatchOptions),
+}));
 
 // Professor Management
-
 const ProfessorManagement = () => {
-  const data = Array.from({ length: 1 }, (_, i) => ({
-    professor: `Professor ${i + 1}`,
-    name: "CS",
-    number: `${4300 + (i % 10)}`,
-    section: `50${i % 5}`,
-    assigned: `Student ${i + 1}`,
-    recommended: `Candidate ${i + 1}`,
-    mismatch:
-      i % 3 === 0
-        ? "Not in candidate pool"
-        : "Already assigned to another professor",
-  }));
+  // data
+  const [data, setData] = useState(professorData);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+  const [selectedRow, setSelectedRow] = useState(null);
 
-  /******* SEARCH FUNCTIONALITY  *******/
+  // table top sorting and searching state
+  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
+  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
   const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
+
+  // modal state
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
+  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
 
   // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
-  /******* SORTING FUNCTIONALITY  *******/
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
   // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
@@ -44,6 +86,7 @@ const ProfessorManagement = () => {
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
+
   // return the current sort arrow based on current sorting direction, and display default
   const getSortArrow = (key) => {
     if (sortConfig.key !== key) {
@@ -62,6 +105,7 @@ const ProfessorManagement = () => {
     }
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
+
   // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
@@ -73,17 +117,16 @@ const ProfessorManagement = () => {
       })
     : data;
 
-  /******* FILTER FUNCTIONALITY  *******/
-  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
-  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
   // update selectedColumn when user selects a column
   const handleColumnChange = (event) => {
     setSelectedColumn(event.target.value);
   };
+
   // update filterValue based on user input
   const handleFilterValueChange = (event) => {
     setFilterValue(event.target.value.toLowerCase());
   };
+
   // output based on SORTING and FILTER functionality
   const filteredData = sortedData.filter(
     (row) =>
@@ -99,19 +142,16 @@ const ProfessorManagement = () => {
   );
 
   // DISPLAY CANDIDATES DROPWDOWM
-  const [selectedRow, setSelectedRow] = useState(null);
   const handleAssignCandidate = (row) => {
     setSelectedRow(row);
   };
 
-  /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
-  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
   // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
     setSelectedCourseData(course);
     setIsModalOpen(true);
   };
+
   // close the reassignment model for the selected course
   const handleCloseModal = () => {
     setIsModalOpen(false);
@@ -128,43 +168,64 @@ const ProfessorManagement = () => {
     currentPage * itemsPerPage
   );
 
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterValue, selectedColumn]);
+
   return (
     <Layout>
       <Title>Professor Management</Title>
       <BoxContainer>
         <Box>
           <HeaderContainer>
-            <SearchContainer>
-              <HeaderText>Search:</HeaderText>
-              <SearchBox
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
+            <ButtonContainer>
+              <HeaderText>Select Term:</HeaderText>
+              <SelectBox
+                placeholder="Select Term"
+                width={"180px"}
+                value={selectedSemester ?? null}
+                onChange={(val) => setSelectedSemester(val)}
+                options={[
+                  { id: 1, name: "Spring2025" },
+                  { id: 2, name: "Fall2024" },
+                  { id: 3, name: "Spring2024" },
+                ]}
               />
-            </SearchContainer>
-            <FilterContainer>
-              <HeaderText>Filter:</HeaderText>
-              <FilterDropdown
-                onChange={handleColumnChange}
-                value={selectedColumn}
-              >
-                <option value="">Select Column</option>
-                <option value="professor">Professor</option>
-                <option value="name">Course Name</option>
-                <option value="section">Section</option>
-                <option value="assigned">Assigned Candidate</option>
-                <option value="recommended">Recommended Candidate</option>
-                <option value="mismatch">Reason for Mismatch</option>
-              </FilterDropdown>
-              <FilterInput
-                type="text"
-                value={filterValue}
-                onChange={handleFilterValueChange}
-                placeholder="Enter filter value"
-              />
-              <ExcelExportButton data={data} filteredData={filteredData} />
-            </FilterContainer>
+            </ButtonContainer>
+            <ButtonContainer></ButtonContainer>
+            <RightConatiner>
+              <FilterContainer>
+                <HeaderText>Filter:</HeaderText>
+                <FilterDropdown
+                  onChange={handleColumnChange}
+                  value={selectedColumn}
+                >
+                  <option value="">Select Column</option>
+                  <option value="professor">Professor</option>
+                  <option value="name">Course Name</option>
+                  <option value="section">Section</option>
+                  <option value="assigned">Assigned Candidate</option>
+                  <option value="recommended">Recommended Candidate</option>
+                  <option value="mismatch">Reason for Mismatch</option>
+                </FilterDropdown>
+                <FilterInput
+                  type="text"
+                  value={filterValue}
+                  onChange={handleFilterValueChange}
+                  placeholder="Enter filter value"
+                />
+                <SearchContainer>
+                  <HeaderText>Search:</HeaderText>
+                  <SearchBox
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                </SearchContainer>
+                <ExcelExportButton data={data} filteredData={filteredData} />
+              </FilterContainer>
+            </RightConatiner>
           </HeaderContainer>
           <ColumnTitle>
             <ColumnTitleText onClick={() => handleSort("professor")}>
@@ -258,7 +319,7 @@ const ProfessorManagement = () => {
           />
         </Box>
       </BoxContainer>
-      <CourseManagementModal
+      <ReassignmentModal
         open={isModalOpen}
         onClose={handleCloseModal}
         courseData={selectedCourseData}
@@ -300,11 +361,10 @@ const Box = styled.div`
 const HeaderContainer = styled.div`
   display: flex;
   align-items: center; // vertically
+  justify-content: space-between;
   width: 100%;
   padding: 10px;
   margin-bottom: 10px;
-  justify-content: space-between;
-  gap: 10px;
 `;
 
 const HeaderText = styled.div`
@@ -393,8 +453,6 @@ const Column = styled.div`
 
 const ButtonContainer = styled.button`
   display: flex;
-  width: 130px;
-  height: 35px;
   justify-content: center; // horizontal text
   align-items: center; // vertical text
   border-radius: 12px;
@@ -420,4 +478,9 @@ const ReassignButton = styled(ButtonContainer)`
 const TableWrapper = styled.div`
   overflow-y: auto;
   flex: 1;
+`;
+
+const RightConatiner = styled.div`
+  display: flex;
+  gap: 16px;
 `;

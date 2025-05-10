@@ -38,7 +38,7 @@ const FileUpload = ({
   };
 
   const handleRemoveFile = (tab, fileNameToRemove) => {
-    const newFiles = uploadedFiles[tab].filter(
+    const newFiles = uploadedFiles[tab]?.filter(
       (f) => f.name !== fileNameToRemove
     );
     onFilesChange(tab, newFiles);
@@ -80,8 +80,6 @@ const FileUpload = ({
     fileInputRef.current.click();
   };
 
-  console.log("onFilesChange", onFilesChange);
-
   return (
     <div>
       {singleUpload ? (
@@ -109,7 +107,7 @@ const FileUpload = ({
             <FileTypeInfo>{fileType} up to 5MB</FileTypeInfo>
           </UploadContainer>
           <FileList>
-            {(uploadedFiles[activeTab] || []).map((file, idx) => (
+            {(uploadedFiles || []).map((file, idx) => (
               <ProgressFileItem key={idx}>
                 <ProgressBarContainer>
                   <ProgressBar style={{ width: "100%" }} />
@@ -153,7 +151,7 @@ const FileUpload = ({
           </UploadContainer>
 
           <FileList>
-            {(uploadedFiles[activeTab] || []).map((file, idx) => (
+            {(uploadedFiles?.[activeTab] || []).map((file, idx) => (
               <ProgressFileItem key={idx}>
                 <ProgressBarContainer>
                   <ProgressBar style={{ width: "100%" }} />

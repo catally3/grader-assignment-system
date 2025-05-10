@@ -9,10 +9,12 @@ pdfjs.GlobalWorkerOptions.workerSrc = `//unpkg.com/pdfjs-dist@${pdfjs.version}/b
 
 const PdfContainer = styled.div`
   max-width: 800px;
+  min-width: 100%;
   position: relative;
   margin: 0 auto;
   border: 1px solid #e8e8e8;
   margin-top: 10px;
+  margin-bottom: 20px;
 `;
 
 const TopContainer = styled.div`
@@ -24,24 +26,25 @@ const PageButton = styled.div`
   border: 1px solid #e8e8e8;
   padding: 4px 6px;
   border-radius: 4px;
+  cursor: pointer;
 `;
 
-const PDFViewer = ({ pdfUrl, highlightWord, activeTabs }) => {
+const PDFViewer = ({ pdfUrl, matchingKeyword, activeTabs }) => {
   const [numPages, setNumPages] = useState(null);
   const [pageNumber, setPageNumber] = useState(1);
   const [textContent, setTextContent] = useState(null);
   const [pageScale, setPageScale] = useState(1);
   const [pageHeight, setPageHeight] = useState(0);
 
-  const matchingKeyword = {
-    skill: ["Python", "Web"],
-    major: ["Computer Science", "Engineer"],
-    experience: "company",
-  };
+  // const matchingKeyword = {
+  //   skill: ["Python", "Web"],
+  //   major: ["Computer Science", "Engineer"],
+  //   experience: "company",
+  // };
 
   const colorMap = {
     major: "rgba(255, 255, 0, 0.3)",
-    skill: "rgba(255, 115, 0, 0.3)",
+    skill: "rgba(255, 115, 0, 0.181)",
     experience: "rgba(0, 255, 0, 0.3)",
   };
 
@@ -71,15 +74,19 @@ const PDFViewer = ({ pdfUrl, highlightWord, activeTabs }) => {
       const text = item.str.toLowerCase();
 
       // Filters only activeTabs
-      Object.entries(matchingKeyword)
-        .filter(([category]) =>
+      Object?.entries(matchingKeyword)
+        ?.filter(([category]) =>
           activeTabs.some((tab) => tab.toLowerCase() === category)
         )
-        .forEach(([category, words]) => {
+        ?.forEach(([category, words]) => {
           const wordList = Array.isArray(words) ? words : [words];
 
-          wordList.forEach((word) => {
-            if (word && text.includes(word.toLowerCase())) {
+          wordList?.forEach((word) => {
+            if (
+              typeof word === "string" &&
+              word &&
+              text?.includes(word.toLowerCase())
+            ) {
               const { transform, width, height } = item;
               const [scaleX, , , scaleY, x, y] = transform;
 
@@ -88,7 +95,7 @@ const PDFViewer = ({ pdfUrl, highlightWord, activeTabs }) => {
               const scaledWidth = width * pageScale;
               const scaledHeight = height * pageScale;
 
-              highlights.push(
+              highlights?.push(
                 <div
                   key={`${index}-${category}-${word}`}
                   style={{

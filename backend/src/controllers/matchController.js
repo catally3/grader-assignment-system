@@ -1,17 +1,17 @@
 import db from '../models/index.js';
-import matchingAlgorithm from '../services/matchingAlgorithm.js';
+import matchCandidatesToCourses from '../services/matchingAlgorithm.js';
 const { Applicant, Course, Assignment, Sequelize } = db;
 
 const runMatching = async (req, res) => {
   try {
-    const results = await matchingAlgorithm.matchCandidatesToCourses();
+    const results = await matchCandidatesToCourses();
     // Save assignments into the database
     for (let result of results) {
       await Assignment.create({
         applicant_student_id: result.candidateId,
         course_id: result.courseId,
         score: result.score,
-        reasoning: result.reasoning,
+        reasoning: result.reasoning
       });
     }
     res.json({ message: 'Matching completed', assignments: results });
@@ -35,7 +35,9 @@ const reassign = async (req, res) => {
   try {
     // For simplicity, re-run matching for courses with no assignments.
     const allAssignments = await Assignment.findAll();
-    const assignedCandidateIds = allAssignments.map(a => a.applicant_student_id);
+    const assignedCandidateIds = allAssignments.map(
+      (a) => a.applicant_student_id
+    );
     const availableCandidates = await Applicant.findAll({
       where: {
         student_id: { [Sequelize.Op.notIn]: assignedCandidateIds }
@@ -50,13 +52,16 @@ const reassign = async (req, res) => {
         coursesToReassign.push(course);
       }
     }
-    const results = await matchingAlgorithm.matchCandidatesToCourses(availableCandidates, coursesToReassign);
+    const results = await matchingAlgorithm.matchCandidatesToCourses(
+      availableCandidates,
+      coursesToReassign
+    );
     for (let result of results) {
       await Assignment.create({
         applicant_student_id: result.candidateId,
         course_id: result.courseId,
         score: result.score,
-        reasoning: result.reasoning,
+        reasoning: result.reasoning
       });
     }
     res.json({ message: 'Reassignment completed', assignments: results });
@@ -68,5 +73,5 @@ const reassign = async (req, res) => {
 export default {
   runMatching,
   getMatchingResults,
-  reassign,
+  reassign
 };

@@ -12,7 +12,7 @@ import InputModal from "../../components/Modals/InputModal.jsx";
 // meta data
 import { applicationlist } from "../../utils/metadata.js";
 import { candidatesColumns } from "../../utils/metadata.js";
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import ReassignmentModal from "../../components/Modals/ReassignmentModal.jsx";
 
 const Title = styled.h2`
   margin-bottom: 20px;
@@ -67,7 +67,7 @@ const Setting = () => {
         onClick={handleSubmit}
       />
       {/* <FileUploadModal open={modalOpen} onClose={() => setModalOpen(false)} /> */}
-      {/* <CourseManagementModal
+      {/* <ReassignmentModal
         open={modalOpen}
         onClose={() => setModalOpen(false)}
       /> */}

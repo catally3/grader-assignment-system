@@ -7,66 +7,74 @@ import InputModal from "../../components/Modals/InputModal.jsx";
 import FileUploadModal from "../../components/Modals/FileUploadModal.jsx";
 import DoughnutChart from "../../components/Common/DonutChart.js";
 import SelectBox from "../../components/Common/SelectBox.jsx";
+import { runMatching } from "../../api/match";
+
+const unmatchedCourses = [
+  {
+    courseNumber: "98765",
+    courseName: "Data Structures",
+    requiredGraders: 2,
+    assignedGraders: 1,
+    professorName: "Dr. Newton",
+    note: "1 more grader needed",
+  },
+  {
+    courseNumber: "87654",
+    courseName: "Algorithms",
+    requiredGraders: 3,
+    assignedGraders: 0,
+    professorName: "Dr. Curie",
+    note: "Urgent - no grader assigned",
+  },
+  {
+    courseNumber: "87654",
+    courseName: "Algorithms",
+    requiredGraders: 3,
+    assignedGraders: 0,
+    professorName: "Dr. Michael",
+    note: "Urgent - no grader assigned",
+  },
+  {
+    courseNumber: "87654",
+    courseName: "Algorithms",
+    requiredGraders: 3,
+    assignedGraders: 0,
+    professorName: "Dr. Michael",
+    note: "Urgent - no grader assigned",
+  },
+  {
+    courseNumber: "87654",
+    courseName: "Algorithms",
+    requiredGraders: 3,
+    assignedGraders: 0,
+    professorName: "Dr. Michael",
+    note: "Urgent - no grader assigned",
+  },
+];
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
+  const currentSemData = localStorage.getItem("semester");
+  const isAssignments = localStorage.getItem("assignments");
+  const isUploadedFiles = localStorage.getItem("fileUploaded");
+
+  // Semester input
   const [inputValue, setInputValue] = useState("");
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [openUploadModal, setOpenUploadModal] = useState(false);
   const [carryOver, setCarryOver] = useState(false);
   const [semesters, setSemesters] = useState([]);
   const [selectedSemester, setSelectedSemester] = useState("");
 
-  const currentSemData = localStorage.getItem("semester");
-  const isAssignments = localStorage.getItem("assignments");
-  const navigate = useNavigate();
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [openUploadModal, setOpenUploadModal] = useState(false);
 
-  const unmatchedCourses = [
-    {
-      courseNumber: "98765",
-      courseName: "Data Structures",
-      requiredGraders: 2,
-      assignedGraders: 1,
-      professorName: "Dr. Newton",
-      note: "1 more grader needed",
-    },
-    {
-      courseNumber: "87654",
-      courseName: "Algorithms",
-      requiredGraders: 3,
-      assignedGraders: 0,
-      professorName: "Dr. Curie",
-      note: "Urgent - no grader assigned",
-    },
-    {
-      courseNumber: "87654",
-      courseName: "Algorithms",
-      requiredGraders: 3,
-      assignedGraders: 0,
-      professorName: "Dr. Michael",
-      note: "Urgent - no grader assigned",
-    },
-    {
-      courseNumber: "87654",
-      courseName: "Algorithms",
-      requiredGraders: 3,
-      assignedGraders: 0,
-      professorName: "Dr. Michael",
-      note: "Urgent - no grader assigned",
-    },
-    {
-      courseNumber: "87654",
-      courseName: "Algorithms",
-      requiredGraders: 3,
-      assignedGraders: 0,
-      professorName: "Dr. Michael",
-      note: "Urgent - no grader assigned",
-    },
-  ];
+  const [fileUploadMode, setFileUploadMode] = useState(false);
 
   // new semester start modal
   const openModal = () => {
     // if new semester start, clear before data
     localStorage.removeItem("assignments");
+    localStorage.removeItem("fileUploaded");
     setIsModalOpen(true);
   };
   const closeModal = () => setIsModalOpen(false);
@@ -89,7 +97,7 @@ const Dashboard = () => {
     };
 
     if (carryOver) {
-      localStorage.setItem("assignments", inputValue);
+      localStorage.setItem("fileUploaded", true);
     }
 
     localStorage.setItem("semester", inputValue);
@@ -100,9 +108,20 @@ const Dashboard = () => {
     setIsModalOpen(false);
   };
 
-  const handleAssignClick = () => {
-    if (currentSemData) {
+  const handleAssignClick = async () => {
+    if (!currentSemData) {
+      alert("No semester selected.");
+      return;
+    }
+
+    try {
+      const result = await runMatching();
       alert("Assignments are created");
+      localStorage.setItem("assignments", currentSemData);
+      navigate(0);
+    } catch (error) {
+      console.error("Assignment creation failed:", error);
+      alert("Error creating assignments");
       localStorage.setItem("assignments", currentSemData);
       navigate(0);
     }
@@ -111,6 +130,7 @@ const Dashboard = () => {
   // main dashboard
   return (
     <Layout>
+      {/* Title */}
       <WelcomeTextBox>
         <WelcomeText>Welcome! </WelcomeText>
         <HiringManagerText>Hiring Manager</HiringManagerText>
@@ -126,20 +146,27 @@ const Dashboard = () => {
               placeholder="Select Term"
               width={"180px"}
               value={selectedSemester ?? null}
-              onChange={(val) => setSelectedSemester(val)}
+              onChange={(val) => {
+                setSelectedSemester(val);
+                localStorage.setItem("semester", val?.name);
+              }}
               options={[
-                { id: 1, name: "Spring2025" },
-                { id: 2, name: "Fall2024" },
-                { id: 3, name: "Spring2024" },
+                { id: 1, name: "Spring 2025" },
+                { id: 2, name: "Fall 2024" },
+                { id: 3, name: "Spring 2024" },
               ]}
             />
           </div>
         )}
+        {/* Buttons */}
         <Button onClick={openModal}>New Semester</Button>
         {!isAssignments && (
           <>
             <Button
-              onClick={() => setOpenUploadModal(true)}
+              onClick={() => {
+                setOpenUploadModal(true);
+                setFileUploadMode(true);
+              }}
               disabled={!currentSemData}
             >
               + Upload Files
@@ -148,20 +175,26 @@ const Dashboard = () => {
             <Button
               onClick={handleAssignClick}
               backgroundColor={"#000000"}
-              disabled={!currentSemData}
+              disabled={isUploadedFiles === null || fileUploadMode === true}
             >
               Assign
             </Button>
           </>
         )}
       </TitleContainer>
-
+      {/* Assignment Content */}
       {currentSemData && (
         <BoxContainer>
-          {!isAssignments ? (
+          {!isUploadedFiles ? (
             <NoticeBox>
               <HeaderText style={{ marginTop: 40 }}>
                 Please upload files to start the grader assignment
+              </HeaderText>
+            </NoticeBox>
+          ) : !isAssignments ? (
+            <NoticeBox>
+              <HeaderText style={{ marginTop: 40 }}>
+                No assignments found.
               </HeaderText>
             </NoticeBox>
           ) : (
@@ -180,7 +213,6 @@ const Dashboard = () => {
                   navigate={navigate}
                 />
               </LeftWrap>
-              {/* chart */}
               <RightWrap>
                 <TopBox>
                   <TitleContainer style={{ marginBottom: 40, marginTop: 0 }}>
@@ -206,6 +238,7 @@ const Dashboard = () => {
       <FileUploadModal
         open={openUploadModal}
         onClose={() => setOpenUploadModal(false)}
+        setFileUploadMode={setFileUploadMode}
       />
     </Layout>
   );

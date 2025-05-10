@@ -23,15 +23,10 @@ const AddCourseModal = ({
 }) => {
   const [addCourseMode, setAddCourseMode] = useState(false);
 
-  const handleAssign = () => {
-    console.log("Add new Candidate");
-    // Implementation for assign action would go here
-  };
-
   const handleFilesChange = (tab, newFiles) => {
     setInputValue((prev) => ({
       ...prev,
-      [tab]: newFiles,
+      file: newFiles,
     }));
   };
 
@@ -129,11 +124,13 @@ const AddCourseModal = ({
                 {/* Resume file upload(single & bulk)*/}
                 <SingleTabItem>Course File Upload</SingleTabItem>
                 <FileUpload
-                  activeTab={"applicants"}
-                  uploadedFiles={inputValue}
+                  activeTab={
+                    uploadType === uploadMode?.SINGLE ? "Course" : "Courses"
+                  }
+                  uploadedFiles={inputValue?.file}
                   onFilesChange={handleFilesChange}
                   singleUpload={true}
-                  fileType={fileType.ZIP}
+                  fileType={fileType.EXCEL}
                 />
               </>
             )}

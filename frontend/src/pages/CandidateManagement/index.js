@@ -1,15 +1,17 @@
 import styled from "@emotion/styled";
 import { useState, useEffect } from "react"; // delete, add, search states
 import Layout from "../../layouts/Layout.js";
+
 import DropdownButton from "../../components/Common/DropdownButton.jsx";
 import SelectBox from "../../components/Common/SelectBox.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import ReassignmentModal from "../../components/Modals/ReassignmentModal.jsx";
 import AddCandidateModal from "../../components/Modals/AddCandidateModal.jsx";
 import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
-import { uploadMode } from "../../utils/type.js";
+import Pagination from "../../components/Common/Pagination.jsx";
 
+import { uploadMode } from "../../utils/type.js";
 import {
   getApplicants,
   createApplicants,
@@ -17,7 +19,6 @@ import {
 } from "../../api/applicants.js";
 import { deleteAssignment } from "../../api/assignments.js";
 import { uploadResume, uploadResumeZip } from "../../api/upload.js";
-import Pagination from "../../components/Common/Pagination.jsx";
 
 // frontend/Applicants Management
 const Title = styled.div`
@@ -325,6 +326,7 @@ const CandidateManagement = () => {
   const [data, setData] = useState([]);
   const [newCandidate, setNewCandidate] = useState(initCandidate);
   const [selectedSemester, setSelectedSemester] = useState(null);
+  const [allCandidates, setAllCandidats] = useState([]);
 
   // table top sorting and searching state
   const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
@@ -346,6 +348,22 @@ const CandidateManagement = () => {
 
   const [selectedApplicantInfo, setSelectedApplicantInfo] = useState({});
   const [uploadType, setUploadType] = useState("");
+
+  // get applicants data and load
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const data = await getApplicants();
+        setData(data);
+        console.log(data);
+      } catch (error) {
+        console.error("Failed to load applicants:", error);
+        setData([]);
+      }
+    };
+
+    fetchData();
+  }, []);
 
   // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
@@ -449,40 +467,27 @@ const CandidateManagement = () => {
   // Handle API
   // create new candidate
   const handleAddCandidate = async () => {
-    console.log(newCandidate);
+    console.log("newCandidate", newCandidate);
 
     if (uploadType === uploadType.BULK) {
       try {
         const result = await uploadResumeZip(newCandidate.file?.[0]);
-        console.log(result);
       } catch (error) {
         console.error("Failed to add candidate:", error);
         alert("Error adding candidate");
       }
     } else {
       try {
-        const result = await uploadResume(
-          newCandidate.file?.[0],
-          selectedSemester
-        );
-        console.log(result);
+        const result = await uploadResume(newCandidate.file?.[0]);
       } catch (error) {
         console.error("Failed to add candidate:", error);
         alert("Error adding candidate");
       }
     }
+    const updatedData = await getApplicants();
     setData(updatedData);
+    setNewCandidate(initCandidate);
     setShowModal(false);
-
-    // try {
-    //   const addedApplicants = await createApplicants(newCandidate);
-    //   const updatedData = await getApplicants(); // new version
-    //   setData(updatedData);
-    //   setShowModal(false);
-    // } catch (error) {
-    //   console.error("Failed to add candidate:", error);
-    //   alert("Error adding candidate");
-    // }
   };
 
   // delete Applicant in DB
@@ -528,15 +533,10 @@ const CandidateManagement = () => {
     currentPage * itemsPerPage
   );
 
+  // if searing update to pagenumber 1
   useEffect(() => {
-    const fetchData = async () => {
-      const data = await getApplicants();
-      setData(data);
-      console.log(data);
-    };
-
-    fetchData();
-  }, []);
+    setCurrentPage(1);
+  }, [searchTerm, filterValue, selectedColumn]);
 
   return (
     <Layout>
@@ -562,8 +562,8 @@ const CandidateManagement = () => {
               <SelectBox
                 placeholder="Select Term"
                 width={"180px"}
-                value={selectedSemester}
-                onChange={(val) => setSelectedSemester(val.id)}
+                value={selectedSemester ?? null}
+                onChange={(val) => setSelectedSemester(val)}
                 options={[
                   { id: 1, name: "Spring2025" },
                   { id: 2, name: "Fall2024" },
@@ -727,11 +727,11 @@ const CandidateManagement = () => {
         title={"Grader Assignment Detail"}
         assignmentInfo={selectedApplicantInfo}
       />
-      <CourseManagementModal
+      <ReassignmentModal
         open={reassignModalOpen}
         onClose={() => setReassignModalOpen(false)}
-        courseData={selectedCourseData}
-        allCourses={filteredData}
+        selectedCourseData={selectedCourseData}
+        allCandidates={allCandidates}
       />
     </Layout>
   );

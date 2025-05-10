@@ -18,13 +18,7 @@ import {
 
 const tabs = ["Course List", "Candidate List", "Resume"];
 
-const FileUploadModal = ({
-  open,
-  onClose,
-  title,
-  inputValue,
-  setInputValue,
-}) => {
+const FileUploadModal = ({ open, onClose, title, setFileUploadMode }) => {
   const currentSemData = localStorage.getItem("semester");
 
   const [activeTab, setActiveTab] = useState("Course List");
@@ -48,6 +42,7 @@ const FileUploadModal = ({
 
   const onCloseFileUpload = () => {
     setUploadedFiles({});
+    setActiveTab("Course List");
     onClose();
   };
 
@@ -55,27 +50,52 @@ const FileUploadModal = ({
 
   const handleSubmit = async () => {
     console.log("uploadedFiles", uploadedFiles);
+
+    const courseFile = uploadedFiles["Course List"]?.[0];
+    const candidateFile = uploadedFiles["Candidate List"]?.[0];
+    const resumeFile = uploadedFiles["Resume"]?.[0];
+
+    if (!courseFile || !candidateFile || !resumeFile) {
+      alert("Please upload all required files.");
+      return;
+    }
+
     try {
-      const courseFile = uploadedFiles["Course List"][0];
-      const candidateFile = uploadedFiles["Candidate List"][0];
-      const resumeFile = uploadedFiles["Resume"][0];
-
-      const semester = currentSemData || "Spring 2025"; // optional if you have one
-
-      if (courseFile && candidateFile && resumeFile) {
+      // 1. Upload Course List
+      try {
         await uploadCourseList(courseFile);
-        await uploadCandidateList(candidateFile);
-        await uploadResumeZip(resumeFile);
-      } else {
-        alert("Please upload all files");
+      } catch (err) {
+        console.error("Course list upload failed:", err);
+        alert("Course list file is invalid or upload failed.");
         return;
       }
 
-      alert("Initial setup complete 🎉");
-      onCloseFileUpload();
+      // 2. Upload Candidate List
+      try {
+        await uploadCandidateList(candidateFile);
+      } catch (err) {
+        console.error("Candidate list upload failed:", err);
+        alert("Candidate list file is invalid or upload failed.");
+        return;
+      }
+
+      // 3. Upload Resume Zip
+      try {
+        await uploadResumeZip(resumeFile);
+      } catch (err) {
+        console.error("Resume zip upload failed:", err);
+        alert("Resume zip file is invalid or upload failed.");
+        return;
+      }
+
+      // All uploads successful
+      await setFileUploadMode(false);
+      await localStorage.setItem("fileUploaded", true);
+      await alert("Initial assignment setup is now complete.");
+      await onCloseFileUpload();
     } catch (error) {
-      console.error("File upload failed:", error);
-      alert("Upload failed. Check your files and try again.");
+      console.error("Unexpected error:", error);
+      alert("Something went wrong. Please try again.");
     }
   };
 
@@ -118,7 +138,7 @@ const FileUploadModal = ({
           <Button
             backgroundColor={"rgba(248, 126, 3, 1)"}
             TextColor={"white"}
-            Text={"Assign"}
+            Text={"Upload"}
             onClick={handleSubmit}
           />
         </ButtonContainer>

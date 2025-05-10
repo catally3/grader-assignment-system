@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import styled from "@emotion/styled";
+import { format } from "date-fns";
 import Modal, {
   CustomShadowButtonWrap,
   ModalContainer,
@@ -14,8 +15,8 @@ import CloseIcon from "../../assets/icons/icon_close.svg";
 import SlideOutModal from "../Common/SlideOutModal";
 
 const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
-  const pdfUrl = "/resume_example.pdf";
-  const wordToHighlight = "Javascript";
+  const resumePath = `/resumes/${assignmentInfo?.resume_path?.split("/").pop()}`;
+  const pdfUrl = resumePath ? `${resumePath}` : null;
 
   let skillsCount = assignmentInfo?.skills?.length;
 
@@ -42,26 +43,30 @@ const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
             />
             <InfoSection.Field
               label="Application Date"
-              value={assignmentInfo?.createdAt || "N/A"}
+              value={
+                assignmentInfo?.createdAt
+                  ? format(new Date(assignmentInfo.createdAt), "yyyy-MM-dd")
+                  : "N/A"
+              }
             />
             <InfoSection.Field
               label="Status"
-              value={assignmentInfo?.status || "N/A"}
+              value={assignmentInfo?.assignment ? "Assigned" : "In progress"}
               isStatus
             />
           </ApplicationInfoSection>
           <PositionDetailsSection>
             <InfoSection.Field
-              label="Applied To Name"
-              value={assignmentInfo?.position || "N/A"}
-            />
-            <InfoSection.Field
               label="Matched Course"
               value={
-                `${assignmentInfo?.course_number} - ${assignmentInfo?.course_name}` ||
-                "N/A"
+                assignmentInfo?.course_number
+                  ? `${assignmentInfo?.course_number} - ${assignmentInfo?.course_name}`
+                  : "N/A"
               }
-              value1="CS4545.004-Machine Learning course"
+            />
+            <InfoSection.Field
+              label="Professor Name"
+              value={assignmentInfo?.professor_name || "N/A"}
             />
           </PositionDetailsSection>
           <PersonalInfoSection>
@@ -108,15 +113,18 @@ const AssignmentDetailModal = ({ open, onClose, title, assignmentInfo }) => {
             matchCount={skillsCount ? skillsCount : 0}
             skills={assignmentInfo?.skills ? assignmentInfo?.skills : []}
           />
-          <DocumentViewer
-            pdfUrl={pdfUrl}
-            wordToHighlight={assignmentInfo?.skills || null}
-            matchingKeyword={assignmentInfo?.experiences || null}
-            fileName={
-              `resume-${assignmentInfo?.applicant_name}(${assignmentInfo?.student_id})` ||
-              "N/A"
-            }
-          />
+          {pdfUrl ? (
+            <DocumentViewer
+              pdfUrl={pdfUrl}
+              major={assignmentInfo?.major || null}
+              skills={assignmentInfo?.skills || null}
+              experience={assignmentInfo?.experience || null}
+            />
+          ) : (
+            <div style={{ padding: "20px", color: "#999" }}>
+              No resume available for this applicant.
+            </div>
+          )}
         </ModalContent>
       </ModalContainer>
     </SlideOutModal>

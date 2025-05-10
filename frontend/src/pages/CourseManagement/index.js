@@ -3,7 +3,7 @@ import styled from "@emotion/styled";
 import Layout from "../../layouts/Layout.js";
 import React, { useState, useEffect } from "react";
 import FileUpload from "../../components/Common/FileUpload.jsx";
-import CourseManagementModal from "../../components/Modals/CourseManagementModal.jsx";
+import ReassignmentModal from "../../components/Modals/ReassignmentModal.jsx";
 import SortIcon from "../../assets/icons/icon_sort.svg";
 import AssignmentDetailModal from "../../components/Modals/AssignmentDetailModal.jsx";
 import { ExcelExportButton } from "../../components/ExcelExportButton.jsx";
@@ -12,6 +12,9 @@ import AddCourseModal from "../../components/Modals/AddCourseModal.jsx";
 import { uploadMode } from "../../utils/type.js";
 import { deleteCourse, getCourses, createCourse } from "../../api/courses.js";
 import Pagination from "../../components/Common/Pagination.jsx";
+import SelectBox from "../../components/Common/SelectBox.jsx";
+import { uploadCandidateList, uploadCourseList } from "../../api/upload.js";
+import { getApplicants } from "../../api/applicants.js";
 
 // Course Management
 const Title = styled.div`
@@ -90,8 +93,6 @@ const FilterInput = styled.input`
 
 const ButtonContainer = styled.button`
   display: flex;
-  width: 130px;
-  height: 35px;
   justify-content: center; // horizontal text
   align-items: center; // vertical text
   border-radius: 12px;
@@ -190,21 +191,84 @@ const TableWrapper = styled.div`
   flex: 1;
 `;
 
-const CourseManagement = () => {
-  const [data, setData] = useState([]);
+const RightConatiner = styled.div`
+  display: flex;
+  gap: 16px;
+`;
 
+const initCourse = {
+  semester: "Spring 2025",
+  professor_name: "",
+  professor_email: "",
+  course_number: "",
+  course_section: "",
+  course_name: "",
+  number_of_graders: "",
+  keywords: [],
+};
+
+const CourseManagement = () => {
+  // data
+  const [data, setData] = useState([]);
+  const [newCourse, setNewCourse] = useState(initCourse);
+  const [selectedSemester, setSelectedSemester] = useState(null);
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [allCandidates, setAllCandidats] = useState([]);
+
+  // table top sorting and searching state
+  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
+  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
+  const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
+  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
+
+  // delete state
+  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
+  const [selectedIds, setSelectedIds] = useState([]); // selected stores the Id chosen to be deleted
+
+  // reassign
+  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
+
+  // modal state
+  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
+  const [selectedRow, setSelectedRow] = useState(null); // DISPLAY CANDIDATES DROPWDOWM
+  const [showModal, setShowModal] = useState(false);
+  const [uploadType, setUploadType] = useState("");
+
+  // pagination
+  const [currentPage, setCurrentPage] = useState(1);
+
+  // get courses data and load
   useEffect(() => {
     const fetchData = async () => {
-      const data = await getCourses();
-      setData(data);
-      console.log(data);
+      try {
+        const data = await getCourses();
+        setData(data);
+        console.log(data);
+      } catch (error) {
+        console.error("Failed to load courses:", error);
+        setData([]);
+      }
     };
 
     fetchData();
   }, []);
 
+  // get candidate list data and load
+  useEffect(() => {
+    const fetchCandidateData = async () => {
+      try {
+        const data = await getApplicants();
+        setAllCandidats(data);
+      } catch (error) {
+        console.error("Failed to load courses:", error);
+        setAllCandidats([]);
+      }
+    };
+
+    fetchCandidateData();
+  }, []);
+
   // File upload
-  const [uploadedFiles, setUploadedFiles] = useState([]);
   const handleFilesChange = (tab, newFiles) => {
     setUploadedFiles((prev) => ({
       ...prev,
@@ -213,15 +277,11 @@ const CourseManagement = () => {
     alert("course is added");
   };
 
-  /******* SEARCH FUNCTIONALITY  *******/
-  const [searchTerm, setSearchTerm] = useState(""); // searchTerm stores the term entered by user to search
   // updates searchTerm with user input, not case-sensitive
   const handleSearchChange = (event) => {
     setSearchTerm(event.target.value.toLowerCase());
   };
 
-  /******* SORTING FUNCTIONALITY  *******/
-  const [sortConfig, setSortConfig] = useState({ key: null, direction: "asc" }); // sortConfig stores sorting state, key (column) and direction
   // toggles direction of sorting behavior when column is clicked
   const handleSort = (key) => {
     let direction = "asc";
@@ -234,6 +294,7 @@ const CourseManagement = () => {
     }
     setSortConfig({ key: direction ? key : null, direction });
   };
+
   // return the current sort arrow based on current sorting direction, and display default
   const getSortArrow = (key) => {
     if (sortConfig.key !== key) {
@@ -252,6 +313,7 @@ const CourseManagement = () => {
     }
     return sortConfig.direction === "asc" ? "▲" : "▼";
   };
+
   // sort data based on the key and direction
   const sortedData = sortConfig.key
     ? [...data].sort((a, b) => {
@@ -263,9 +325,6 @@ const CourseManagement = () => {
       })
     : data;
 
-  /******* FILTER FUNCTIONALITY  *******/
-  const [selectedColumn, setSelectedColumn] = useState(""); // selectedColumn stores user selected column to filter
-  const [filterValue, setFilterValue] = useState(""); // filterValue stores user inputed term to filter
   // update selectedColumn when user selects a column
   const handleColumnChange = (event) => {
     setSelectedColumn(event.target.value);
@@ -288,9 +347,6 @@ const CourseManagement = () => {
         : true)
   );
 
-  /******* DELETION  FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [deleteMode, setDeleteMode] = useState(false); // deleteMode: true or false (normalMode)
-  const [selectedIds, setSelectedIds] = useState([]); // selected stores the Id chosen to be deleted
   // toggles deleteMode and clears any selected candidates between toggles
   const toggleDeleteMode = () => {
     setDeleteMode(!deleteMode);
@@ -318,9 +374,6 @@ const CourseManagement = () => {
     }
   };
 
-  /******** REASSIGN FUNCTIONALITY  *******/ // FFFFFFFFFFIIIIIIIIIIIXXXXXXXXXXXXXXX
-  const [isModalOpen, setIsModalOpen] = useState(false); // isModalOpen: true or false
-  const [selectedCourseData, setSelectedCourseData] = useState(null); // selectedCourseData stores course data for selcted candidate
   // open the reassignmnet modal for the selected course
   const handleReassign = (course) => {
     setSelectedCourseData(course);
@@ -329,61 +382,12 @@ const CourseManagement = () => {
   // close the reassignment model for the selected course
   const handleCloseModal = () => {
     setIsModalOpen(false);
+    setSelectedCourseData(null);
   };
 
-  // DISPLAY CANDIDATES DROPWDOWM
-  const [selectedRow, setSelectedRow] = useState(null);
-
-  const groupedData = filteredData.reduce((acc, row) => {
-    const courseKey = `${row?.course_number}-${row?.course_section}-${row?.professor_name}`;
-    if (!acc[courseKey]) {
-      acc[courseKey] = [];
-    }
-    acc[courseKey].push(row);
-    return acc;
-  }, {});
-
-  const renderGroupedRow = (group, key) => (
-    <Row key={key}>
-      {deleteMode && (
-        <Column>
-          <input
-            type="checkbox"
-            checked={selectedIds?.includes(group[0].id)}
-            onChange={() => handleCheckboxChange(group[0].id)}
-          />
-        </Column>
-      )}
-      <Column>{group[0]?.course_number || "N/A"}</Column>
-      <Column>{group[0]?.course_name || "N/A"}</Column>
-      <Column>{group[0]?.number_of_graders || "N/A"}</Column>
-      <Column>{group[0]?.professor_name || "N/A"}</Column>
-      <Column>
-        {/* Removed the onClick handler */}
-        <span>{group.map((row) => row.assigned || "N/A").join(", ")}</span>
-      </Column>
-      <Column>
-        <ReassignButton onClick={() => handleReassign(group)}>
-          Reassign
-        </ReassignButton>
-      </Column>
-    </Row>
-  );
-
-  const [showModal, setShowModal] = useState(false);
-  const [uploadType, setUploadType] = useState("");
-  const [newCourse, setNewCourse] = useState({
-    semester: "Spring 2025",
-    professor_name: "",
-    professor_email: "",
-    course_number: "",
-    course_section: "",
-    course_name: "",
-    number_of_graders: "",
-    keywords: [],
-  });
-
+  // handler add new course
   const handleAddCourse = async () => {
+    // single add course with input field
     if (uploadType === uploadMode.SINGLE) {
       const newCourseExists = data.some(
         (v) =>
@@ -422,40 +426,49 @@ const CourseManagement = () => {
         alert("This course already has an assigned!");
         return;
       }
-    }
 
-    try {
-      const addedCourse = await createCourse(newCourse);
-      const updatedData = await getCourses(); // new version
-      setData(updatedData);
-      setShowModal(false);
-      setNewCourse({
-        semester: "Spring 2025",
-        professor_name: "",
-        professor_email: "",
-        course_number: "",
-        course_section: "",
-        course_name: "",
-        number_of_graders: 1,
-        keywords: [],
-      });
-    } catch (error) {
-      console.error("Failed to add course:", error);
-      alert("Error adding course");
+      try {
+        const addedCourse = await createCourse(newCourse);
+        const updatedData = await getCourses(); // new version
+        setData(updatedData);
+        setShowModal(false);
+        setNewCourse(initCourse);
+      } catch (error) {
+        console.error("Failed to add course:", error);
+        alert("Error adding course");
+      }
+      return;
+    } else {
+      // bulk upload with excel file
+      if (newCourse?.file?.[0]) {
+        try {
+          const result = await uploadCourseList(newCourse?.file?.[0]);
+          const updatedData = await getCourses(); // new version
+          setData(updatedData);
+          setShowModal(false);
+          setNewCourse(initCourse);
+        } catch (error) {
+          console.error("Failed to add courses:", error);
+          alert("Error adding courses");
+        }
+      }
     }
   };
 
   // pagination
-  const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 10;
   const totalPages = Math.ceil(filteredData.length / itemsPerPage);
 
-  const groupedDataEntries = Object.entries(groupedData);
   // handler pagenation
-  const paginatedData = groupedDataEntries.slice(
+  const paginatedData = filteredData.slice(
     (currentPage - 1) * itemsPerPage,
     currentPage * itemsPerPage
   );
+
+  // if searing update to pagenumber 1
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, filterValue, selectedColumn]);
 
   return (
     <Layout>
@@ -463,73 +476,87 @@ const CourseManagement = () => {
       <BoxContainer>
         <Box>
           <HeaderContainer>
-            <SearchContainer>
-              <ButtonContainer>
-                <DeleteButton onClick={toggleDeleteMode}>
-                  {deleteMode ? "Cancel" : "Delete Course"}
+            <ButtonContainer>
+              <DeleteButton onClick={toggleDeleteMode}>
+                {deleteMode ? "Cancel" : "Delete Course"}
+              </DeleteButton>
+              {deleteMode && (
+                <DeleteButton onClick={handleDelete}>
+                  Confirm Delete
                 </DeleteButton>
-                {deleteMode && (
-                  <DeleteButton onClick={handleDelete}>
-                    Confirm Delete
-                  </DeleteButton>
-                )}
-              </ButtonContainer>
-              <HeaderText>Search:</HeaderText>
-              <SearchBox
-                type="text"
-                placeholder="Search..."
-                value={searchTerm}
-                onChange={handleSearchChange}
-              />
-            </SearchContainer>
-
-            <FilterContainer>
-              <HeaderText>Filter:</HeaderText>
-              <FilterDropdown
-                onChange={handleColumnChange}
-                value={selectedColumn}
-              >
-                <option value="">Select Column</option>
-                <option value="course_number">Course Number</option>
-                <option value="course_name">Course Name</option>
-                <option value="number_of_graders">Number of Graders</option>
-                <option value="professor_name">Professor Name</option>
-                <option value="assigned">Assigned Candidate</option>
-              </FilterDropdown>
-              <FilterInput
-                type="text"
-                value={filterValue}
-                onChange={handleFilterValueChange}
-                placeholder="Enter filter value"
-              />
-              <ExcelExportButton data={data} filteredData={filteredData} />
-              <DropdownButton
-                label="+ Add Course"
+              )}
+              <HeaderText>Select Term:</HeaderText>
+              <SelectBox
+                placeholder="Select Term"
+                width={"180px"}
+                value={selectedSemester ?? null}
+                onChange={(val) => setSelectedSemester(val)}
                 options={[
-                  {
-                    label: "Add One by One",
-                    onClick: () => {
-                      setUploadType(uploadMode.SINGLE);
-                      setShowModal(true);
-                    },
-                  },
-                  {
-                    label: "Bulk File Upload",
-                    onClick: () => {
-                      setUploadType(uploadMode.BULK);
-                      setShowModal(true);
-                    },
-                  },
+                  { id: 1, name: "Spring2025" },
+                  { id: 2, name: "Fall2024" },
+                  { id: 3, name: "Spring2024" },
                 ]}
-                style={{
-                  color: "#ffffff",
-                  backgroundColor: "rgba(248, 126, 3, 1)",
-                  display: "flex",
-                  padding: "10px",
-                  height: "35px",
-                }}
               />
-            </FilterContainer>
+            </ButtonContainer>
+            <ButtonContainer></ButtonContainer>
+            <RightConatiner>
+              <FilterContainer>
+                <HeaderText>Filter:</HeaderText>
+                <FilterDropdown
+                  onChange={handleColumnChange}
+                  value={selectedColumn}
+                >
+                  <option value="">Select Column</option>
+                  <option value="course_number">Course Number</option>
+                  <option value="course_name">Course Name</option>
+                  <option value="number_of_graders">Number of Graders</option>
+                  <option value="professor_name">Professor Name</option>
+                  <option value="assigned">Assigned Candidate</option>
+                </FilterDropdown>
+                <FilterInput
+                  type="text"
+                  value={filterValue}
+                  onChange={handleFilterValueChange}
+                  placeholder="Enter filter value"
+                />
+                <SearchContainer>
+                  <HeaderText>Search:</HeaderText>
+                  <SearchBox
+                    type="text"
+                    placeholder="Search..."
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                  />
+                </SearchContainer>
+                <ExcelExportButton data={data} filteredData={filteredData} />
+                <DropdownButton
+                  label="+ Add Course"
+                  options={[
+                    {
+                      label: "Add One by One",
+                      onClick: () => {
+                        setUploadType(uploadMode.SINGLE);
+                        setShowModal(true);
+                      },
+                    },
+                    {
+                      label: "Bulk File Upload",
+                      onClick: () => {
+                        setUploadType(uploadMode.BULK);
+                        setShowModal(true);
+                      },
+                    },
+                  ]}
+                  style={{
+                    color: "#ffffff",
+                    backgroundColor: "rgba(248, 126, 3, 1)",
+                    display: "flex",
+                    padding: "10px",
+                    height: "35px",
+                  }}
+                />
+              </FilterContainer>
+            </RightConatiner>
           </HeaderContainer>
           <ColumnTitle>
             {deleteMode && <ColumnTitleText>Select</ColumnTitleText>}
@@ -551,15 +578,44 @@ const CourseManagement = () => {
             <ColumnTitleText>Re-Assignment</ColumnTitleText>
           </ColumnTitle>
           <TableWrapper>
-            {/* Render grouped data */}
-            {Object.entries(groupedData).map(([key, group]) =>
-              renderGroupedRow(group, key)
-            )}
+            {paginatedData.map((row, index) => (
+              <Row key={index}>
+                {deleteMode && (
+                  <Column>
+                    <input
+                      type="checkbox"
+                      checked={selectedIds?.includes(row.id)}
+                      onChange={() => handleCheckboxChange(row.id)}
+                    />
+                  </Column>
+                )}
+                <Column>
+                  {row?.course_number
+                    ? `${row?.course_number} - ${row?.course_section}`
+                    : "N/A"}
+                </Column>
+                <Column>{row?.course_name || "N/A"}</Column>
+                <Column>{row?.number_of_graders || "N/A"}</Column>
+                <Column>{row?.professor_name || "N/A"}</Column>
+                <Column>
+                  {/* To be updated */}
+                  <span></span>
+                </Column>
+                <Column>
+                  <ReassignButton onClick={() => handleReassign(row)}>
+                    Reassign
+                  </ReassignButton>
+                </Column>
+              </Row>
+            ))}
           </TableWrapper>
           <Pagination
             currentPage={currentPage}
             totalPages={totalPages}
-            onPageChange={(page) => setCurrentPage(page)}
+            onPageChange={(page) => {
+              console.log("page change:", page);
+              setCurrentPage(page);
+            }}
           />
         </Box>
       </BoxContainer>
@@ -568,14 +624,15 @@ const CourseManagement = () => {
         onClose={() => {
           setShowModal(false);
           setNewCourse({
-            semester: "",
+            semester: "Spring 2025",
             professor_name: "",
-            professor_email: "r",
+            professor_email: "",
             course_number: "",
             course_section: "",
             course_name: "",
-            number_of_graders: 1,
+            number_of_graders: "",
             keywords: [],
+            file: "",
           });
           setUploadType("");
         }}
@@ -589,11 +646,11 @@ const CourseManagement = () => {
         setInputValue={setNewCourse}
         uploadType={uploadType}
       />
-      <CourseManagementModal
+      <ReassignmentModal
         open={isModalOpen}
         onClose={handleCloseModal}
-        courseData={selectedCourseData}
-        allCourses={filteredData}
+        selectedCourseData={selectedCourseData}
+        allCandidates={allCandidates}
       />
     </Layout>
   );

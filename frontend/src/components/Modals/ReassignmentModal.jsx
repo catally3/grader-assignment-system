@@ -1,32 +1,39 @@
 import React, { useState, useMemo } from "react";
 import styled from "@emotion/styled";
-import Modal, { ModalContainer } from "../Common/Modal";
+import Modal, { ModalButtonWrap, ModalContainer } from "../Common/Modal";
 import ModalHeader from "../Common/ModalHeader";
 import Input from "../Common/Input";
 import TableHeader from "../Common/TableHeader";
 
 import { assignGraderColumns } from "../../utils/metadata";
+import { format } from "date-fns";
 
-const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
-  if (!courseData) return null;
-  const [data, setData] = useState(courseData);
+const ReassignmentModal = ({
+  open,
+  onClose,
+  selectedCourseData,
+  allCandidates,
+}) => {
+  if (!selectedCourseData) return null;
+  const [data, setData] = useState(selectedCourseData);
   const [manualReassignIndex, setManualReassignIndex] = useState(null);
   const [selectedColumn, setSelectedColumn] = useState("");
   const [filterValue, setFilterValue] = useState("");
   const [reassignedGraders, setReassignedGraders] = useState(null);
 
-  const [courseList, setCourseList] = useState(allCourses || []);
+  const [courseList, setCourseList] = useState(allCandidates || []);
 
   const assignedGraders = useMemo(() => {
     if (reassignedGraders) return reassignedGraders;
     return courseList.filter(
       (row) =>
-        row.number === courseData.number &&
-        row.name === courseData.name &&
-        row.section === courseData.section &&
-        (row.professor === courseData.professor || row.professor === null)
+        row.number === selectedCourseData.number &&
+        row.name === selectedCourseData.name &&
+        row.section === selectedCourseData.section &&
+        (row.professor === selectedCourseData.professor ||
+          row.professor === null)
     );
-  }, [courseList, courseData, reassignedGraders]);
+  }, [courseList, selectedCourseData, reassignedGraders]);
 
   const changeForm = (name, value) => {
     setData({ ...data, [name]: value });
@@ -59,7 +66,7 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
   const handleFilterValueChange = (event) =>
     setFilterValue(event.target.value.toLowerCase());
 
-  const filteredData = allCourses.filter((row) => {
+  const filteredData = allCandidates.filter((row) => {
     if (selectedColumn) {
       return row[selectedColumn]?.toLowerCase().includes(filterValue);
     } else {
@@ -83,29 +90,29 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
           <Field>
             <Label>Course Number</Label>
             <Input
-              inputValue={data.number}
-              onChange={(e) => changeForm("courseNumber", e.target.value)}
+              inputValue={data?.course_number}
+              onChange={(e) => changeForm("course_number", e.target.value)}
             />
           </Field>
           <Field>
             <Label>Course Section</Label>
             <Input
-              inputValue={data.section}
-              onChange={(e) => changeForm("courseSection", e.target.value)}
+              inputValue={data?.course_section}
+              onChange={(e) => changeForm("course_section", e.target.value)}
             />
           </Field>
           <Field>
             <Label>Course Name</Label>
             <Input
-              inputValue={data.name}
-              onChange={(e) => changeForm("courseName", e.target.value)}
+              inputValue={data?.course_name}
+              onChange={(e) => changeForm("course_name", e.target.value)}
             />
           </Field>
           <Field>
             <Label>Professor</Label>
             <Input
-              inputValue={data.professor}
-              onChange={(e) => changeForm("professor", e.target.value)}
+              inputValue={data?.professor_name}
+              onChange={(e) => changeForm("professor_name", e.target.value)}
             />
           </Field>
         </InfoContainer>
@@ -114,7 +121,7 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
           <Label>Assigned Grader</Label>
           <TableHeader columns={assignGraderColumns} />
           {assignedGraders.map((graderRow, index) => (
-            <Row key={`${graderRow.assigned}-${index}`}>
+            <Row key={`${graderRow?.assigned}-${index}`}>
               <RowMain>
                 <Cell>
                   <ButtonStack>
@@ -135,10 +142,13 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
                     </Button>
                   </ButtonStack>
                 </Cell>
-                <Cell>{graderRow.assigned || "N/A"}</Cell>
-                <Cell>{graderRow.number || "N/A"}</Cell>
-                <Cell>{graderRow.document_id || "N/A"}</Cell>
-                <Cell>{graderRow.create_date || "N/A"}</Cell>
+                <Cell>{graderRow?.applicant_name || "N/A"}</Cell>
+                <Cell>{graderRow?.major || "N/A"}</Cell>
+                <Cell>{graderRow?.document_id || "N/A"}</Cell>
+                <Cell>
+                  {format(new Date(graderRow?.updatedAt), "yyyy-MM-dd") ||
+                    "N/A"}
+                </Cell>
               </RowMain>
               {manualReassignIndex === index && (
                 <AccordionContent>
@@ -163,10 +173,10 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
                   <ColumnTitle>
                     <ColumnTitleText>Candidate ID</ColumnTitleText>
                     <ColumnTitleText>Candidate Name</ColumnTitleText>
-                    <ColumnTitleText>Candidate Number</ColumnTitleText>
+                    <ColumnTitleText>Document</ColumnTitleText>
                     <ColumnTitleText>Professor Name</ColumnTitleText>
                   </ColumnTitle>
-                  {filteredData.map((row, index) => (
+                  {filteredData?.map((row, index) => (
                     <Cell
                       key={index}
                       hover
@@ -175,15 +185,15 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
                           "Confirm reassignment of this candidate?"
                         );
                         if (confirmChange) {
-                          handleCheckboxChange(row); // 선택 처리
-                          setManualReassignIndex(null); // 아코디언 닫기
+                          handleCheckboxChange(row);
+                          setManualReassignIndex(null);
                         }
                       }}
                     >
-                      <Column>{row.candidateID || "N/A"}</Column>
-                      <Column>{row.assigned || "N/A"}</Column>
-                      <Column>{row.number || "N/A"}</Column>
-                      <Column>{row.professor || "N/A"}</Column>
+                      <Column>{row?.student_id || "N/A"}</Column>
+                      <Column>{row?.applicant_name || "N/A"}</Column>
+                      <Column>{row?.document_id || "N/A"}</Column>
+                      <Column>{row?.professor_name || "N/A"}</Column>
                     </Cell>
                   ))}
                 </AccordionContent>
@@ -196,7 +206,7 @@ const CourseManagementModal = ({ open, onClose, courseData, allCourses }) => {
   );
 };
 
-export default CourseManagementModal;
+export default ReassignmentModal;
 
 // Styled Components
 const InfoContainer = styled.section`
@@ -219,6 +229,7 @@ const Divider = styled.div`
 `;
 const TableWrapper = styled.div`
   max-height: 500px;
+  min-height: 250px;
   overflow-y: auto;
 `;
 const Row = styled.div`
@@ -335,4 +346,13 @@ const Button = styled.button`
     cursor: not-allowed;
     box-shadow: none;
   }
+`;
+
+const Text = styled.div`
+  flex: 1;
+  text-align: center;
+  padding: 20px 10px;
+  color: #333;
+  font-size: small;
+  font-weight: normal;
 `;

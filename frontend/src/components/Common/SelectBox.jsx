@@ -46,14 +46,14 @@ const SelectBox = ({
       <Icon src={ArrowIcon} isOpened={isOpened} />
       {isOpened && (
         <Dropdown style={{ ...absoluteStyle }}>
-          {mergedOptions.map((option) => (
+          {mergedOptions?.map((option) => (
             <Option
               key={option.id ?? "placeholder"}
               active={value?.id === option.id}
               onClick={(e) => handleSelect(option, e)}
-              isPlaceholder={option.id === null}
+              isPlaceholder={option?.id === null}
             >
-              {option.name}
+              {option?.name}
             </Option>
           ))}
         </Dropdown>
@@ -113,7 +113,7 @@ const Dropdown = styled.div`
 
 const Option = styled.div`
   padding: 8px 12px;
-  font-size: medium;
+  font-size: small;
   cursor: pointer;
   color: ${({ active }) => (active ? "rgba(248, 126, 3, 1)" : "#000")};
   ${({ isPlaceholder }) =>

@@ -1,10 +1,11 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import styled from "@emotion/styled";
 
 import PencilGrIcon from "../assets/icons/icon_pencil_green.svg";
 import PencilOgIcon from "../assets/icons/icon_pencil_orange.svg";
 import PencilYwIcon from "../assets/icons/icon_pencil_yellow.svg";
 import PencilGyIcon from "../assets/icons/icon_pencil_gray.svg";
+import DownloadIcon from "../assets/icons/icon_download.svg";
 
 import PDFViewer from "./PDFViewer";
 
@@ -26,18 +27,45 @@ const highlightTabs = [
   },
 ];
 
-function DocumentViewer({
-  documentIcon,
-  pdfUrl,
-  wordToHighlight,
-  matchingKeyword,
-  fileName,
-}) {
+const tabKeyMap = {
+  Skill: "skill",
+  Major: "major",
+  Experience: "experience",
+};
+
+function DocumentViewer({ pdfUrl, major, skills, experience }) {
+  if (!major) return;
+
   const [activeTabs, setActiveTabs] = useState([
     "Skill",
     "Major",
     "Experience",
   ]);
+
+  const createMatchingKeywordObject = (skills, major, experience) => {
+    const normalizeArray = (input) => {
+      const arr = Array.isArray(input) ? input : [input];
+      return [...new Set(arr.filter(Boolean))];
+    };
+
+    const mappedMajor = normalizeArray(major).map((m) =>
+      m.toLowerCase() === "computer science" ? "CS" : m
+    );
+
+    const experienceRoles = (Array.isArray(experience) ? experience : [])
+      .map((e) => e.role)
+      .filter(Boolean);
+
+    return {
+      skill: normalizeArray(skills),
+      major: mappedMajor,
+      experience: [...new Set(experienceRoles)],
+    };
+  };
+
+  const matchingKeywordObject = useMemo(() => {
+    return createMatchingKeywordObject(skills, major, experience);
+  }, [skills, major, experience]);
 
   // Tab Handler
   const handleTabClick = (index) => {
@@ -54,6 +82,10 @@ function DocumentViewer({
 
   // PDF Download
   const handleDownload = async () => {
+    const fileName =
+      `resume-${assignmentInfo?.applicant_name}(${assignmentInfo?.student_id})` ||
+      "N/A";
+
     try {
       const response = await fetch(pdfUrl);
       const blob = await response.blob();
@@ -76,36 +108,45 @@ function DocumentViewer({
     }
   };
 
-  // Filter matching keyword following active tab (optional)
+  // // Filter matching keyword following active tab (optional)
+  // const filteredMatchingKeyword = activeTabs.length
+  //   ? Object.fromEntries(
+  //       Object.entries(matchingKeywordObject || {}).filter(([key]) =>
+  //         activeTabs.includes(key)
+  //       )
+  //     )
+  //   : matchingKeywordObject; //if noting chosen filtering
+
   const filteredMatchingKeyword = activeTabs.length
     ? Object.fromEntries(
-        Object.entries(matchingKeyword).filter((_, index) =>
-          activeTabs.includes(index)
-        )
+        activeTabs.map((label) => {
+          const key = tabKeyMap[label];
+          return [key, matchingKeywordObject[key]];
+        })
       )
-    : matchingKeyword; // if noting chosen filtering
+    : matchingKeywordObject;
 
   return (
     <Container>
       <DocumentHeader>
         <DocumentTitle>
           <Title>Document (CVS, PDF)</Title>
-          <DocumentIcon
-            src={documentIcon}
+          <DownloadIconWrap
+            src={DownloadIcon}
             alt="icon"
             onClick={handleDownload}
           />
         </DocumentTitle>
         <TabsContainer>
-          {highlightTabs.map((tab, index) => (
+          {highlightTabs?.map((tab, index) => (
             <TabPill
               key={index}
-              $isActive={activeTabs.includes(tab.label)} // array check
+              $isActive={activeTabs?.includes(tab.label)} // array check
               $bgColor={tab.color}
               onClick={() => handleTabClick(tab.label)}
             >
               <TabIcon
-                src={activeTabs.includes(tab.label) ? tab.icon : PencilGyIcon}
+                src={activeTabs?.includes(tab.label) ? tab.icon : PencilGyIcon}
                 alt="tab icon"
               />
               <TabLabel>{tab.label}</TabLabel>
@@ -115,7 +156,6 @@ function DocumentViewer({
       </DocumentHeader>
       <PDFViewer
         pdfUrl={pdfUrl}
-        highlightWord={wordToHighlight}
         matchingKeyword={filteredMatchingKeyword} // filtering keyword
         activeTabs={activeTabs}
       />
@@ -125,6 +165,7 @@ function DocumentViewer({
 
 const Container = styled.section`
   display: flex;
+  flex-direction: column;
   margin-top: 20px;
   width: 100%;
   gap: 8px;
@@ -146,7 +187,7 @@ const Title = styled.div`
   color: #6f727a;
 `;
 
-const DocumentIcon = styled.img`
+const DownloadIconWrap = styled.img`
   aspect-ratio: 1;
   object-fit: contain;
   object-position: center;
