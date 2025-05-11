@@ -1,6 +1,6 @@
-# grader-assignment-system
 
-# Grader Assignment Management System
+# Grader Assignment System (GAS)
+
 A web-based platform to manage and assign graders to university courses. 
 Built for academic departments, the system supports data uploads, grader matching, and clear assignment tracking.
 
