@@ -19,16 +19,16 @@ npm install
 ```bash
 docker-compose up --build
 ```
-client: React frontend on http://localhost:3000
-server: Node.js API on http://localhost:3001/api
-db: MySQL database container
+- **client**: React frontend on http://localhost:3000
+- **server**: Node.js API on http://localhost:3001/api
+- **db**: MySQL database container
 
 ## Features
 
 - **Semester Selection**: View and manage grader assignments by semester.
 - **Bulk Uploads**: Import course lists, candidate data, and resumes(parsing excel, pdf files).
 - **Course and Candidate Browser**: Search, filter, and sort by course or candidate attributes.
-- **Matching Algorithm**: Matches best grader candidates based on resume and course's preferences.
+- **Matching Algorithm**: Matches the best grader candidates to courses based on resume analysis and course requirements.
 - **Manual Reassignment**: Easily adjust grader-course pairings via modal UI.
 - **Assignment Dashboard**: Visual summary of assignment status by course.
 - **Validation System**: Checks for missing fields, duplicates, and resume mismatches.
