@@ -9,7 +9,7 @@ Built for academic departments, the system supports data uploads, grader matchin
 ## Getting Started
 
 ```bash
-git@github.com:catally3/grader-assignment-system.git
+git clone https://github.com/catally3/grader-assignment-system.git
 cd grader-assignment-system
 npm install
 ```
